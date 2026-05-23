@@ -4,6 +4,7 @@ import {
   FaShieldAlt, FaExclamationTriangle, FaGlobe, FaPhone,
   FaChartBar, FaBug, FaCog, FaBars, FaPlus, FaTimes,
   FaFilter, FaKey, FaListAlt, FaBrain, FaTrash,
+  FaChevronLeft, FaChevronRight, FaInbox,
 } from "react-icons/fa";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -12,6 +13,122 @@ import {
 
 const API = "https://fraude-defender-api.onrender.com";
 const COLORS = ["#ef4444", "#eab308", "#22c55e"];
+const POR_PAGINA = 10;
+
+// ─── EMPTY STATE ──────────────────────────────────────────────
+function EmptyState({ mensaje = "No hay datos para mostrar" }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+      <FaInbox className="text-6xl mb-4 text-gray-700" />
+      <p className="text-lg font-medium">{mensaje}</p>
+      <p className="text-sm mt-1">Los reportes aparecerán aquí cuando se registren</p>
+    </div>
+  );
+}
+
+// ─── PAGINACION ───────────────────────────────────────────────
+function Paginacion({ total, pagina, onChange }) {
+  const totalPaginas = Math.ceil(total / POR_PAGINA);
+  if (totalPaginas <= 1) return null;
+  return (
+    <div className="flex items-center justify-between mt-4 px-2">
+      <span className="text-gray-500 text-sm">{total} resultados · Página {pagina} de {totalPaginas}</span>
+      <div className="flex gap-2">
+        <button
+          onClick={() => onChange(pagina - 1)}
+          disabled={pagina === 1}
+          className="px-3 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition"
+        >
+          <FaChevronLeft />
+        </button>
+        {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((p) => (
+          <button
+            key={p}
+            onClick={() => onChange(p)}
+            className={`px-3 py-2 rounded-lg font-bold text-sm transition ${p === pagina ? "bg-green-500 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"}`}
+          >
+            {p}
+          </button>
+        ))}
+        <button
+          onClick={() => onChange(pagina + 1)}
+          disabled={pagina === totalPaginas}
+          className="px-3 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition"
+        >
+          <FaChevronRight />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── TABLA REUTILIZABLE ───────────────────────────────────────
+function TablaReportes({ reportes, onEliminar, paginar = false }) {
+  const [pagina, setPagina] = useState(1);
+  const [eliminando, setEliminando] = useState(null);
+
+  const paginados = paginar
+    ? reportes.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA)
+    : reportes;
+
+  const handleEliminar = async (id) => {
+    if (!window.confirm("¿Seguro que deseas eliminar este reporte?")) return;
+    setEliminando(id);
+    try {
+      await fetch(`${API}/reportes/${id}`, { method: "DELETE" });
+      if (onEliminar) onEliminar(id);
+    } catch (e) {
+      console.error(e);
+    }
+    setEliminando(null);
+  };
+
+  if (reportes.length === 0) return <EmptyState />;
+
+  return (
+    <>
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-left border-b border-gray-700 text-gray-400">
+            <th className="p-3">Teléfono</th>
+            <th className="p-3">Cuenta</th>
+            <th className="p-3">Dominio</th>
+            <th className="p-3">Riesgo</th>
+            <th className="p-3">Descripción</th>
+            {onEliminar && <th className="p-3 text-center">Acción</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {paginados.map((r) => (
+            <tr key={r.id} className="border-b border-gray-800 hover:bg-gray-800 transition">
+              <td className="p-3">{r.phone_number || "—"}</td>
+              <td className="p-3">{r.bank_account || "—"}</td>
+              <td className="p-3">{r.domain || "—"}</td>
+              <td className="p-3">
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${r.risk_level === "alto" ? "bg-red-500" : r.risk_level === "medio" ? "bg-yellow-500" : "bg-green-600"}`}>
+                  {r.risk_level}
+                </span>
+              </td>
+              <td className="p-3 text-gray-300">{r.description}</td>
+              {onEliminar && (
+                <td className="p-3 text-center">
+                  <button
+                    onClick={() => handleEliminar(r.id)}
+                    disabled={eliminando === r.id}
+                    className="text-red-400 hover:text-red-300 hover:bg-red-900 hover:bg-opacity-30 p-2 rounded-lg transition disabled:opacity-50"
+                  >
+                    <FaTrash />
+                  </button>
+                </td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {paginar && <Paginacion total={reportes.length} pagina={pagina} onChange={setPagina} />}
+    </>
+  );
+}
 
 // ─── DASHBOARD ───────────────────────────────────────────────
 function Dashboard({ reportes, onNuevoReporte }) {
@@ -59,26 +176,30 @@ function Dashboard({ reportes, onNuevoReporte }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         <div className="bg-gray-900 rounded-2xl p-6 shadow-lg">
           <h2 className="text-xl font-bold mb-4">Estadísticas de Riesgo</h2>
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={dataBar}>
-              <XAxis dataKey="name" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip contentStyle={{ background: "#111827", border: "none" }} />
-              <Bar dataKey="cantidad" fill="#22c55e" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          {reportes.length === 0 ? <EmptyState mensaje="Sin datos para graficar" /> : (
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={dataBar}>
+                <XAxis dataKey="name" stroke="#9ca3af" />
+                <YAxis stroke="#9ca3af" />
+                <Tooltip contentStyle={{ background: "#111827", border: "none" }} />
+                <Bar dataKey="cantidad" fill="#22c55e" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
         <div className="bg-gray-900 rounded-2xl p-6 shadow-lg">
           <h2 className="text-xl font-bold mb-4">Distribución por Riesgo</h2>
-          <ResponsiveContainer width="100%" height={260}>
-            <PieChart>
-              <Pie data={dataPie} cx="50%" cy="50%" outerRadius={90} dataKey="value" label>
-                {dataPie.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
-              </Pie>
-              <Legend />
-              <Tooltip contentStyle={{ background: "#111827", border: "none" }} />
-            </PieChart>
-          </ResponsiveContainer>
+          {reportes.length === 0 ? <EmptyState mensaje="Sin datos para graficar" /> : (
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie data={dataPie} cx="50%" cy="50%" outerRadius={90} dataKey="value" label>
+                  {dataPie.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
+                </Pie>
+                <Legend />
+                <Tooltip contentStyle={{ background: "#111827", border: "none" }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
@@ -90,43 +211,8 @@ function Dashboard({ reportes, onNuevoReporte }) {
   );
 }
 
-// ─── TABLA REUTILIZABLE ───────────────────────────────────────
-function TablaReportes({ reportes }) {
-  return (
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="text-left border-b border-gray-700 text-gray-400">
-          <th className="p-3">Teléfono</th>
-          <th className="p-3">Cuenta</th>
-          <th className="p-3">Dominio</th>
-          <th className="p-3">Riesgo</th>
-          <th className="p-3">Descripción</th>
-        </tr>
-      </thead>
-      <tbody>
-        {reportes.length === 0 && (
-          <tr><td colSpan={5} className="p-6 text-center text-gray-500">Sin reportes</td></tr>
-        )}
-        {reportes.map((r) => (
-          <tr key={r.id} className="border-b border-gray-800 hover:bg-gray-800 transition">
-            <td className="p-3">{r.phone_number || "—"}</td>
-            <td className="p-3">{r.bank_account || "—"}</td>
-            <td className="p-3">{r.domain || "—"}</td>
-            <td className="p-3">
-              <span className={`px-3 py-1 rounded-full text-xs font-bold ${r.risk_level === "alto" ? "bg-red-500" : r.risk_level === "medio" ? "bg-yellow-500" : "bg-green-600"}`}>
-                {r.risk_level}
-              </span>
-            </td>
-            <td className="p-3 text-gray-300">{r.description}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
 // ─── REPORTES ─────────────────────────────────────────────────
-function Reportes({ reportes, onNuevoReporte }) {
+function Reportes({ reportes, onNuevoReporte, onEliminar }) {
   const [filtroRiesgo, setFiltroRiesgo] = useState("todos");
   const [filtroBusqueda, setFiltroBusqueda] = useState("");
 
@@ -170,7 +256,7 @@ function Reportes({ reportes, onNuevoReporte }) {
       </div>
 
       <div className="bg-gray-900 rounded-2xl p-6 shadow-lg overflow-auto">
-        <TablaReportes reportes={filtrados} />
+        <TablaReportes reportes={filtrados} onEliminar={onEliminar} paginar={true} />
       </div>
     </>
   );
@@ -212,23 +298,25 @@ function Amenazas({ reportes }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-gray-900 rounded-2xl p-6 shadow-lg">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><FaGlobe className="text-red-400" /> Dominios más reportados</h2>
-          {dominiosMasFrecuentes.length === 0 && <p className="text-gray-500">Sin datos</p>}
-          {dominiosMasFrecuentes.map(([d, c]) => (
-            <div key={d} className="flex justify-between items-center py-2 border-b border-gray-800">
-              <span className="text-gray-300">{d}</span>
-              <span className="bg-red-500 text-white text-xs px-3 py-1 rounded-full font-bold">{c} reportes</span>
-            </div>
-          ))}
+          {dominiosMasFrecuentes.length === 0
+            ? <EmptyState mensaje="Sin dominios reportados aún" />
+            : dominiosMasFrecuentes.map(([d, c]) => (
+              <div key={d} className="flex justify-between items-center py-2 border-b border-gray-800">
+                <span className="text-gray-300">{d}</span>
+                <span className="bg-red-500 text-white text-xs px-3 py-1 rounded-full font-bold">{c} reportes</span>
+              </div>
+            ))}
         </div>
         <div className="bg-gray-900 rounded-2xl p-6 shadow-lg">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><FaPhone className="text-yellow-400" /> Teléfonos más reportados</h2>
-          {telefonosMasFrecuentes.length === 0 && <p className="text-gray-500">Sin datos</p>}
-          {telefonosMasFrecuentes.map(([t, c]) => (
-            <div key={t} className="flex justify-between items-center py-2 border-b border-gray-800">
-              <span className="text-gray-300">{t}</span>
-              <span className="bg-yellow-500 text-white text-xs px-3 py-1 rounded-full font-bold">{c} reportes</span>
-            </div>
-          ))}
+          {telefonosMasFrecuentes.length === 0
+            ? <EmptyState mensaje="Sin teléfonos reportados aún" />
+            : telefonosMasFrecuentes.map(([t, c]) => (
+              <div key={t} className="flex justify-between items-center py-2 border-b border-gray-800">
+                <span className="text-gray-300">{t}</span>
+                <span className="bg-yellow-500 text-white text-xs px-3 py-1 rounded-full font-bold">{c} reportes</span>
+              </div>
+            ))}
         </div>
       </div>
 
@@ -290,19 +378,21 @@ function ThreatIntel({ reportes }) {
         <div className="bg-gray-900 rounded-2xl p-6 shadow-lg">
           <h2 className="text-lg font-bold mb-4 text-purple-400">Lista Negra — Dominios</h2>
           <div className="space-y-2 max-h-64 overflow-auto">
-            {dominios.length === 0 && <p className="text-gray-500">Sin dominios registrados</p>}
-            {dominios.map((d, i) => (
-              <div key={i} className="bg-gray-800 rounded-lg px-4 py-2 text-sm text-red-300 font-mono">{d}</div>
-            ))}
+            {dominios.length === 0
+              ? <EmptyState mensaje="Sin dominios registrados" />
+              : dominios.map((d, i) => (
+                <div key={i} className="bg-gray-800 rounded-lg px-4 py-2 text-sm text-red-300 font-mono">{d}</div>
+              ))}
           </div>
         </div>
         <div className="bg-gray-900 rounded-2xl p-6 shadow-lg">
           <h2 className="text-lg font-bold mb-4 text-pink-400">Lista Negra — Teléfonos</h2>
           <div className="space-y-2 max-h-64 overflow-auto">
-            {telefonos.length === 0 && <p className="text-gray-500">Sin teléfonos registrados</p>}
-            {telefonos.map((t, i) => (
-              <div key={i} className="bg-gray-800 rounded-lg px-4 py-2 text-sm text-yellow-300 font-mono">{t}</div>
-            ))}
+            {telefonos.length === 0
+              ? <EmptyState mensaje="Sin teléfonos registrados" />
+              : telefonos.map((t, i) => (
+                <div key={i} className="bg-gray-800 rounded-lg px-4 py-2 text-sm text-yellow-300 font-mono">{t}</div>
+              ))}
           </div>
         </div>
       </div>
@@ -318,9 +408,14 @@ function Configuracion() {
     { id: 3, nombre: "Notificar duplicados de teléfono", activa: true },
   ]);
   const [apiKey] = useState("fd_" + Math.random().toString(36).substring(2, 18).toUpperCase());
+  const [copiado, setCopiado] = useState(false);
 
-  const toggleRegla = (id) => {
-    setReglas(reglas.map(r => r.id === id ? { ...r, activa: !r.activa } : r));
+  const toggleRegla = (id) => setReglas(reglas.map(r => r.id === id ? { ...r, activa: !r.activa } : r));
+
+  const copiarKey = () => {
+    navigator.clipboard.writeText(apiKey);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
   };
 
   return (
@@ -347,11 +442,8 @@ function Configuracion() {
         <p className="text-gray-400 text-sm mb-4">Usa esta clave para integrar Fraude Defender con tus sistemas externos.</p>
         <div className="bg-gray-800 rounded-xl px-4 py-3 font-mono text-green-400 text-sm flex justify-between items-center">
           <span>{apiKey}</span>
-          <button
-            onClick={() => { navigator.clipboard.writeText(apiKey); }}
-            className="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-lg text-white transition"
-          >
-            Copiar
+          <button onClick={copiarKey} className={`text-xs px-3 py-1 rounded-lg text-white transition ${copiado ? "bg-green-600" : "bg-gray-700 hover:bg-gray-600"}`}>
+            {copiado ? "✓ Copiado" : "Copiar"}
           </button>
         </div>
         <p className="text-gray-500 text-xs mt-3">⚠ No compartas esta clave públicamente.</p>
@@ -462,6 +554,10 @@ function App() {
     } catch (e) { console.error(e); }
   };
 
+  const eliminarReporte = (id) => {
+    setReportes(prev => prev.filter(r => r.id !== id));
+  };
+
   const navItems = [
     { id: "dashboard", icon: <FaChartBar />, label: "Dashboard" },
     { id: "reportes", icon: <FaExclamationTriangle />, label: "Reportes" },
@@ -472,33 +568,27 @@ function App() {
 
   return (
     <div className="flex bg-gray-950 text-white min-h-screen">
-      {/* SIDEBAR */}
       <div className={`fixed md:relative z-50 bg-gray-900 w-64 min-h-screen p-6 transition-all duration-300 ${menuOpen ? "left-0" : "-left-64 md:left-0"}`}>
         <h1 className="text-2xl font-bold mb-10 text-green-400">🛡 Fraude Defender</h1>
         <nav className="space-y-2">
           {navItems.map((item) => (
-            <div
-              key={item.id}
-              onClick={() => { setSeccion(item.id); setMenuOpen(false); }}
-              className={`flex items-center gap-3 text-base px-4 py-3 rounded-xl cursor-pointer transition ${seccion === item.id ? "bg-green-500 text-white font-bold" : "hover:bg-gray-800 text-gray-300"}`}
-            >
+            <div key={item.id} onClick={() => { setSeccion(item.id); setMenuOpen(false); }}
+              className={`flex items-center gap-3 text-base px-4 py-3 rounded-xl cursor-pointer transition ${seccion === item.id ? "bg-green-500 text-white font-bold" : "hover:bg-gray-800 text-gray-300"}`}>
               {item.icon}<span>{item.label}</span>
             </div>
           ))}
         </nav>
       </div>
 
-      {/* OVERLAY MOBILE */}
       {menuOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={() => setMenuOpen(false)} />}
 
-      {/* MAIN */}
       <div className="flex-1 p-6 overflow-auto">
         <button className="md:hidden mb-6 text-2xl" onClick={() => setMenuOpen(!menuOpen)}><FaBars /></button>
 
         <AnimatePresence mode="wait">
           <motion.div key={seccion} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
             {seccion === "dashboard" && <Dashboard reportes={reportes} onNuevoReporte={() => setModalOpen(true)} />}
-            {seccion === "reportes" && <Reportes reportes={reportes} onNuevoReporte={() => setModalOpen(true)} />}
+            {seccion === "reportes" && <Reportes reportes={reportes} onNuevoReporte={() => setModalOpen(true)} onEliminar={eliminarReporte} />}
             {seccion === "amenazas" && <Amenazas reportes={reportes} />}
             {seccion === "threatintel" && <ThreatIntel reportes={reportes} />}
             {seccion === "configuracion" && <Configuracion />}
