@@ -282,7 +282,7 @@ MIT © 2026 [Mazagir](https://github.com/mazagir)
 
 <div align="center">
 
-**Construido con ❤️ para proteger a las personas del fraude financiero en Colombia**
+**Construido con ❤️ para proteger a las personas del fraude financiero y engaños**
 
 ⭐ Si este proyecto te parece útil, dale una estrella en GitHub
 
