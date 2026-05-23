@@ -85,7 +85,7 @@ function App() {
       setSubmitting(true);
       setFormStatus({ type: '', message: '' });
 
-      const respuesta = await fetch('http://127.0.0.1:8000/reportes', {
+      const respuesta = await fetch("https://fraude-defender-api.onrender.com/reportes", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
