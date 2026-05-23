@@ -17,6 +17,7 @@ function App() {
 
   const [form, setForm] = useState({
     phone_number: "",
+    bank_account: "",
     domain: "",
     risk_level: "alto",
     description: "",
@@ -41,8 +42,12 @@ function App() {
   };
 
   const handleSubmit = async () => {
-    if (!form.phone_number || !form.domain || !form.description) {
-      setMensaje({ tipo: "error", texto: "Por favor completa todos los campos." });
+    if (!form.phone_number && !form.bank_account && !form.domain) {
+      setMensaje({ tipo: "error", texto: "Debes proporcionar al menos un teléfono, cuenta o dominio." });
+      return;
+    }
+    if (!form.description) {
+      setMensaje({ tipo: "error", texto: "La descripción es obligatoria." });
       return;
     }
     setLoading(true);
@@ -52,13 +57,14 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (response.ok) {
+      if (response.status === 201 || response.ok) {
         setMensaje({ tipo: "ok", texto: "Reporte registrado exitosamente." });
-        setForm({ phone_number: "", domain: "", risk_level: "alto", description: "" });
+        setForm({ phone_number: "", bank_account: "", domain: "", risk_level: "alto", description: "" });
         obtenerReportes();
         setTimeout(() => { setModalOpen(false); setMensaje(null); }, 1500);
       } else {
-        setMensaje({ tipo: "error", texto: "Error al registrar el reporte." });
+        const err = await response.json();
+        setMensaje({ tipo: "error", texto: err.detail || "Error al registrar el reporte." });
       }
     } catch (error) {
       setMensaje({ tipo: "error", texto: "No se pudo conectar con el servidor." });
@@ -193,6 +199,17 @@ function App() {
                   value={form.phone_number}
                   onChange={handleChange}
                   placeholder="+573001112233"
+                  className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-gray-400 mb-1 block">Cuenta Bancaria</label>
+                <input
+                  name="bank_account"
+                  value={form.bank_account}
+                  onChange={handleChange}
+                  placeholder="Número de cuenta (opcional)"
                   className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
