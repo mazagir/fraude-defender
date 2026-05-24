@@ -13,6 +13,7 @@ from app.auth import (
 )
 
 Base.metadata.create_all(bind=engine)
+print("✅ Tablas creadas correctamente")
 
 app = FastAPI(
     title="Fraude Defender API",
