@@ -12,7 +12,7 @@ import {
   PieChart, Pie, Cell, Legend,
 } from "recharts";
 
-const API = "https://fraude-defender-api.onrender.com";
+const API = "https://fraude-defender-api.onrender.com/api/v1";
 const COLORS = ["#ef4444", "#eab308", "#22c55e"];
 const POR_PAGINA = 10;
 
