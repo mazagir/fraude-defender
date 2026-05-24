@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.sql import func
-from app.database import Base
+from app.core.database import Base
 
 class FraudReport(Base):
     __tablename__ = "fraud_reports"
@@ -11,6 +11,8 @@ class FraudReport(Base):
     domain = Column(String, nullable=True)
     description = Column(String, nullable=False)
     risk_level = Column(String, nullable=False)
+    risk_score = Column(Integer, nullable=True)  # Puntuación numérica (0-100)
+    malicious_indicators = Column(String, nullable=True)  # Indicadores encontrados (ej: "TLD sospechoso, Duplicado")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class User(Base):

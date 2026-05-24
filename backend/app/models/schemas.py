@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, EmailStr
+from typing import Optional, List
 from datetime import datetime
 
 class FraudReportCreate(BaseModel):
@@ -11,11 +11,13 @@ class FraudReportCreate(BaseModel):
 
 class FraudReportResponse(BaseModel):
     id: int
-    phone_number: Optional[str]
-    bank_account: Optional[str]
-    domain: Optional[str]
+    phone_number: Optional[str] = None
+    bank_account: Optional[str] = None
+    domain: Optional[str] = None
     description: str
     risk_level: str
+    risk_score: Optional[int] = None
+    malicious_indicators: Optional[str] = None
     created_at: datetime
 
     class Config:

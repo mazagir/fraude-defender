@@ -1,12 +1,21 @@
 import random
 
 # Listas de nombres y apellidos comunes en Colombia para máxima veracidad
-NOMBRES = ["Juan", "Carlos", "Andres", "Luis", "Santiago", "Mateo", "Maria", "Ana", "Andrea", "Diana", "Sandra", "Camila", "Daniela", "Jose", "Jorge", "David"]
-APELLIDOS = ["Rodriguez", "Martinez", "Gomez", "Lopez", "Gonzalez", "Hernandez", "Perez", "Sanchez", "Ramirez", "Torres", "Diaz", "Castro", "Mendoza", "Ospina"]
-PREFIJOS_CELULAR = ["300", "301", "302", "304", "310", "311", "312", "313", "314", "315", "316", "317", "318", "320", "321", "322", "350"]
+NOMBRES = [
+    "Juan", "Carlos", "Andres", "Luis", "Santiago", "Mateo", "Maria", "Ana", 
+    "Andrea", "Diana", "Sandra", "Camila", "Daniela", "Jose", "Jorge", "David"
+]
+APELLIDOS = [
+    "Rodriguez", "Martinez", "Gomez", "Lopez", "Gonzalez", "Hernandez", 
+    "Perez", "Sanchez", "Ramirez", "Torres", "Diaz", "Castro", "Mendoza", "Ospina"
+]
+PREFIJOS_CELULAR = [
+    "300", "301", "302", "304", "310", "311", "312", "313", "314", "315", 
+    "316", "317", "318", "320", "321", "322", "350"
+]
 
-def generar_contacto_falso():
-    """Generar un nombre completo y un número celular colombiano aleatorio."""
+def generar_contacto_falso() -> dict:
+    """Genera un nombre completo y un número celular colombiano aleatorio."""
     nombre = random.choice(NOMBRES)
     if random.random() > 0.5:
         nombre += f" {random.choice(NOMBRES)}"
@@ -22,13 +31,12 @@ def generar_contacto_falso():
         "telefono": telefono
     }
 
-def crear_archivo_vcard(cantidad=200):
+def crear_archivo_vcard(cantidad: int = 200) -> str:
     """
     Genera una cadena de texto en formato .vcf (vCard) 
     con la cantidad de contactos especificada.
     """
     contenido_vcf = ""
-    
     for _ in range(cantidad):
         contacto = generar_contacto_falso()
         

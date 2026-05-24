@@ -1,27 +1,29 @@
 <div align="center">
 
-# 🛡 Fraude Defender
+# 🛡️ AegisShield (Fraude Defender PRO)
 
-**Plataforma de inteligencia y monitoreo para detectar fraudes de aplicaciones de préstamos (Montadeudas)**
+**Plataforma avanzada de inteligencia de amenazas y monitoreo colaborativo contra fraudes financieros y Montadeudas**
 
-[![Estado](https://img.shields.io/badge/estado-beta%20activo-brightgreen?style=for-the-badge)](https://fraude-defender-1176.vercel.app)
+[![Estado](https://img.shields.io/badge/estado-producción%20activo-brightgreen?style=for-the-badge)](https://fraude-defender-1176.vercel.app)
 [![Frontend](https://img.shields.io/badge/Vercel-deployed-black?style=for-the-badge&logo=vercel)](https://fraude-defender-1176.vercel.app)
 [![Backend](https://img.shields.io/badge/Render-live-purple?style=for-the-badge&logo=render)](https://fraude-defender-api.onrender.com)
-[![Python](https://img.shields.io/badge/Python-3.14-blue?style=for-the-badge&logo=python)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.13-blue?style=for-the-badge&logo=python)](https://python.org)
 [![React](https://img.shields.io/badge/React-Vite-61DAFB?style=for-the-badge&logo=react)](https://react.dev)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-336791?style=for-the-badge&logo=postgresql)](https://postgresql.org)
 
-[🚀 Ver App en Vivo](https://fraude-defender-1176.vercel.app) · [📄 Documentación API](https://fraude-defender-api.onrender.com/docs) · [🐛 Reportar Bug](https://github.com/mazagir/fraude-defender/issues)
+[🚀 Ver App en Vivo](https://fraude-defender-1176.vercel.app) · [📄 Documentación API (Swagger)](https://fraude-defender-api.onrender.com/docs) · [🐛 Reportar Bug](https://github.com/mazagir/fraude-defender/issues)
 
 </div>
 
 ---
 
-## 📌 ¿Qué es Fraude Defender?
+## 📌 ¿Qué es AegisShield?
 
-Fraude Defender es una herramienta de **ciberseguridad colaborativa** diseñada para combatir las aplicaciones de préstamos fraudulentas conocidas como *Montadeudas*. Permite registrar, analizar y visualizar indicadores de compromiso (IoCs) como números de teléfono, dominios maliciosos y cuentas bancarias usadas por estafadores.
+AegisShield (originalmente Fraude Defender) es una plataforma de **ciberseguridad colaborativa e inteligencia de amenazas** diseñada específicamente para combatir y mitigar las redes de extorsión digital y aplicaciones de préstamos fraudulentas conocidas como *Montadeudas*. 
 
-> 🇨🇴 Enfocado en el contexto colombiano donde este tipo de fraude ha afectado a miles de personas.
+La plataforma permite registrar, analizar y visualizar Indicadores de Compromiso (IoCs) como números telefónicos, cuentas bancarias de recaudo y dominios de phishing utilizados por los atacantes.
+
+> 🇨🇴 Enfocado en mitigar el fraude financiero digital que afecta al ecosistema colombiano y de LATAM.
 
 ---
 
@@ -29,11 +31,11 @@ Fraude Defender es una herramienta de **ciberseguridad colaborativa** diseñada 
 
 | Servicio | URL |
 |---|---|
-| 🖥 Aplicación web | https://fraude-defender-1176.vercel.app |
-| ⚙ API REST | https://fraude-defender-api.onrender.com |
+| 🖥️ Aplicación Web | https://fraude-defender-1176.vercel.app |
+| ⚙️ API REST (Base) | https://fraude-defender-api.onrender.com |
 | 📄 Swagger UI | https://fraude-defender-api.onrender.com/docs |
 
-> ⚠️ **Nota:** El backend usa plan gratuito de Render. Si no responde al primer intento, espera 30-60 segundos — el servidor se duerme por inactividad.
+> ⚠️ **Nota:** El backend está desplegado en la infraestructura gratuita de Render. Si no responde al primer intento, por favor espera de 30 a 60 segundos a que el servidor se reactive automáticamente.
 
 ---
 
@@ -69,221 +71,205 @@ Fraude Defender es una herramienta de **ciberseguridad colaborativa** diseñada 
 
 ---
 
-## ✨ Funcionalidades
+## ✨ Funcionalidades y Capacidades
 
-| Módulo | Descripción |
-|---|---|
-| 📊 **Dashboard** | Métricas en tiempo real, gráfica de barras y torta por nivel de riesgo |
-| 📋 **Reportes** | Tabla con filtros avanzados por riesgo, teléfono, dominio y descripción |
-| ⚠ **Amenazas** | Top de dominios y teléfonos más reportados, listado de alto riesgo |
-| 🧠 **Threat Intel** | Listas negras automáticas y detección de patrones maliciosos |
-| ⚙ **Configuración** | Reglas de seguridad toggle y gestión de API keys |
-| ➕ **Nuevo Reporte** | Formulario modal para registrar IoCs con validación |
+- **Dashboard de Monitoreo**: Telemetría visual en tiempo real de amenazas y métricas agregadas por severidad.
+- **Threat Intelligence**: Listas negras dinámicas y análisis sintáctico de firmas de fraude.
+- **Motor de Riesgo Heurístico**: Calcula automáticamente una puntuación de riesgo (0-100) basándose en la reputación de los TLDs de dominio, duplicidad de teléfonos/bancos en BD y análisis semántico de keywords del reporte.
+- **Seguridad B2B y API Keys**: Soporte para autenticación por cabecera HTTP (`X-API-KEY`) para integraciones con microservicios externos y automatizaciones.
+- **Defensa Activa (Envenenador de Datos)**: Telemetría de contramedidas para reportar ejecuciones de scripts distractores (decoys) que inyectan identidades falsas en las bases de datos de los extorsionadores.
 
 ---
 
-## 🏗 Arquitectura
+## 🏗️ Arquitectura de Software
 
-```
+El backend ha sido refactorizado siguiendo los principios de **Clean Architecture** (Arquitectura Limpia) para independizar la infraestructura de la lógica de negocio y garantizar la mantenibilidad.
+
+```text
 fraude-defender/
-├── backend/                  # API REST
+├── backend/                        # API REST en Python (FastAPI)
 │   ├── app/
-│   │   ├── main.py           # Endpoints FastAPI
-│   │   ├── models.py         # Modelos SQLAlchemy
-│   │   ├── schemas.py        # Validación Pydantic
-│   │   └── database.py       # Conexión PostgreSQL
+│   │   ├── main.py                 # Inicializador y configuración de la aplicación
+│   │   ├── api/                    # Capa de Presentación (Controladores HTTP)
+│   │   │   ├── deps.py             # Inyección de dependencias (Auth JWT, API Key, DB)
+│   │   │   └── v1/
+│   │   │       ├── router.py       # Enrutador centralizado
+│   │   │       └── endpoints/      # Endpoints versionados (auth.py, reports.py)
+│   │   ├── core/                   # Capa de Infraestructura Transversal
+│   │   │   ├── config.py           # Configuración con Pydantic Settings
+│   │   │   ├── database.py         # Conexión SQLAlchemy
+│   │   │   └── security.py         # Criptografía, JWT y password hashing
+│   │   ├── models/                 # Capa de Dominio (Modelos)
+│   │   │   ├── db.py               # Tablas base de datos (User, FraudReport)
+│   │   │   └── schemas.py          # Esquemas Pydantic
+│   │   ├── services/               # Capa de Aplicación (Lógica de negocio)
+│   │   │   ├── auth.py             # Casos de uso de autenticación de analistas
+│   │   │   ├── reports.py          # Casos de uso de gestión de reportes y contramedidas
+│   │   │   └── risk_engine.py      # Motor inteligente de scoring de riesgo
+│   │   └── utils/                  # Capa de Utilidades
+│   │       └── generator.py        # Generador de vCards y teléfonos ficticios
+│   ├── tests/                      # Suite de pruebas automatizadas
+│   │   └── test_api.py
+│   ├── tools/                      # Scripts de automatización y binarios ADB
+│   │   └── poison_payload.py       # Payload para envenenar DB de apps maliciosas
 │   └── requirements.txt
-├── frontend/                 # Interfaz de usuario
+├── frontend/                       # Interfaz SPA en React (Vite)
 │   └── src/
-│       └── App.jsx           # SPA con navegación entre módulos
-└── docs/
-    └── screenshots/          # Capturas de pantalla
-```
-
-```
-Usuario → Vercel (React/Vite) → Render (FastAPI) → PostgreSQL
+│       ├── App.jsx                 # SPA React principal
+│       └── services/
+│           └── api.js              # Cliente API y cabeceras
+└── docs/                           # Documentación y Capturas
 ```
 
 ---
 
 ## 🚀 Stack Tecnológico
 
-| Capa | Tecnología | Por qué |
+| Capa | Tecnología | Propósito |
 |---|---|---|
-| Frontend | React + Vite | Rápido, componentes reutilizables |
-| Estilos | Tailwind CSS | Utilidades sin CSS custom |
-| Animaciones | Framer Motion | Transiciones fluidas entre módulos |
-| Gráficas | Recharts | Gráficas declarativas en React |
-| Backend | Python + FastAPI | Alto rendimiento, docs automáticas |
-| ORM | SQLAlchemy | Queries seguras y migraciones |
-| Validación | Pydantic | Schemas tipados en Python |
-| Base de datos | PostgreSQL 18 | Robusto y open source |
-| Deploy Frontend | Vercel | CI/CD automático desde GitHub |
-| Deploy Backend | Render | Fácil deploy de APIs Python |
+| **Frontend** | React (Vite) | SPA reactiva y componentes modulares de alto desempeño. |
+| **Estilos** | Tailwind CSS | Sistema de diseño responsivo basado en utilidades de CSS. |
+| **Animaciones** | Framer Motion | Transiciones e interacciones fluidas entre vistas. |
+| **Gráficas** | Recharts | Renderizado interactivo de telemetría y métricas de riesgo. |
+| **Backend** | Python + FastAPI | API REST de alto rendimiento con generación automática de OpenAPI. |
+| **ORM** | SQLAlchemy | Capa de abstracción de base de datos segura contra inyecciones SQL. |
+| **Validación** | Pydantic | Validación estricta y tipado de payloads JSON en entrada y salida. |
+| **Base de datos**| PostgreSQL / SQLite | Persistencia relacional óptima para desarrollo y producción. |
 
 ---
 
-## ⚙ Instalación Local
+## ⚙️ Instalación Local
 
-### Requisitos previos
+### Requisitos Previos
 - Node.js 18+
 - Python 3.10+
-- PostgreSQL
+- PostgreSQL (opcional, por defecto local usa SQLite)
 
 ### 1. Clonar el repositorio
-
 ```bash
 git clone https://github.com/mazagir/fraude-defender.git
 cd fraude-defender
 ```
 
-### 2. Configurar el Backend
-
+### 2. Levantar el Backend
 ```bash
 cd backend
 python -m venv venv
 
-# Linux/Mac
+# Activar Entorno Virtual (Windows)
+.\venv\Scripts\activate
+
+# Activar Entorno Virtual (Linux/Mac)
 source venv/bin/activate
 
-# Windows
-venv\Scripts\activate
-
+# Instalar dependencias
 pip install -r requirements.txt
+
+# Ejecutar Suite de Pruebas Automatizadas
+python tests/test_api.py
 ```
 
-Crea el archivo `backend/.env`:
-
+Crea un archivo `.env` en la raíz de `backend/` si deseas conectarte a PostgreSQL (si no se define, el backend levantará automáticamente una base de datos local SQLite `aegis_shield.db`):
 ```env
 DATABASE_URL=postgresql://usuario:password@localhost/fraude_defender_db
+SECRET_KEY=clave_super_secreta_jwt_de_produccion
+ALLOWED_API_KEYS=aegis_dev_api_key_2026,key_b2b_produccion
 ```
 
-Inicia el servidor:
-
+Inicia el servidor web FastAPI:
 ```bash
 uvicorn app.main:app --reload
 ```
+- API disponible en: `http://localhost:8000`
+- Swagger UI interactivo en: `http://localhost:8000/docs`
 
-✅ API disponible en `http://localhost:8000`
-📄 Documentación en `http://localhost:8000/docs`
-
-### 3. Configurar el Frontend
-
+### 3. Levantar el Frontend
 ```bash
-cd frontend
+cd ../frontend
 npm install
 ```
 
-Crea el archivo `frontend/.env`:
-
-```env
-VITE_API_URL=http://localhost:8000
+Crea o edita el archivo `frontend/src/services/api.js` (o `.env` si aplica) para apuntar a la dirección local del backend:
+```javascript
+const API = "http://localhost:8000";
 ```
 
-Inicia el servidor de desarrollo:
-
+Inicia el servidor de desarrollo Vite:
 ```bash
 npm run dev
 ```
-
-✅ App disponible en `http://localhost:5173`
-
----
-
-## 📡 API Reference
-
-| Método | Endpoint | Descripción |
-|---|---|---|
-| `GET` | `/reportes` | Listar todos los reportes ordenados por fecha |
-| `POST` | `/reportes` | Crear nuevo reporte de fraude |
-| `POST` | `/reportes/contramedida` | Registrar ejecución de contramedida |
-| `GET` | `/reportes/metricas/contramedidas` | Telemetría de contramedidas |
-
-### Ejemplo: Crear reporte
-
-```bash
-curl -X POST https://fraude-defender-api.onrender.com/reportes \
-  -H "Content-Type: application/json" \
-  -d '{
-    "phone_number": "+573001112233",
-    "bank_account": "987654321",
-    "domain": "prestamos-rapidos.xyz",
-    "risk_level": "alto",
-    "description": "Aplicación usada para amenazas y extorsión"
-  }'
-```
-
-### Niveles de riesgo válidos
-
-| Valor | Descripción |
-|---|---|
-| `alto` | Amenaza confirmada, acción inmediata requerida |
-| `medio` | Comportamiento sospechoso en investigación |
-| `bajo` | Indicador débil, requiere más evidencia |
+- Frontend interactivo disponible en: `http://localhost:5173`
 
 ---
 
-## 🔐 Variables de Entorno
+## 📡 API Reference (Endpoints principales)
 
-### Backend (`backend/.env`)
+AegisShield soporta versionado centralizado. Se puede acceder a los recursos mediante el prefijo `/api/v1/` o mediante las rutas legadas sin prefijo (mantenidas por compatibilidad retroactiva).
 
-| Variable | Requerida | Descripción |
-|---|---|---|
-| `DATABASE_URL` | ✅ | URL de conexión PostgreSQL |
+### Autenticación (`/api/v1/auth`)
 
-### Frontend (`frontend/.env`)
+| Método | Endpoint | Cabecera Auth | Descripción |
+|---|---|---|---|
+| `POST` | `/registro` | Ninguna | Registra un nuevo analista de ciberseguridad. |
+| `POST` | `/login` | Ninguna | Valida credenciales y genera un token Bearer JWT. |
+| `GET` | `/me` | `Bearer <JWT>` | Retorna los detalles del analista autenticado. |
 
-| Variable | Requerida | Descripción |
-|---|---|---|
-| `VITE_API_URL` | ✅ | URL base del backend API |
+### Indicadores de Fraude (`/api/v1/reportes`)
+
+| Método | Endpoint | Cabecera Auth | Descripción |
+|---|---|---|---|
+| `GET` | `/` | `Bearer <JWT>` o `X-API-KEY` | Obtiene la lista completa de reportes de IoCs ordenados cronológicamente. |
+| `POST` | `/` | `Bearer <JWT>` o `X-API-KEY` | Registra un nuevo IoC. El motor evalúa y asigna el riesgo automáticamente. |
+| `DELETE`| `/{id}` | `Bearer <JWT>` o `X-API-KEY` | Elimina un reporte por su ID de base de datos. |
+| `POST` | `/contramedida` | Ninguna | Endpoint público para reportar la inyección de señuelos por ADB. |
+| `GET` | `/metricas/contramedidas` | Ninguna | Endpoint público para leer telemetría de contramedidas activas. |
 
 ---
 
-## 🗺 Roadmap
+## 🔐 Cabeceras de Seguridad Permitidas
 
-- [x] Dashboard con métricas en tiempo real
-- [x] Módulo de reportes con filtros
-- [x] Detección de amenazas activas
-- [x] Threat Intelligence con listas negras
-- [x] API REST documentada
-- [x] Deploy en producción
-- [ ] Autenticación de usuarios
-- [ ] Notificaciones por email al registrar alto riesgo
-- [ ] WebSockets para actualizaciones en tiempo real
-- [ ] Exportar reportes a PDF/CSV
-- [ ] App móvil
+Para integraciones externas o scripts (B2B):
+- Cabecera: `X-API-KEY`
+- Valor: Cualquier llave configurada en la variable de entorno `ALLOWED_API_KEYS`.
+
+---
+
+## 🗺️ Roadmap de la Plataforma
+
+- [x] Dashboard con métricas visuales en tiempo real.
+- [x] Gestión colaborativa de reportes de fraude e indicadores.
+- [x] Autenticación de analistas mediante firmas de tokens JWT.
+- [x] Soporte para API Keys de integración externa (B2B).
+- [x] Refactorización de código a Arquitectura Limpia (Clean Architecture).
+- [x] Motor dinámico de detección de severidad de amenazas.
+- [ ] Notificaciones por canal de mensajería (Slack/Discord) al detectar reportes de riesgo Crítico.
+- [ ] Integración de WebSockets para actualizar métricas en caliente.
+- [ ] Exportación de reportes forenses en formato PDF/CSV.
+- [ ] Aplicación móvil nativa para reportar IoCs desde Android/iOS.
 
 ---
 
 ## 🤝 Contribuir
 
-Las contribuciones son bienvenidas. Para cambios importantes, por favor abre un issue primero.
-
-```bash
-# Fork → Clone → Branch → Commit → Push → Pull Request
-git checkout -b feature/nueva-funcionalidad
-git commit -m "feat: agregar nueva funcionalidad"
-git push origin feature/nueva-funcionalidad
-```
-
----
-
-## 🔒 Seguridad
-
-Si descubres una vulnerabilidad de seguridad, por favor repórtala de forma responsable abriendo un issue privado o contactando directamente al equipo. No publiques vulnerabilidades de forma pública.
+Si deseas colaborar con el desarrollo de AegisShield:
+1. Realiza un Fork del repositorio.
+2. Crea una rama para tu feature: `git checkout -b feature/nueva-funcionalidad`.
+3. Haz un commit con tus cambios: `git commit -m "feat: agregar validaciones avanzadas"`.
+4. Envía la rama a GitHub: `git push origin feature/nueva-funcionalidad`.
+5. Abre una solicitud de extracción (Pull Request) hacia la rama principal.
 
 ---
 
 ## 📄 Licencia
 
-MIT © 2026 [Mazagir](https://github.com/mazagir)
+Este proyecto está bajo la Licencia MIT © 2026 [Mazagir](https://github.com/mazagir).
 
 ---
 
 <div align="center">
 
-**Construido con ❤️ para proteger a las personas del fraude financiero y engaños**
+**Desarrollado con ❤️ para blindar a las comunidades frente a las redes de extorsión digital y fraude financiero**
 
-⭐ Si este proyecto te parece útil, dale una estrella en GitHub
+⭐ Si esta plataforma te es de utilidad para investigaciones o defensa, ¡danos una estrella en GitHub!
 
 </div>
