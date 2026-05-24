@@ -21,7 +21,6 @@ class FraudReportResponse(BaseModel):
     class Config:
         from_attributes = True
 
-# Auth schemas
 class UsuarioCreate(BaseModel):
     nombre: str
     email: EmailStr
