@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
@@ -23,7 +23,7 @@ class FraudReportResponse(BaseModel):
 
 class UsuarioCreate(BaseModel):
     nombre: str
-    email: EmailStr
+    email: str
     password: str
 
 class UsuarioResponse(BaseModel):
