@@ -4,7 +4,8 @@ import {
   FaShieldAlt, FaExclamationTriangle, FaGlobe, FaPhone,
   FaChartBar, FaBug, FaCog, FaBars, FaPlus, FaTimes,
   FaFilter, FaKey, FaListAlt, FaBrain, FaTrash,
-  FaChevronLeft, FaChevronRight, FaInbox,
+  FaChevronLeft, FaChevronRight, FaInbox, FaLock,
+  FaUserShield, FaSignOutAlt, FaEye, FaEyeSlash,
 } from "react-icons/fa";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -14,6 +15,163 @@ import {
 const API = "https://fraude-defender-api.onrender.com";
 const COLORS = ["#ef4444", "#eab308", "#22c55e"];
 const POR_PAGINA = 10;
+
+// ─── AUTH HELPERS ─────────────────────────────────────────────
+const getToken = () => localStorage.getItem("fd_token");
+const getUsuario = () => JSON.parse(localStorage.getItem("fd_usuario") || "null");
+const setAuth = (token, usuario) => {
+  localStorage.setItem("fd_token", token);
+  localStorage.setItem("fd_usuario", JSON.stringify(usuario));
+};
+const clearAuth = () => {
+  localStorage.removeItem("fd_token");
+  localStorage.removeItem("fd_usuario");
+};
+const authHeaders = () => ({ "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` });
+
+// ─── LOGIN / REGISTRO ─────────────────────────────────────────
+function AuthScreen({ onAuth }) {
+  const [modo, setModo] = useState("login");
+  const [form, setForm] = useState({ nombre: "", email: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [showPass, setShowPass] = useState(false);
+
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleSubmit = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      if (modo === "registro") {
+        const res = await fetch(`${API}/auth/registro`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || "Error al registrarse.");
+        }
+        setModo("login");
+        setError({ tipo: "ok", texto: "Cuenta creada. Ahora inicia sesión." });
+      } else {
+        const formData = new FormData();
+        formData.append("username", form.email);
+        formData.append("password", form.password);
+        const res = await fetch(`${API}/auth/login`, { method: "POST", body: formData });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || "Credenciales incorrectas.");
+        }
+        const data = await res.json();
+        setAuth(data.access_token, data.usuario);
+        onAuth(data.usuario);
+      }
+    } catch (e) {
+      setError({ tipo: "error", texto: e.message });
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+      {/* Background grid */}
+      <div className="absolute inset-0 opacity-5" style={{
+        backgroundImage: "linear-gradient(#22c55e 1px, transparent 1px), linear-gradient(90deg, #22c55e 1px, transparent 1px)",
+        backgroundSize: "50px 50px"
+      }} />
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative w-full max-w-md"
+      >
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="bg-green-500 bg-opacity-20 border border-green-500 rounded-full p-4">
+              <FaUserShield className="text-5xl text-green-400" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-1">🛡 Fraude Defender</h1>
+          <p className="text-green-400 font-mono text-sm tracking-widest">CENTRO DE INTELIGENCIA</p>
+          <div className="mt-3 flex items-center justify-center gap-2 text-gray-500 text-xs">
+            <FaLock className="text-green-500" />
+            <span>Acceso restringido — Solo analistas autorizados</span>
+          </div>
+        </div>
+
+        {/* Card */}
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-2xl">
+          {/* Tabs */}
+          <div className="flex bg-gray-800 rounded-xl p-1 mb-6">
+            {["login", "registro"].map((m) => (
+              <button key={m} onClick={() => { setModo(m); setError(null); }}
+                className={`flex-1 py-2 rounded-lg font-bold text-sm capitalize transition ${modo === m ? "bg-green-500 text-white" : "text-gray-400 hover:text-white"}`}>
+                {m === "login" ? "Iniciar Sesión" : "Registrarse"}
+              </button>
+            ))}
+          </div>
+
+          {modo === "registro" && (
+            <div className="mb-4 p-3 bg-blue-900 bg-opacity-30 border border-blue-700 rounded-xl text-xs text-blue-300">
+              🔐 El registro está abierto solo para analistas que forman parte de la red de inteligencia contra fraudes. Tu cuenta será parte de la base de datos de protección colectiva.
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {modo === "registro" && (
+              <div>
+                <label className="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Nombre completo</label>
+                <input name="nombre" value={form.nombre} onChange={handleChange} placeholder="Tu nombre"
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+              </div>
+            )}
+
+            <div>
+              <label className="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Correo electrónico</label>
+              <input name="email" value={form.email} onChange={handleChange} placeholder="analista@ejemplo.com" type="email"
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+            </div>
+
+            <div>
+              <label className="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Contraseña</label>
+              <div className="relative">
+                <input name="password" value={form.password} onChange={handleChange}
+                  placeholder={modo === "registro" ? "Mínimo 8 caracteres" : "Tu contraseña"}
+                  type={showPass ? "text" : "password"}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent pr-12" />
+                <button onClick={() => setShowPass(!showPass)} className="absolute right-3 top-3.5 text-gray-400 hover:text-white">
+                  {showPass ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
+            </div>
+
+            {error && (
+              <div className={`text-sm px-4 py-2 rounded-xl ${error.tipo === "ok" ? "bg-green-900 text-green-300 border border-green-700" : "bg-red-900 text-red-300 border border-red-700"}`}>
+                {error.texto}
+              </div>
+            )}
+
+            <button onClick={handleSubmit} disabled={loading}
+              className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2">
+              {loading ? (
+                <span className="animate-pulse">Verificando identidad...</span>
+              ) : (
+                <>{modo === "login" ? <><FaLock /> Acceder al Centro</> : <><FaUserShield /> Unirme a la Red</>}</>
+              )}
+            </button>
+          </div>
+        </div>
+
+        <p className="text-center text-gray-600 text-xs mt-4">
+          Fraude Defender v2.0 · Plataforma de Inteligencia Colaborativa
+        </p>
+      </motion.div>
+    </div>
+  );
+}
 
 // ─── EMPTY STATE ──────────────────────────────────────────────
 function EmptyState({ mensaje = "No hay datos para mostrar" }) {
@@ -34,27 +192,18 @@ function Paginacion({ total, pagina, onChange }) {
     <div className="flex items-center justify-between mt-4 px-2">
       <span className="text-gray-500 text-sm">{total} resultados · Página {pagina} de {totalPaginas}</span>
       <div className="flex gap-2">
-        <button
-          onClick={() => onChange(pagina - 1)}
-          disabled={pagina === 1}
-          className="px-3 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition"
-        >
+        <button onClick={() => onChange(pagina - 1)} disabled={pagina === 1}
+          className="px-3 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition">
           <FaChevronLeft />
         </button>
         {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((p) => (
-          <button
-            key={p}
-            onClick={() => onChange(p)}
-            className={`px-3 py-2 rounded-lg font-bold text-sm transition ${p === pagina ? "bg-green-500 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"}`}
-          >
+          <button key={p} onClick={() => onChange(p)}
+            className={`px-3 py-2 rounded-lg font-bold text-sm transition ${p === pagina ? "bg-green-500 text-white" : "bg-gray-800 text-gray-300 hover:bg-gray-700"}`}>
             {p}
           </button>
         ))}
-        <button
-          onClick={() => onChange(pagina + 1)}
-          disabled={pagina === totalPaginas}
-          className="px-3 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition"
-        >
+        <button onClick={() => onChange(pagina + 1)} disabled={pagina === Math.ceil(total / POR_PAGINA)}
+          className="px-3 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition">
           <FaChevronRight />
         </button>
       </div>
@@ -67,19 +216,15 @@ function TablaReportes({ reportes, onEliminar, paginar = false }) {
   const [pagina, setPagina] = useState(1);
   const [eliminando, setEliminando] = useState(null);
 
-  const paginados = paginar
-    ? reportes.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA)
-    : reportes;
+  const paginados = paginar ? reportes.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA) : reportes;
 
   const handleEliminar = async (id) => {
     if (!window.confirm("¿Seguro que deseas eliminar este reporte?")) return;
     setEliminando(id);
     try {
-      await fetch(`${API}/reportes/${id}`, { method: "DELETE" });
+      await fetch(`${API}/reportes/${id}`, { method: "DELETE", headers: authHeaders() });
       if (onEliminar) onEliminar(id);
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
     setEliminando(null);
   };
 
@@ -112,11 +257,8 @@ function TablaReportes({ reportes, onEliminar, paginar = false }) {
               <td className="p-3 text-gray-300">{r.description}</td>
               {onEliminar && (
                 <td className="p-3 text-center">
-                  <button
-                    onClick={() => handleEliminar(r.id)}
-                    disabled={eliminando === r.id}
-                    className="text-red-400 hover:text-red-300 hover:bg-red-900 hover:bg-opacity-30 p-2 rounded-lg transition disabled:opacity-50"
-                  >
+                  <button onClick={() => handleEliminar(r.id)} disabled={eliminando === r.id}
+                    className="text-red-400 hover:text-red-300 hover:bg-red-900 hover:bg-opacity-30 p-2 rounded-lg transition disabled:opacity-50">
                     <FaTrash />
                   </button>
                 </td>
@@ -234,27 +376,19 @@ function Reportes({ reportes, onNuevoReporte, onEliminar }) {
           <FaPlus /> Nuevo Reporte
         </button>
       </div>
-
       <div className="bg-gray-900 rounded-2xl p-6 mb-6 shadow-lg flex flex-wrap gap-4 items-center">
         <FaFilter className="text-green-400" />
-        <input
-          placeholder="Buscar por teléfono, dominio o descripción..."
-          value={filtroBusqueda}
+        <input placeholder="Buscar por teléfono, dominio o descripción..." value={filtroBusqueda}
           onChange={(e) => setFiltroBusqueda(e.target.value)}
-          className="bg-gray-800 rounded-xl px-4 py-2 text-white outline-none focus:ring-2 focus:ring-green-500 flex-1 min-w-48"
-        />
+          className="bg-gray-800 rounded-xl px-4 py-2 text-white outline-none focus:ring-2 focus:ring-green-500 flex-1 min-w-48" />
         {["todos", "alto", "medio", "bajo"].map((nivel) => (
-          <button
-            key={nivel}
-            onClick={() => setFiltroRiesgo(nivel)}
-            className={`px-4 py-2 rounded-xl font-bold capitalize transition ${filtroRiesgo === nivel ? "bg-green-500 text-white" : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`}
-          >
+          <button key={nivel} onClick={() => setFiltroRiesgo(nivel)}
+            className={`px-4 py-2 rounded-xl font-bold capitalize transition ${filtroRiesgo === nivel ? "bg-green-500 text-white" : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`}>
             {nivel}
           </button>
         ))}
         <span className="text-gray-500 text-sm">{filtrados.length} resultados</span>
       </div>
-
       <div className="bg-gray-900 rounded-2xl p-6 shadow-lg overflow-auto">
         <TablaReportes reportes={filtrados} onEliminar={onEliminar} paginar={true} />
       </div>
@@ -268,7 +402,6 @@ function Amenazas({ reportes }) {
   const dominiosMasFrecuentes = Object.entries(
     reportes.reduce((acc, r) => { if (r.domain) acc[r.domain] = (acc[r.domain] || 0) + 1; return acc; }, {})
   ).sort((a, b) => b[1] - a[1]).slice(0, 5);
-
   const telefonosMasFrecuentes = Object.entries(
     reportes.reduce((acc, r) => { if (r.phone_number) acc[r.phone_number] = (acc[r.phone_number] || 0) + 1; return acc; }, {})
   ).sort((a, b) => b[1] - a[1]).slice(0, 5);
@@ -276,7 +409,6 @@ function Amenazas({ reportes }) {
   return (
     <>
       <h1 className="text-4xl font-bold mb-8">Amenazas Activas</h1>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-red-900 bg-opacity-40 border border-red-500 rounded-2xl p-6">
           <FaExclamationTriangle className="text-3xl text-red-400 mb-3" />
@@ -294,13 +426,11 @@ function Amenazas({ reportes }) {
           <p className="text-gray-300">Números Recurrentes</p>
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-gray-900 rounded-2xl p-6 shadow-lg">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><FaGlobe className="text-red-400" /> Dominios más reportados</h2>
-          {dominiosMasFrecuentes.length === 0
-            ? <EmptyState mensaje="Sin dominios reportados aún" />
-            : dominiosMasFrecuentes.map(([d, c]) => (
+          {dominiosMasFrecuentes.length === 0 ? <EmptyState mensaje="Sin dominios reportados aún" /> :
+            dominiosMasFrecuentes.map(([d, c]) => (
               <div key={d} className="flex justify-between items-center py-2 border-b border-gray-800">
                 <span className="text-gray-300">{d}</span>
                 <span className="bg-red-500 text-white text-xs px-3 py-1 rounded-full font-bold">{c} reportes</span>
@@ -309,9 +439,8 @@ function Amenazas({ reportes }) {
         </div>
         <div className="bg-gray-900 rounded-2xl p-6 shadow-lg">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><FaPhone className="text-yellow-400" /> Teléfonos más reportados</h2>
-          {telefonosMasFrecuentes.length === 0
-            ? <EmptyState mensaje="Sin teléfonos reportados aún" />
-            : telefonosMasFrecuentes.map(([t, c]) => (
+          {telefonosMasFrecuentes.length === 0 ? <EmptyState mensaje="Sin teléfonos reportados aún" /> :
+            telefonosMasFrecuentes.map(([t, c]) => (
               <div key={t} className="flex justify-between items-center py-2 border-b border-gray-800">
                 <span className="text-gray-300">{t}</span>
                 <span className="bg-yellow-500 text-white text-xs px-3 py-1 rounded-full font-bold">{c} reportes</span>
@@ -319,7 +448,6 @@ function Amenazas({ reportes }) {
             ))}
         </div>
       </div>
-
       <div className="bg-gray-900 rounded-2xl p-6 shadow-lg overflow-auto">
         <h2 className="text-xl font-bold mb-4 text-red-400">⚠ Reportes de Alto Riesgo</h2>
         <TablaReportes reportes={altos} />
@@ -333,7 +461,6 @@ function ThreatIntel({ reportes }) {
   const dominios = [...new Set(reportes.map(r => r.domain).filter(Boolean))];
   const telefonos = [...new Set(reportes.map(r => r.phone_number).filter(Boolean))];
   const cuentas = [...new Set(reportes.map(r => r.bank_account).filter(Boolean))];
-
   const patrones = [
     { patron: "Dominios con extensiones de alto riesgo (.xyz, .top, .click)", detectados: dominios.filter(d => /\.(xyz|top|click|loan|cash)$/.test(d)).length },
     { patron: "Números con prefijo internacional sospechoso", detectados: telefonos.filter(t => t.startsWith("+") && !t.startsWith("+57")).length },
@@ -343,25 +470,19 @@ function ThreatIntel({ reportes }) {
   return (
     <>
       <h1 className="text-4xl font-bold mb-8 flex items-center gap-3"><FaBrain className="text-purple-400" /> Threat Intelligence</h1>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gray-900 rounded-2xl p-6 shadow-lg text-center">
-          <FaGlobe className="text-4xl text-purple-400 mx-auto mb-3" />
-          <h2 className="text-3xl font-bold">{dominios.length}</h2>
-          <p className="text-gray-400">Dominios únicos en lista negra</p>
-        </div>
-        <div className="bg-gray-900 rounded-2xl p-6 shadow-lg text-center">
-          <FaPhone className="text-4xl text-pink-400 mx-auto mb-3" />
-          <h2 className="text-3xl font-bold">{telefonos.length}</h2>
-          <p className="text-gray-400">Teléfonos únicos bloqueados</p>
-        </div>
-        <div className="bg-gray-900 rounded-2xl p-6 shadow-lg text-center">
-          <FaListAlt className="text-4xl text-orange-400 mx-auto mb-3" />
-          <h2 className="text-3xl font-bold">{cuentas.length}</h2>
-          <p className="text-gray-400">Cuentas bancarias marcadas</p>
-        </div>
+        {[
+          { icon: <FaGlobe className="text-4xl text-purple-400 mx-auto mb-3" />, val: dominios.length, label: "Dominios únicos en lista negra" },
+          { icon: <FaPhone className="text-4xl text-pink-400 mx-auto mb-3" />, val: telefonos.length, label: "Teléfonos únicos bloqueados" },
+          { icon: <FaListAlt className="text-4xl text-orange-400 mx-auto mb-3" />, val: cuentas.length, label: "Cuentas bancarias marcadas" },
+        ].map((c, i) => (
+          <div key={i} className="bg-gray-900 rounded-2xl p-6 shadow-lg text-center">
+            {c.icon}
+            <h2 className="text-3xl font-bold">{c.val}</h2>
+            <p className="text-gray-400">{c.label}</p>
+          </div>
+        ))}
       </div>
-
       <div className="bg-gray-900 rounded-2xl p-6 mb-6 shadow-lg">
         <h2 className="text-xl font-bold mb-4">🔍 Patrones de Riesgo Detectados</h2>
         {patrones.map((p, i) => (
@@ -373,26 +494,19 @@ function ThreatIntel({ reportes }) {
           </div>
         ))}
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-gray-900 rounded-2xl p-6 shadow-lg">
           <h2 className="text-lg font-bold mb-4 text-purple-400">Lista Negra — Dominios</h2>
           <div className="space-y-2 max-h-64 overflow-auto">
-            {dominios.length === 0
-              ? <EmptyState mensaje="Sin dominios registrados" />
-              : dominios.map((d, i) => (
-                <div key={i} className="bg-gray-800 rounded-lg px-4 py-2 text-sm text-red-300 font-mono">{d}</div>
-              ))}
+            {dominios.length === 0 ? <EmptyState mensaje="Sin dominios registrados" /> :
+              dominios.map((d, i) => <div key={i} className="bg-gray-800 rounded-lg px-4 py-2 text-sm text-red-300 font-mono">{d}</div>)}
           </div>
         </div>
         <div className="bg-gray-900 rounded-2xl p-6 shadow-lg">
           <h2 className="text-lg font-bold mb-4 text-pink-400">Lista Negra — Teléfonos</h2>
           <div className="space-y-2 max-h-64 overflow-auto">
-            {telefonos.length === 0
-              ? <EmptyState mensaje="Sin teléfonos registrados" />
-              : telefonos.map((t, i) => (
-                <div key={i} className="bg-gray-800 rounded-lg px-4 py-2 text-sm text-yellow-300 font-mono">{t}</div>
-              ))}
+            {telefonos.length === 0 ? <EmptyState mensaje="Sin teléfonos registrados" /> :
+              telefonos.map((t, i) => <div key={i} className="bg-gray-800 rounded-lg px-4 py-2 text-sm text-yellow-300 font-mono">{t}</div>)}
           </div>
         </div>
       </div>
@@ -401,7 +515,7 @@ function ThreatIntel({ reportes }) {
 }
 
 // ─── CONFIGURACIÓN ────────────────────────────────────────────
-function Configuracion() {
+function Configuracion({ usuario, onLogout }) {
   const [reglas, setReglas] = useState([
     { id: 1, nombre: "Alerta riesgo alto automática", activa: true },
     { id: 2, nombre: "Bloquear dominios .xyz por defecto", activa: false },
@@ -411,26 +525,36 @@ function Configuracion() {
   const [copiado, setCopiado] = useState(false);
 
   const toggleRegla = (id) => setReglas(reglas.map(r => r.id === id ? { ...r, activa: !r.activa } : r));
-
-  const copiarKey = () => {
-    navigator.clipboard.writeText(apiKey);
-    setCopiado(true);
-    setTimeout(() => setCopiado(false), 2000);
-  };
+  const copiarKey = () => { navigator.clipboard.writeText(apiKey); setCopiado(true); setTimeout(() => setCopiado(false), 2000); };
 
   return (
     <>
       <h1 className="text-4xl font-bold mb-8 flex items-center gap-3"><FaCog className="text-gray-400" /> Configuración</h1>
 
       <div className="bg-gray-900 rounded-2xl p-6 mb-6 shadow-lg">
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><FaUserShield className="text-green-400" /> Mi Perfil</h2>
+        <div className="flex items-center gap-4">
+          <div className="bg-green-500 bg-opacity-20 border border-green-500 rounded-full p-4">
+            <FaUserShield className="text-3xl text-green-400" />
+          </div>
+          <div>
+            <p className="font-bold text-white text-lg">{usuario?.nombre}</p>
+            <p className="text-gray-400 text-sm">{usuario?.email}</p>
+            <p className="text-green-400 text-xs mt-1">✓ Analista autorizado</p>
+          </div>
+          <button onClick={onLogout} className="ml-auto flex items-center gap-2 bg-red-900 bg-opacity-40 border border-red-700 hover:bg-red-800 text-red-400 font-bold px-4 py-2 rounded-xl transition">
+            <FaSignOutAlt /> Cerrar sesión
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-gray-900 rounded-2xl p-6 mb-6 shadow-lg">
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><FaListAlt className="text-green-400" /> Reglas de Seguridad</h2>
         {reglas.map((r) => (
           <div key={r.id} className="flex justify-between items-center py-4 border-b border-gray-800">
             <span className="text-gray-300">{r.nombre}</span>
-            <button
-              onClick={() => toggleRegla(r.id)}
-              className={`px-4 py-2 rounded-xl font-bold text-sm transition ${r.activa ? "bg-green-500 hover:bg-green-600" : "bg-gray-700 hover:bg-gray-600 text-gray-400"}`}
-            >
+            <button onClick={() => toggleRegla(r.id)}
+              className={`px-4 py-2 rounded-xl font-bold text-sm transition ${r.activa ? "bg-green-500 hover:bg-green-600" : "bg-gray-700 hover:bg-gray-600 text-gray-400"}`}>
               {r.activa ? "Activa" : "Inactiva"}
             </button>
           </div>
@@ -473,7 +597,7 @@ function ModalReporte({ onClose, onSuccess }) {
     try {
       const res = await fetch(`${API}/reportes`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(),
         body: JSON.stringify(form),
       });
       if (res.status === 201 || res.ok) {
@@ -539,24 +663,32 @@ function ModalReporte({ onClose, onSuccess }) {
 
 // ─── APP PRINCIPAL ────────────────────────────────────────────
 function App() {
+  const [usuario, setUsuario] = useState(getUsuario());
   const [seccion, setSeccion] = useState("dashboard");
   const [reportes, setReportes] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
-  useEffect(() => { obtenerReportes(); }, []);
+  useEffect(() => { if (usuario) obtenerReportes(); }, [usuario]);
 
   const obtenerReportes = async () => {
     try {
-      const res = await fetch(`${API}/reportes`);
+      const res = await fetch(`${API}/reportes`, { headers: authHeaders() });
+      if (res.status === 401) { handleLogout(); return; }
       const data = await res.json();
       setReportes(data);
     } catch (e) { console.error(e); }
   };
 
-  const eliminarReporte = (id) => {
-    setReportes(prev => prev.filter(r => r.id !== id));
+  const handleAuth = (u) => setUsuario(u);
+
+  const handleLogout = () => {
+    clearAuth();
+    setUsuario(null);
+    setReportes([]);
   };
+
+  const eliminarReporte = (id) => setReportes(prev => prev.filter(r => r.id !== id));
 
   const navItems = [
     { id: "dashboard", icon: <FaChartBar />, label: "Dashboard" },
@@ -566,10 +698,13 @@ function App() {
     { id: "configuracion", icon: <FaCog />, label: "Configuración" },
   ];
 
+  if (!usuario) return <AuthScreen onAuth={handleAuth} />;
+
   return (
     <div className="flex bg-gray-950 text-white min-h-screen">
       <div className={`fixed md:relative z-50 bg-gray-900 w-64 min-h-screen p-6 transition-all duration-300 ${menuOpen ? "left-0" : "-left-64 md:left-0"}`}>
-        <h1 className="text-2xl font-bold mb-10 text-green-400">🛡 Fraude Defender</h1>
+        <h1 className="text-2xl font-bold mb-2 text-green-400">🛡 Fraude Defender</h1>
+        <p className="text-xs text-gray-500 font-mono mb-8 tracking-wider">CENTRO DE INTELIGENCIA</p>
         <nav className="space-y-2">
           {navItems.map((item) => (
             <div key={item.id} onClick={() => { setSeccion(item.id); setMenuOpen(false); }}
@@ -578,6 +713,15 @@ function App() {
             </div>
           ))}
         </nav>
+        <div className="absolute bottom-6 left-6 right-6">
+          <div className="bg-gray-800 rounded-xl p-3 flex items-center gap-3">
+            <FaUserShield className="text-green-400 text-xl flex-shrink-0" />
+            <div className="overflow-hidden">
+              <p className="text-white text-sm font-bold truncate">{usuario?.nombre}</p>
+              <p className="text-gray-500 text-xs truncate">{usuario?.email}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {menuOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={() => setMenuOpen(false)} />}
@@ -591,7 +735,7 @@ function App() {
             {seccion === "reportes" && <Reportes reportes={reportes} onNuevoReporte={() => setModalOpen(true)} onEliminar={eliminarReporte} />}
             {seccion === "amenazas" && <Amenazas reportes={reportes} />}
             {seccion === "threatintel" && <ThreatIntel reportes={reportes} />}
-            {seccion === "configuracion" && <Configuracion />}
+            {seccion === "configuracion" && <Configuracion usuario={usuario} onLogout={handleLogout} />}
           </motion.div>
         </AnimatePresence>
       </div>
