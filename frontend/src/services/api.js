@@ -1,23 +1,23 @@
-const API_URL = "http://127.0.0.1:8000"
+const API = "https://fraude-defender-api.onrender.com";
 
-export async function obtenerReportes() {
+export default API;
 
-  const respuesta = await fetch(`${API_URL}/reportes`)
+export const getToken = () => localStorage.getItem("fd_token");
 
-  return await respuesta.json()
+export const getUsuario = () =>
+  JSON.parse(localStorage.getItem("fd_usuario") || "null");
 
-}
+export const setAuth = (token, usuario) => {
+  localStorage.setItem("fd_token", token);
+  localStorage.setItem("fd_usuario", JSON.stringify(usuario));
+};
 
-export async function crearReporte(data) {
+export const clearAuth = () => {
+  localStorage.removeItem("fd_token");
+  localStorage.removeItem("fd_usuario");
+};
 
-  const respuesta = await fetch(`${API_URL}/reportes`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(data)
-  })
-
-  return await respuesta.json()
-
-}
+export const authHeaders = () => ({
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${getToken()}`,
+});

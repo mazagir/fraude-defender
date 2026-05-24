@@ -577,83 +577,255 @@ function Configuracion({ usuario, onLogout }) {
 }
 
 // ─── MODAL NUEVO REPORTE ──────────────────────────────────────
+// ─── MODAL NUEVO REPORTE ──────────────────────────────────────
 function ModalReporte({ onClose, onSuccess }) {
-  const [form, setForm] = useState({ phone_number: "", bank_account: "", domain: "", risk_level: "alto", description: "" });
+
+  // ─── IA DETECCIÓN DE RIESGO ─────────────────────────
+  const detectarRiesgo = (data) => {
+    const texto =
+      `${data.domain} ${data.description}`.toLowerCase();
+
+    // Riesgo alto
+    if (
+      texto.includes(".xyz") ||
+      texto.includes(".top") ||
+      texto.includes("prestamo") ||
+      texto.includes("préstamo") ||
+      texto.includes("dinero rápido") ||
+      texto.includes("extorsión") ||
+      texto.includes("amenaza") ||
+      texto.includes("gota a gota") ||
+      texto.includes("montadeudas")
+    ) {
+      return "alto";
+    }
+
+    // Riesgo medio
+    if (
+      texto.includes("whatsapp") ||
+      texto.includes("sms") ||
+      texto.includes("desconocido")
+    ) {
+      return "medio";
+    }
+
+    // Riesgo bajo
+    return "bajo";
+  };
+
+  const [form, setForm] = useState({
+    phone_number: "",
+    bank_account: "",
+    domain: "",
+    risk_level: "alto",
+    description: ""
+  });
+
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState(null);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  // ─── AUTO IA ────────────────────────────────────────
+  const handleChange = (e) => {
+    const updated = {
+      ...form,
+      [e.target.name]: e.target.value
+    };
 
+    updated.risk_level = detectarRiesgo(updated);
+
+    setForm(updated);
+  };
+
+  // ─── ENVIAR ─────────────────────────────────────────
   const handleSubmit = async () => {
-    if (!form.phone_number && !form.bank_account && !form.domain) {
-      setMensaje({ tipo: "error", texto: "Proporciona al menos un teléfono, cuenta o dominio." });
-      return;
-    }
-    if (!form.description) {
-      setMensaje({ tipo: "error", texto: "La descripción es obligatoria." });
-      return;
-    }
     setLoading(true);
+    setMensaje(null);
+
     try {
       const res = await fetch(`${API}/reportes`, {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify(form),
       });
-      if (res.status === 201 || res.ok) {
-        setMensaje({ tipo: "ok", texto: "¡Reporte registrado exitosamente!" });
-        setTimeout(() => { onSuccess(); onClose(); }, 1200);
-      } else {
-        const err = await res.json();
-        setMensaje({ tipo: "error", texto: err.detail || "Error al registrar." });
+
+      if (!res.ok) {
+        throw new Error("Error al registrar reporte");
       }
-    } catch {
-      setMensaje({ tipo: "error", texto: "No se pudo conectar con el servidor." });
+
+      setMensaje({
+        tipo: "ok",
+        texto: "Reporte registrado correctamente"
+      });
+
+      onSuccess();
+      setTimeout(() => {
+        onClose();
+      }, 1200);
+
+    } catch (e) {
+      setMensaje({
+        tipo: "error",
+        texto: e.message
+      });
     }
+
     setLoading(false);
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-        className="bg-gray-900 rounded-2xl p-8 w-full max-w-md shadow-2xl relative max-h-screen overflow-auto">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white text-xl"><FaTimes /></button>
-        <h2 className="text-2xl font-bold mb-6 text-green-400">Registrar Nuevo Reporte</h2>
-        <div className="space-y-4">
-          {[
-            { name: "phone_number", label: "Teléfono", placeholder: "+573001112233" },
-            { name: "bank_account", label: "Cuenta Bancaria", placeholder: "Número de cuenta (opcional)" },
-            { name: "domain", label: "Dominio", placeholder: "prestamos-rapidos.xyz" },
-          ].map((f) => (
-            <div key={f.name}>
-              <label className="text-sm text-gray-400 mb-1 block">{f.label}</label>
-              <input name={f.name} value={form[f.name]} onChange={handleChange} placeholder={f.placeholder}
-                className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-green-500" />
-            </div>
-          ))}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-gray-900 rounded-2xl w-full max-w-2xl p-6 border border-gray-800 shadow-2xl"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <label className="text-sm text-gray-400 mb-1 block">Nivel de Riesgo</label>
-            <select name="risk_level" value={form.risk_level} onChange={handleChange}
-              className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-green-500">
-              <option value="alto">Alto</option>
-              <option value="medio">Medio</option>
-              <option value="bajo">Bajo</option>
-            </select>
+            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+              <FaPlus className="text-green-400" />
+              Nuevo Reporte
+            </h2>
+            <p className="text-gray-500 text-sm mt-1">
+              Registrar amenaza o actividad sospechosa
+            </p>
           </div>
+
+          <button
+            onClick={onClose}
+            className="bg-gray-800 hover:bg-gray-700 p-3 rounded-xl transition"
+          >
+            <FaTimes />
+          </button>
+        </div>
+
+        {/* FORM */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* TELEFONO */}
           <div>
-            <label className="text-sm text-gray-400 mb-1 block">Descripción</label>
-            <textarea name="description" value={form.description} onChange={handleChange}
-              placeholder="Describe la amenaza o fraude detectado..." rows={3}
-              className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-green-500 resize-none" />
+            <label className="text-sm text-gray-400 block mb-2">
+              Número Telefónico
+            </label>
+
+            <input
+              type="text"
+              name="phone_number"
+              value={form.phone_number}
+              onChange={handleChange}
+              placeholder="+57 3000000000"
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-green-500"
+            />
           </div>
-          {mensaje && (
-            <div className={`text-sm px-4 py-2 rounded-xl ${mensaje.tipo === "ok" ? "bg-green-800 text-green-200" : "bg-red-800 text-red-200"}`}>
-              {mensaje.texto}
+
+          {/* CUENTA */}
+          <div>
+            <label className="text-sm text-gray-400 block mb-2">
+              Cuenta Bancaria
+            </label>
+
+            <input
+              type="text"
+              name="bank_account"
+              value={form.bank_account}
+              onChange={handleChange}
+              placeholder="123456789"
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+
+          {/* DOMINIO */}
+          <div className="md:col-span-2">
+            <label className="text-sm text-gray-400 block mb-2">
+              Dominio / URL Sospechosa
+            </label>
+
+            <input
+              type="text"
+              name="domain"
+              value={form.domain}
+              onChange={handleChange}
+              placeholder="fraude.xyz"
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+
+          {/* DESCRIPCIÓN */}
+          <div className="md:col-span-2">
+            <label className="text-sm text-gray-400 block mb-2">
+              Descripción
+            </label>
+
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              rows="4"
+              placeholder="Describe la amenaza detectada..."
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-green-500 resize-none"
+            />
+          </div>
+
+          {/* IA RIESGO */}
+          <div className="md:col-span-2">
+            <label className="text-sm text-gray-400 block mb-2">
+              Riesgo Detectado por IA
+            </label>
+
+            <div
+              className={`w-full rounded-xl px-4 py-3 text-center text-white font-bold border
+              ${
+                form.risk_level === "alto"
+                  ? "bg-red-900 border-red-500"
+                  : form.risk_level === "medio"
+                  ? "bg-yellow-900 border-yellow-500 text-yellow-100"
+                  : "bg-green-900 border-green-500"
+              }`}
+            >
+              {form.risk_level === "alto"
+                ? "🔴 RIESGO ALTO"
+                : form.risk_level === "medio"
+                ? "🟡 RIESGO MEDIO"
+                : "🟢 RIESGO BAJO"}
             </div>
-          )}
-          <button onClick={handleSubmit} disabled={loading}
-            className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition">
-            {loading ? "Guardando..." : "Registrar Reporte"}
+          </div>
+        </div>
+
+        {/* MENSAJE */}
+        {mensaje && (
+          <div
+            className={`mt-5 px-4 py-3 rounded-xl text-sm font-medium ${
+              mensaje.tipo === "ok"
+                ? "bg-green-900 border border-green-700 text-green-300"
+                : "bg-red-900 border border-red-700 text-red-300"
+            }`}
+          >
+            {mensaje.texto}
+          </div>
+        )}
+
+        {/* BOTONES */}
+        <div className="flex justify-end gap-3 mt-6">
+          <button
+            onClick={onClose}
+            className="bg-gray-800 hover:bg-gray-700 text-white px-5 py-3 rounded-xl font-bold transition"
+          >
+            Cancelar
+          </button>
+
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white px-5 py-3 rounded-xl font-bold transition flex items-center gap-2"
+          >
+            {loading ? (
+              "Analizando..."
+            ) : (
+              <>
+                <FaShieldAlt />
+                Registrar Reporte
+              </>
+            )}
           </button>
         </div>
       </motion.div>
