@@ -7,7 +7,7 @@ class FraudReportCreate(BaseModel):
     bank_account: Optional[str] = None
     domain: Optional[str] = None
     description: str
-    risk_level: str
+    risk_level: Optional[str] = None
 
 class FraudReportResponse(BaseModel):
     id: int

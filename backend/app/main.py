@@ -213,6 +213,15 @@ async def home():
     </html>
     """
 
+# ─── HEALTH CHECK (KEEP-ALIVE PARA RENDER) ───────────────────
+@app.get("/health", tags=["Sistema"])
+async def health_check():
+    """
+    Endpoint de health check. Usado para mantener el servidor activo
+    en Render (free tier) y para verificar el estado del servicio.
+    """
+    return {"status": "ok", "servicio": settings.PROJECT_NAME, "version": settings.VERSION}
+
 # ─── MONTAJE DE RUTAS VERSIONADAS ────────────────────────────
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
