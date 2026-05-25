@@ -1,37 +1,14 @@
-// frontend/src/components/Login.jsx
-import { useState } from 'react';
-
 export function Login({ onLogin }) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    
-    // FastAPI espera los datos en formato URL-Encoded para OAuth2
-    const formData = new URLSearchParams();
-    formData.append("username", username);
-    formData.append("password", password);
-
-    const response = await fetch("http://127.0.0.1:8000/login", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      localStorage.setItem("token", data.access_token); // Guardamos el pase de acceso
-      onLogin(); // Avisamos a App.jsx que ya estamos autenticados
-    } else {
-      alert("Credenciales incorrectas");
-    }
-  };
-
   return (
-    <form onSubmit={handleLogin}>
-      <input type="text" placeholder="Usuario" onChange={(e) => setUsername(e.target.value)} />
-      <input type="password" placeholder="Contraseña" onChange={(e) => setPassword(e.target.value)} />
-      <button type="submit">Ingresar</button>
-    </form>
+    <div className="p-6 bg-gray-900 rounded-xl border border-gray-800">
+      <h2 className="text-lg font-bold mb-4">Login</h2>
+      <button
+        className="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-lg"
+        onClick={() => onLogin?.({ username: "demo" })}
+      >
+        Entrar (demo)
+      </button>
+    </div>
   );
 }
+
