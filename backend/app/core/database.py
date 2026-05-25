@@ -22,3 +22,15 @@ SessionLocal = sessionmaker(
 )
 
 Base = declarative_base()
+
+# ... (lo que ya tienes arriba en el archivo)
+
+Base = declarative_base()
+
+# 1. Agrega esta función que es la que está buscando tu backend:
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
