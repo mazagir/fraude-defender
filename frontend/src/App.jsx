@@ -281,14 +281,33 @@ function Dashboard({ reportes, onNuevoReporte }) {
   );
 }
 
-function Reportes({ reportes, onNuevoReporte, onEliminar }) {
+import React, { useState } from "react"; // Asegúrate de tener useState importado si te daba error
+
+function Reportes({ reportes = [], onNuevoReporte, onEliminar }) {
   const [filtroRiesgo, setFiltroRiesgo] = useState("todos");
   const [filtroBusqueda, setFiltroBusqueda] = useState("");
+
   const filtrados = reportes.filter((r) => {
-    const matchRiesgo = filtroRiesgo === "todos" || r.risk_level === filtroRiesgo;
+    // CORRECCIÓN: Normalizamos ambos strings a minúsculas para que coincidan perfectamente
+    const nivelReporte = r.risk_level ? r.risk_level.toLowerCase() : "bajo";
+    const nivelFiltro = filtroRiesgo ? filtroRiesgo.toLowerCase() : "todos";
+
+    const matchRiesgo = nivelFiltro === "todos" || nivelReporte === nivelFiltro;
+    
     const q = filtroBusqueda.toLowerCase();
-    return matchRiesgo && (!q || (r.phone_number || "").includes(q) || (r.domain || "").includes(q) || (r.description || "").toLowerCase().includes(q));
+    
+    // Búsqueda inteligente por texto libre
+    const matchBusqueda = 
+      !q || 
+      (r.phone_number || "").includes(q) || 
+      (r.domain || "").toLowerCase().includes(q) || 
+      (r.description || "").toLowerCase().includes(q) ||
+      (r.bank_account || "").toLowerCase().includes(q); // Añadido soporte para buscar por cuenta bancaria
+
+    return matchRiesgo && matchBusqueda;
   });
+
+  // El resto de tu return JSX va aquí abajo...
 
   return (
     <>
