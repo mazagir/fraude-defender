@@ -72,7 +72,7 @@ La plataforma permite registrar, analizar y visualizar Indicadores de Compromiso
 
 - **Dashboard de Monitoreo**: Telemetría visual en tiempo real de amenazas y métricas agregadas por severidad sin desajustes de color por descarte de datos en cero.
 - **Threat Intelligence**: Listas negras dinámicas y análisis sintáctico de firmas de fraude.
-- **Motor de Riesgo Heurístico**: Calcula automáticamente una puntuación de riesgo (0-100) basándose en la reputación de los TLDs de dominio, duplicidad de teléfonos/bancos en BD y análisis semántico de keywords del reporte.
+- **Motor de Riesgo Heurístico**: Calculates automáticamente una puntuación de riesgo (0-100) basándose en la reputación de los TLDs de dominio, duplicidad de teléfonos/bancos en BD y análisis semántico de keywords del reporte.
 - **Seguridad B2B y API Keys**: Soporte para autenticación por cabecera HTTP (`X-API-KEY`) para integraciones con microservicios externos y automatizaciones.
 - **Defensa Activa (Envenenador de Datos)**: Telemetría de contramedidas para reportar ejecuciones de scripts distractores (decoys) que inyectan identidades falsas en las bases de datos de los extorsionadores.
 
