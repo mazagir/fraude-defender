@@ -41,8 +41,8 @@ export default function App() {
 
   useEffect(() => {
     if (!usuario) return;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    cargarReportes();
+    // Evitar setState desde un effect directo: delegamos la carga a una microtarea.
+    Promise.resolve().then(() => cargarReportes());
   }, [usuario]);
 
   return (

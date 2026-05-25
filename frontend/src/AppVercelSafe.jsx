@@ -28,7 +28,6 @@ export default function AppVercelSafe() {
   // Cargamos reportes únicamente cuando hay usuario al montar, mediante una acción asíncrona.
   useEffect(() => {
     if (!usuario) return;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     Promise.resolve().then(() => cargarReportes());
   }, [usuario]);
 

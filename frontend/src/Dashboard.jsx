@@ -1,6 +1,7 @@
 
-import { FaShieldAlt, FaExclamationTriangle, FaChartPie, FaListUl } from "react-icons/fa";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { FaChartPie, FaListUl } from "react-icons/fa";
+import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+
 
 const COLORS = ["#ef4444", "#eab308", "#22c55e"];
 
@@ -9,7 +10,7 @@ const Dashboard = ({ reportes, onNuevoReporte }) => {
   const medios = reportes.filter((r) => (r.risk_level || "").toLowerCase() === "medio").length;
   const bajos = reportes.filter((r) => (r.risk_level || "").toLowerCase() === "bajo").length;
 
-  const dataBar = [{ name: "Alto", cantidad: altos }, { name: "Medio", cantidad: medios }, { name: "Bajo", cantidad: bajos }];
+
   const dataPie = [{ name: "Alto", value: altos }, { name: "Medio", value: medios }, { name: "Bajo", value: bajos }];
 
   return (
