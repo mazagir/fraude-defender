@@ -41,39 +41,36 @@ La plataforma permite registrar, analizar y visualizar Indicadores de Compromiso
 
 ## 📸 Capturas de Pantalla
 
-### 🏠 Dashboard Principal
-![Dashboard](docs/screenshots/dashboard.png)
-*Métricas en tiempo real: reportes totales, riesgo alto, dominios detectados y números sospechosos con gráficas de barras y torta.*
+### 🔑 Portal de Acceso (Autenticación JWT)
+![Portal de Acceso](login-page.png)
+*Módulo seguro de inicio de sesión con cifrado de credenciales para analistas autorizados.*
 
-### 📋 Módulo de Reportes
-![Reportes](docs/screenshots/reportes.png)
-*Tabla completa con filtros avanzados por nivel de riesgo y búsqueda por teléfono, dominio o descripción.*
+### 🏠 Dashboard Principal (Métricas y Analítica)
+![Dashboard Seccion Superior](dashboard-top.png)
+![Dashboard Seccion Inferior](dashboard-bottom.png)
+*Visualización de telemetría en tiempo real: reportes totales, criticidad de riesgos, dominios maliciosos, números sospechosos y analítica interactiva mediante Recharts sin fallos de renderizado.*
 
-### ⚠ Amenazas Activas
-![Amenazas](docs/screenshots/amenazas.png)
-*Dominios y teléfonos más reportados, con listado priorizado de amenazas de alto riesgo.*
+### 📋 Módulo Central de Reportes
+![Reportes de Incidentes](incident-reports.png)
+*Repositorio indexado con filtros rápidos por nivel de severidad y barras de búsqueda multivariable (teléfono, dominio, descripción o entidad financiera).*
 
-### 🧠 Threat Intelligence
-![Threat Intel](docs/screenshots/threatintel.png)
-*Listas negras de dominios, teléfonos y cuentas bancarias. Detección automática de patrones de riesgo.*
+### ⚠ Panel de Amenazas Activas
+![Amenazas Activas](active-threats.png)
+*Consola de priorización que agrupa contadores dinámicos para los dominios críticos y números telefónicos más recurrentes.*
 
-### ⚙ Configuración
-![Configuración](docs/screenshots/configuracion.png)
-*Gestión de reglas de seguridad activables/desactivables y administración de API keys.*
+### 🧠 Threat Intelligence Center
+![Threat Intelligence](threat-intelligence.png)
+*Correlación de firmas de infraestructura atacante, detección automática de TLDs maliciosos (.xyz, .top, .click) y cuentas bancarias cruzadas.*
 
-### ➕ Registrar Reporte
-![Formulario](docs/screenshots/formulario.png)
-*Formulario para registrar nuevos indicadores de fraude con validación en tiempo real.*
-
-### 📡 API REST
-![API Docs](docs/screenshots/api-docs.png)
-*Documentación interactiva generada automáticamente con Swagger UI / OpenAPI 3.1.*
+### ⚙ Ajustes e Integraciones (B2B)
+![Ajustes del Sistema](system-settings.png)
+*Gestión del perfil del investigador activo y generación simétrica de API Keys para interacciones seguras con módulos externos.*
 
 ---
 
 ## ✨ Funcionalidades y Capacidades
 
-- **Dashboard de Monitoreo**: Telemetría visual en tiempo real de amenazas y métricas agregadas por severidad.
+- **Dashboard de Monitoreo**: Telemetría visual en tiempo real de amenazas y métricas agregadas por severidad sin desajustes de color por descarte de datos en cero.
 - **Threat Intelligence**: Listas negras dinámicas y análisis sintáctico de firmas de fraude.
 - **Motor de Riesgo Heurístico**: Calcula automáticamente una puntuación de riesgo (0-100) basándose en la reputación de los TLDs de dominio, duplicidad de teléfonos/bancos en BD y análisis semántico de keywords del reporte.
 - **Seguridad B2B y API Keys**: Soporte para autenticación por cabecera HTTP (`X-API-KEY`) para integraciones con microservicios externos y automatizaciones.
@@ -112,6 +109,8 @@ fraude-defender/
 │   │   └── test_api.py
 │   ├── tools/                      # Scripts de automatización y binarios ADB
 │   │   └── poison_payload.py       # Payload para envenenar DB de apps maliciosas
+│   ├── seed.py                     # Script de inicialización de datos de prueba
+│   ├── ataque_simulador.py         # Simulador autónomo de estrés e inyección de IoCs
 │   └── requirements.txt
 ├── frontend/                       # Interfaz SPA en React (Vite)
 │   └── src/
@@ -119,157 +118,3 @@ fraude-defender/
 │       └── services/
 │           └── api.js              # Cliente API y cabeceras
 └── docs/                           # Documentación y Capturas
-```
-
----
-
-## 🚀 Stack Tecnológico
-
-| Capa | Tecnología | Propósito |
-|---|---|---|
-| **Frontend** | React (Vite) | SPA reactiva y componentes modulares de alto desempeño. |
-| **Estilos** | Tailwind CSS | Sistema de diseño responsivo basado en utilidades de CSS. |
-| **Animaciones** | Framer Motion | Transiciones e interacciones fluidas entre vistas. |
-| **Gráficas** | Recharts | Renderizado interactivo de telemetría y métricas de riesgo. |
-| **Backend** | Python + FastAPI | API REST de alto rendimiento con generación automática de OpenAPI. |
-| **ORM** | SQLAlchemy | Capa de abstracción de base de datos segura contra inyecciones SQL. |
-| **Validación** | Pydantic | Validación estricta y tipado de payloads JSON en entrada y salida. |
-| **Base de datos**| PostgreSQL / SQLite | Persistencia relacional óptima para desarrollo y producción. |
-
----
-
-## ⚙️ Instalación Local
-
-### Requisitos Previos
-- Node.js 18+
-- Python 3.10+
-- PostgreSQL (opcional, por defecto local usa SQLite)
-
-### 1. Clonar el repositorio
-```bash
-git clone https://github.com/mazagir/fraude-defender.git
-cd fraude-defender
-```
-
-### 2. Levantar el Backend
-```bash
-cd backend
-python -m venv venv
-
-# Activar Entorno Virtual (Windows)
-.\venv\Scripts\activate
-
-# Activar Entorno Virtual (Linux/Mac)
-source venv/bin/activate
-
-# Instalar dependencias
-pip install -r requirements.txt
-
-# Ejecutar Suite de Pruebas Automatizadas
-python tests/test_api.py
-```
-
-Crea un archivo `.env` en la raíz de `backend/` si deseas conectarte a PostgreSQL (si no se define, el backend levantará automáticamente una base de datos local SQLite `aegis_shield.db`):
-```env
-DATABASE_URL=postgresql://usuario:password@localhost/fraude_defender_db
-SECRET_KEY=clave_super_secreta_jwt_de_produccion
-ALLOWED_API_KEYS=aegis_dev_api_key_2026,key_b2b_produccion
-```
-
-Inicia el servidor web FastAPI:
-```bash
-uvicorn app.main:app --reload
-```
-- API disponible en: `http://localhost:8000`
-- Swagger UI interactivo en: `http://localhost:8000/docs`
-
-### 3. Levantar el Frontend
-```bash
-cd ../frontend
-npm install
-```
-
-Crea o edita el archivo `frontend/src/services/api.js` (o `.env` si aplica) para apuntar a la dirección local del backend:
-```javascript
-const API = "http://localhost:8000";
-```
-
-Inicia el servidor de desarrollo Vite:
-```bash
-npm run dev
-```
-- Frontend interactivo disponible en: `http://localhost:5173`
-
----
-
-## 📡 API Reference (Endpoints principales)
-
-AegisShield soporta versionado centralizado. Se puede acceder a los recursos mediante el prefijo `/api/v1/` o mediante las rutas legadas sin prefijo (mantenidas por compatibilidad retroactiva).
-
-### Autenticación (`/api/v1/auth`)
-
-| Método | Endpoint | Cabecera Auth | Descripción |
-|---|---|---|---|
-| `POST` | `/registro` | Ninguna | Registra un nuevo analista de ciberseguridad. |
-| `POST` | `/login` | Ninguna | Valida credenciales y genera un token Bearer JWT. |
-| `GET` | `/me` | `Bearer <JWT>` | Retorna los detalles del analista autenticado. |
-
-### Indicadores de Fraude (`/api/v1/reportes`)
-
-| Método | Endpoint | Cabecera Auth | Descripción |
-|---|---|---|---|
-| `GET` | `/` | `Bearer <JWT>` o `X-API-KEY` | Obtiene la lista completa de reportes de IoCs ordenados cronológicamente. |
-| `POST` | `/` | `Bearer <JWT>` o `X-API-KEY` | Registra un nuevo IoC. El motor evalúa y asigna el riesgo automáticamente. |
-| `DELETE`| `/{id}` | `Bearer <JWT>` o `X-API-KEY` | Elimina un reporte por su ID de base de datos. |
-| `POST` | `/contramedida` | Ninguna | Endpoint público para reportar la inyección de señuelos por ADB. |
-| `GET` | `/metricas/contramedidas` | Ninguna | Endpoint público para leer telemetría de contramedidas activas. |
-
----
-
-## 🔐 Cabeceras de Seguridad Permitidas
-
-Para integraciones externas o scripts (B2B):
-- Cabecera: `X-API-KEY`
-- Valor: Cualquier llave configurada en la variable de entorno `ALLOWED_API_KEYS`.
-
----
-
-## 🗺️ Roadmap de la Plataforma
-
-- [x] Dashboard con métricas visuales en tiempo real.
-- [x] Gestión colaborativa de reportes de fraude e indicadores.
-- [x] Autenticación de analistas mediante firmas de tokens JWT.
-- [x] Soporte para API Keys de integración externa (B2B).
-- [x] Refactorización de código a Arquitectura Limpia (Clean Architecture).
-- [x] Motor dinámico de detección de severidad de amenazas.
-- [ ] Notificaciones por canal de mensajería (Slack/Discord) al detectar reportes de riesgo Crítico.
-- [ ] Integración de WebSockets para actualizar métricas en caliente.
-- [ ] Exportación de reportes forenses en formato PDF/CSV.
-- [ ] Aplicación móvil nativa para reportar IoCs desde Android/iOS.
-
----
-
-## 🤝 Contribuir
-
-Si deseas colaborar con el desarrollo de AegisShield:
-1. Realiza un Fork del repositorio.
-2. Crea una rama para tu feature: `git checkout -b feature/nueva-funcionalidad`.
-3. Haz un commit con tus cambios: `git commit -m "feat: agregar validaciones avanzadas"`.
-4. Envía la rama a GitHub: `git push origin feature/nueva-funcionalidad`.
-5. Abre una solicitud de extracción (Pull Request) hacia la rama principal.
-
----
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT © 2026 [Mazagir](https://github.com/mazagir).
-
----
-
-<div align="center">
-
-**Desarrollado con ❤️ para blindar a las comunidades frente a las redes de extorsión digital y fraude financiero**
-
-⭐ Si esta plataforma te es de utilidad para investigaciones o defensa, ¡danos una estrella en GitHub!
-
-</div>
