@@ -1,3 +1,4 @@
+// AegisShield v2.0 - Dashboard rediseñado
 import { useState, useEffect, useCallback } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -588,13 +589,13 @@ export default function App() {
   };
 
   const handleCreateReport = async (form) => {
-    const res = await apiFetch(`${API_BASE}/api/v1/reportes`, token, { method: "POST", body: JSON.stringify(form) });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Error al crear reporte");
-    }
-    await fetchReports(token);
-  };
+    const payload = {
+      description: form.descripcion,
+      phone_number: form.telefono_sospechoso,
+      domain: form.dominio,
+      bank_account: form.banco_recaudo,
+    };
+    const res = await apiFetch(`${API_BASE}/api/v1/reportes`, token, { method: "POST", body: JSON.stringify(payload) });
 
   const handleDelete = async (id) => {
     if (!window.confirm(`¿Eliminar reporte #${id}?`)) return;
