@@ -49,7 +49,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # ─── SWAGGER PERSONALIZADO ───────────────────────────────────
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
