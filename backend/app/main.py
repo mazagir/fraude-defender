@@ -40,7 +40,11 @@ Basado en las recomendaciones del **OWASP Top 10** y el marco de ciberseguridad 
 # Configuración de Middlewares (CORS)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "https://fraude-defender-1176.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
