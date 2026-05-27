@@ -1,239 +1,119 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { FaTimes } from "react-icons/fa";
+import { useMemo, useState } from "react";
+
+import { FaTrash } from "react-icons/fa";
 
 import API, { authHeaders } from "../services/api";
 
-function detectarRiesgoAutomatico(form) {
-  let score = 0;
-
-  const dominio = form.domain?.toLowerCase() || "";
-  const descripcion = form.description?.toLowerCase() || "";
-
-  // Dominios sospechosos
-  if (
-    dominio.includes(".xyz") ||
-    dominio.includes(".top") ||
-    dominio.includes(".click") ||
-    dominio.includes(".loan")
-  ) {
-    score += 40;
-  }
-
-  // Palabras sospechosas
-  const palabras = [
-    "extorsión",
-    "amenaza",
-    "préstamo",
-    "gota a gota",
-    "montadeudas",
-    "whatsapp",
-    "hack",
-    "estafa",
-  ];
-
-  palabras.forEach((p) => {
-    if (descripcion.includes(p)) {
-      score += 10;
-    }
-  });
-
-  // Teléfono internacional
-  if (
-    form.phone_number &&
-    form.phone_number.startsWith("+") &&
-    !form.phone_number.startsWith("+57")
-  ) {
-    score += 25;
-  }
-
-  // Resultado
-  if (score >= 60) return "alto";
-  if (score >= 30) return "medio";
-  return "bajo";
+function riesgoColor(risk) {
+  const v = (risk || "").toLowerCase();
+  if (v === "alto") return "bg-red-500/15 text-red-200 border-red-500/30";
+  if (v === "medio") return "bg-yellow-500/15 text-yellow-200 border-yellow-500/30";
+  return "bg-green-500/15 text-green-200 border-green-500/30";
 }
 
-function ModalReporte({ onClose, onSuccess }) {
-  const [form, setForm] = useState({
-    phone_number: "",
-    bank_account: "",
-    domain: "",
-    risk_level: "alto",
-    description: "",
-  });
+export default function TablaReportes({ reportes = [] }) {
+  // Solo muestra (ID, risk_level, domain/phone, description)
+  const rows = useMemo(() => {
+    return reportes.map((r, idx) => ({
+      _k: r.id ?? idx,
+      id: r.id,
+      risk_level: r.risk_level,
+      phone_number: r.phone_number,
+      domain: r.domain,
+      description: r.description,
+      created_at: r.created_at,
+    }));
+  }, [reportes]);
 
-  const [loading, setLoading] = useState(false);
+  // (Opcional) eliminar reporte si el backend lo soporta
+  const [deletingId, setDeletingId] = useState(null);
 
-  const [mensaje, setMensaje] = useState(null);
-
-  const handleChange = (e) => {
-    const nuevo = {
-      ...form,
-      [e.target.name]: e.target.value,
-    };
-
-    nuevo.risk_level = detectarRiesgoAutomatico(nuevo);
-
-    setForm(nuevo);
-  };
-
-  const handleSubmit = async () => {
-    if (
-      !form.phone_number &&
-      !form.bank_account &&
-      !form.domain
-    ) {
-      setMensaje({
-        tipo: "error",
-        texto:
-          "Debes ingresar teléfono, cuenta o dominio.",
-      });
-
-      return;
-    }
-
-    if (!form.description) {
-      setMensaje({
-        tipo: "error",
-        texto: "La descripción es obligatoria.",
-      });
-
-      return;
-    }
-
-    setLoading(true);
-
+  const handleDelete = async (reporteId) => {
+    if (!reporteId || deletingId) return;
+    setDeletingId(reporteId);
     try {
-      const res = await fetch(`${API}/reportes`, {
-        method: "POST",
+      const res = await fetch(`${API}/api/v1/reportes/${reporteId}`, {
+        method: "DELETE",
         headers: authHeaders(),
-        body: JSON.stringify(form),
       });
-
-      if (res.ok) {
-        setMensaje({
-          tipo: "ok",
-          texto: "Reporte registrado exitosamente.",
-        });
-
-        setTimeout(() => {
-          onSuccess();
-          onClose();
-        }, 1200);
-      } else {
-        const err = await res.json();
-
-        setMensaje({
-          tipo: "error",
-          texto: err.detail || "Error",
-        });
+      // Si el usuario necesita refrescar la lista, debe hacerlo desde el padre.
+      // Aquí no hacemos fetch global para no romper el flujo actual.
+      if (!res.ok) {
+        // eslint-disable-next-line no-console
+        console.error("No se pudo eliminar el reporte", await res.text());
       }
-    } catch {
-      setMensaje({
-        tipo: "error",
-        texto: "Error de conexión.",
-      });
+    } finally {
+      setDeletingId(null);
     }
-
-    setLoading(false);
   };
+
+  if (!rows.length) {
+    return (
+      <div className="text-gray-400 text-sm">No hay reportes para mostrar.</div>
+    );
+  }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-gray-900 rounded-2xl p-8 w-full max-w-md shadow-2xl relative"
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white"
-        >
-          <FaTimes />
-        </button>
-
-        <h2 className="text-2xl font-bold mb-6 text-green-400">
-          Nuevo Reporte
-        </h2>
-
-        <div className="space-y-4">
-          <input
-            name="phone_number"
-            placeholder="Teléfono"
-            value={form.phone_number}
-            onChange={handleChange}
-            className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white"
-          />
-
-          <input
-            name="bank_account"
-            placeholder="Cuenta bancaria"
-            value={form.bank_account}
-            onChange={handleChange}
-            className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white"
-          />
-
-          <input
-            name="domain"
-            placeholder="Dominio"
-            value={form.domain}
-            onChange={handleChange}
-            className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white"
-          />
-
-          <textarea
-            name="description"
-            placeholder="Descripción"
-            value={form.description}
-            onChange={handleChange}
-            rows={4}
-            className="w-full bg-gray-800 rounded-xl px-4 py-3 text-white"
-          />
-
-          {/* IA */}
-          <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-            <p className="text-sm text-gray-400 mb-2">
-              Riesgo Detectado Automáticamente
-            </p>
-
-            <div
-              className={`inline-block px-4 py-2 rounded-full font-bold ${
-                form.risk_level === "alto"
-                  ? "bg-red-500"
-                  : form.risk_level === "medio"
-                  ? "bg-yellow-500"
-                  : "bg-green-600"
-              }`}
-            >
-              {form.risk_level.toUpperCase()}
-            </div>
-          </div>
-
-          {mensaje && (
-            <div
-              className={`p-3 rounded-xl ${
-                mensaje.tipo === "ok"
-                  ? "bg-green-800 text-green-200"
-                  : "bg-red-800 text-red-200"
-              }`}
-            >
-              {mensaje.texto}
-            </div>
-          )}
-
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl"
-          >
-            {loading
-              ? "Analizando amenaza..."
-              : "Registrar Reporte"}
-          </button>
+    <div>
+      <div className="min-w-[720px]">
+        <div className="grid grid-cols-12 gap-2 text-xs text-gray-400 border-b border-gray-800 pb-2">
+          <div className="col-span-1">ID</div>
+          <div className="col-span-2">Riesgo</div>
+          <div className="col-span-3">Dominio / Teléfono</div>
+          <div className="col-span-5">Descripción</div>
+          <div className="col-span-1 text-right">Acción</div>
         </div>
-      </motion.div>
+
+        <div className="divide-y divide-gray-800">
+          {rows.map((r) => (
+            <motion.div
+              key={r._k}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="grid grid-cols-12 gap-2 py-3 items-start text-sm"
+            >
+              <div className="col-span-1 text-gray-300">{r.id ?? "-"}</div>
+
+              <div className="col-span-2">
+                <span
+                  className={`inline-flex items-center px-2 py-1 rounded-md border ${
+                    riesgoColor(r.risk_level)
+                  }`}
+                >
+                  {(r.risk_level || "").toUpperCase() || "-"}
+                </span>
+              </div>
+
+              <div className="col-span-3 text-gray-200">
+                <div className="font-medium">
+                  {r.domain ? r.domain : "-"}
+                </div>
+                <div className="text-gray-400">
+                  {r.phone_number ? r.phone_number : "-"}
+                </div>
+              </div>
+
+              <div className="col-span-5 text-gray-300">
+                <div className="line-clamp-2">{r.description || "-"}</div>
+              </div>
+
+              <div className="col-span-1 text-right">
+                <button
+                  type="button"
+                  onClick={() => handleDelete(r.id)}
+                  disabled={!r.id || deletingId === r.id}
+                  className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-800 hover:bg-gray-700 border border-gray-700 disabled:opacity-50"
+                  title="Eliminar"
+                >
+                  <FaTrash size={14} />
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
 
-export default ModalReporte;

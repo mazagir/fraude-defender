@@ -5,6 +5,8 @@
     "tailwindcss": "^4.3.0"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.3.0"
+    "@clerk/clerk-react": "^5.61.7",
+    "@tailwindcss/vite": "^4.3.0",
+    "lucide-react": "^1.16.0"
   }
 }
