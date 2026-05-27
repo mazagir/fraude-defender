@@ -1,4 +1,3 @@
-// AegisShield v2.0 - Dashboard rediseñado
 import { useState, useEffect, useCallback } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -24,7 +23,7 @@ function buildMonthlyData(reports) {
   reports.forEach((r) => {
     const date = new Date(r.created_at || r.fecha_reporte || Date.now());
     const key = months[date.getMonth()];
-    const lvl = getRiskLevel(r.score_riesgo ?? 0);
+    const lvl = getRiskLevel(r.risk_score ?? 0);
     if (map[key]) map[key][lvl]++;
   });
   return Object.values(map);
@@ -226,9 +225,9 @@ function LoginView({ onLogin }) {
 // ─── DASHBOARD ─────────────────────────────────────────────────────────────
 function DashboardView({ reports }) {
   const total  = reports.length;
-  const altos  = reports.filter((r) => getRiskLevel(r.score_riesgo ?? 0) === "alto").length;
-  const medios = reports.filter((r) => getRiskLevel(r.score_riesgo ?? 0) === "medio").length;
-  const bajos  = reports.filter((r) => getRiskLevel(r.score_riesgo ?? 0) === "bajo").length;
+  const altos  = reports.filter((r) => getRiskLevel(r.risk_score ?? 0) === "alto").length;
+  const medios = reports.filter((r) => getRiskLevel(r.risk_score ?? 0) === "medio").length;
+  const bajos  = reports.filter((r) => getRiskLevel(r.risk_score ?? 0) === "bajo").length;
   const monthlyData = buildMonthlyData(reports);
   const trendData   = buildTrendData(reports);
   const pieData = [
@@ -336,8 +335,8 @@ function DashboardView({ reports }) {
                 <motion.tr key={r.id ?? i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
                   style={{ borderBottom: "1px solid rgba(99,130,255,0.05)" }}>
                   <td style={{ padding: "11px 16px", fontSize: 11, color: "#6b7fa3", fontFamily: "monospace" }}>#{r.id}</td>
-                  <td style={{ padding: "11px 16px", fontSize: 12, color: "#c5cde8", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.descripcion}</td>
-                  <td style={{ padding: "11px 16px" }}><RiskBadge level={getRiskLevel(r.score_riesgo ?? 0)} /></td>
+                  <td style={{ padding: "11px 16px", fontSize: 12, color: "#c5cde8", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.description}</td>
+                  <td style={{ padding: "11px 16px" }}><RiskBadge level={getRiskLevel(r.risk_score ?? 0)} /></td>
                 </motion.tr>
               ))}
               {reports.length === 0 && (
@@ -356,10 +355,10 @@ function ReportesView({ reports, onDelete, token }) {
   const [search, setSearch] = useState("");
   const [filterRisk, setFilterRisk] = useState("todos");
   const filtered = reports.filter((r) => {
-    const level = getRiskLevel(r.score_riesgo ?? 0);
+    const level = getRiskLevel(r.risk_score ?? 0);
     const matchRisk = filterRisk === "todos" || level === filterRisk;
     const q = search.toLowerCase();
-    const matchSearch = !q || (r.descripcion || "").toLowerCase().includes(q) || String(r.id).includes(q) || (r.telefono_sospechoso || "").includes(q) || (r.dominio || "").includes(q);
+    const matchSearch = !q || (r.description || "").toLowerCase().includes(q) || String(r.id).includes(q) || (r.phone_number || "").includes(q) || (r.domain || "").includes(q);
     return matchRisk && matchSearch;
   });
 
@@ -388,16 +387,16 @@ function ReportesView({ reports, onDelete, token }) {
           <tbody>
             <AnimatePresence>
               {filtered.map((r, i) => {
-                const level = getRiskLevel(r.score_riesgo ?? 0);
+                const level = getRiskLevel(r.risk_score ?? 0);
                 const fecha = r.created_at ? new Date(r.created_at).toLocaleDateString("es-CO") : "—";
                 return (
                   <motion.tr key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ delay: i * 0.03 }}
                     style={{ borderBottom: "1px solid rgba(99,130,255,0.05)" }}>
                     <td style={{ padding: "12px 16px", fontSize: 11, color: "#6b7fa3", fontFamily: "monospace" }}>#{r.id}</td>
-                    <td style={{ padding: "12px 16px", fontSize: 12, color: "#c5cde8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.descripcion}</td>
-                    <td style={{ padding: "12px 16px", fontSize: 11, color: "#6b7fa3", fontFamily: "monospace" }}>{r.telefono_sospechoso || "—"}</td>
-                    <td style={{ padding: "12px 16px", fontSize: 11, color: "#6b7fa3" }}>{r.dominio || "—"}</td>
-                    <td style={{ padding: "12px 16px", fontSize: 12, color: riskColor[level], fontWeight: 700, fontFamily: "monospace" }}>{r.score_riesgo ?? 0}</td>
+                    <td style={{ padding: "12px 16px", fontSize: 12, color: "#c5cde8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.description}</td>
+                    <td style={{ padding: "12px 16px", fontSize: 11, color: "#6b7fa3", fontFamily: "monospace" }}>{r.phone_number || "—"}</td>
+                    <td style={{ padding: "12px 16px", fontSize: 11, color: "#6b7fa3" }}>{r.domain || "—"}</td>
+                    <td style={{ padding: "12px 16px", fontSize: 12, color: riskColor[level], fontWeight: 700, fontFamily: "monospace" }}>{r.risk_score ?? 0}</td>
                     <td style={{ padding: "12px 16px" }}><RiskBadge level={level} /></td>
                     <td style={{ padding: "12px 16px", fontSize: 11, color: "#6b7fa3" }}>{fecha}</td>
                     <td style={{ padding: "12px 16px" }}>
@@ -419,12 +418,12 @@ function ReportesView({ reports, onDelete, token }) {
 function AmenazasView({ reports }) {
   const telefonos = {}, dominios = {};
   reports.forEach((r) => {
-    if (r.telefono_sospechoso) telefonos[r.telefono_sospechoso] = (telefonos[r.telefono_sospechoso] || 0) + 1;
-    if (r.dominio) dominios[r.dominio] = (dominios[r.dominio] || 0) + 1;
+    if (r.phone_number) telefonos[r.phone_number] = (telefonos[r.phone_number] || 0) + 1;
+    if (r.domain) dominios[r.domain] = (dominios[r.domain] || 0) + 1;
   });
   const topTel = Object.entries(telefonos).sort((a,b) => b[1]-a[1]).slice(0,10);
   const topDom = Object.entries(dominios).sort((a,b) => b[1]-a[1]).slice(0,10);
-  const altos  = reports.filter((r) => getRiskLevel(r.score_riesgo ?? 0) === "alto").slice(0, 8);
+  const altos  = reports.filter((r) => getRiskLevel(r.risk_score ?? 0) === "alto").slice(0, 8);
   const card = (s) => ({ background: "#0f1320", border: "1px solid rgba(99,130,255,0.15)", borderRadius: 12, ...s });
 
   return (
@@ -457,11 +456,11 @@ function AmenazasView({ reports }) {
         {altos.length === 0 ? <div style={{ color: "#6b7fa3", fontSize: 13 }}>Sin amenazas críticas.</div> : altos.map((r, i) => (
           <motion.div key={r.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
             style={{ background: "rgba(255,77,109,0.07)", border: "1px solid rgba(255,77,109,0.15)", borderRadius: 8, padding: "10px 14px", marginBottom: 8 }}>
-            <div style={{ fontSize: 12, color: "#e8ecf8", marginBottom: 4 }}>{r.descripcion}</div>
+            <div style={{ fontSize: 12, color: "#e8ecf8", marginBottom: 4 }}>{r.description}</div>
             <div style={{ display: "flex", gap: 12, fontSize: 11, color: "#6b7fa3" }}>
-              <span>Score: <strong style={{ color: "#ff4d6d" }}>{r.score_riesgo}</strong></span>
-              {r.telefono_sospechoso && <span>📱 {r.telefono_sospechoso}</span>}
-              {r.dominio && <span>🌐 {r.dominio}</span>}
+              <span>Score: <strong style={{ color: "#ff4d6d" }}>{r.risk_score}</strong></span>
+              {r.phone_number && <span>📱 {r.phone_number}</span>}
+              {r.domain && <span>🌐 {r.domain}</span>}
             </div>
           </motion.div>
         ))}
@@ -472,15 +471,15 @@ function AmenazasView({ reports }) {
 
 // ─── THREAT INTEL ──────────────────────────────────────────────────────────
 function ThreatIntelView({ reports }) {
-  const blacklistTel = [...new Set(reports.filter((r) => r.telefono_sospechoso).map((r) => r.telefono_sospechoso))];
-  const blacklistDom = [...new Set(reports.filter((r) => r.dominio).map((r) => r.dominio))];
+  const blacklistTel = [...new Set(reports.filter((r) => r.phone_number).map((r) => r.phone_number))];
+  const blacklistDom = [...new Set(reports.filter((r) => r.domain).map((r) => r.domain))];
   const blacklistBan = [...new Set(reports.filter((r) => r.banco_recaudo).map((r) => r.banco_recaudo))];
   const scoreData = [
-    { rango: "0-20",   count: reports.filter((r) => (r.score_riesgo ?? 0) <= 20).length },
-    { rango: "21-40",  count: reports.filter((r) => (r.score_riesgo ?? 0) > 20  && (r.score_riesgo ?? 0) <= 40).length },
-    { rango: "41-60",  count: reports.filter((r) => (r.score_riesgo ?? 0) > 40  && (r.score_riesgo ?? 0) <= 60).length },
-    { rango: "61-80",  count: reports.filter((r) => (r.score_riesgo ?? 0) > 60  && (r.score_riesgo ?? 0) <= 80).length },
-    { rango: "81-100", count: reports.filter((r) => (r.score_riesgo ?? 0) > 80).length },
+    { rango: "0-20",   count: reports.filter((r) => (r.risk_score ?? 0) <= 20).length },
+    { rango: "21-40",  count: reports.filter((r) => (r.risk_score ?? 0) > 20  && (r.risk_score ?? 0) <= 40).length },
+    { rango: "41-60",  count: reports.filter((r) => (r.risk_score ?? 0) > 40  && (r.risk_score ?? 0) <= 60).length },
+    { rango: "61-80",  count: reports.filter((r) => (r.risk_score ?? 0) > 60  && (r.risk_score ?? 0) <= 80).length },
+    { rango: "81-100", count: reports.filter((r) => (r.risk_score ?? 0) > 80).length },
   ];
   const card = (s) => ({ background: "#0f1320", border: "1px solid rgba(99,130,255,0.15)", borderRadius: 12, ...s });
   const listStyle = { fontFamily: "monospace", fontSize: 12, color: "#c5cde8", padding: "8px 12px", background: "rgba(99,130,255,0.05)", borderRadius: 6, marginBottom: 6, display: "block" };
@@ -522,8 +521,6 @@ export default function App() {
   const [token, setToken]         = useState(() => localStorage.getItem("aegis_token") || "");
   const [view, setView]           = useState("dashboard");
   const [reports, setReports]     = useState([]);
-
-
   const [loading, setLoading]     = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [error, setError]         = useState("");
@@ -534,29 +531,15 @@ export default function App() {
     if (!t) return;
     setLoading(true); setError("");
     try {
-      const res = await apiFetch(`${API_BASE}/api/v1/reportes`, t);
+      const res = await apiFetch(`${API_BASE}/api/v1/reportes/`, t);
       if (res.ok) {
         const data = await res.json();
-        const list = Array.isArray(data) ? data : [];
-        // Normaliza nombres de campos para que la UI (es-*) funcione con el backend (en snake_case)
-        setReports(
-          list.map((r) => ({
-            ...r,
-            telefono_sospechoso: r.telefono_sospechoso ?? r.phone_number,
-            banco_recaudo: r.banco_recaudo ?? r.bank_account,
-            dominio: r.dominio ?? r.domain,
-            descripcion: r.descripcion ?? r.description,
-            score_riesgo: r.score_riesgo ?? r.risk_score,
-            riesgo: r.riesgo ?? r.risk_level,
-          }))
-        );
+        setReports(Array.isArray(data) ? data : []);
       } else if (res.status === 401) {
         console.warn("Token expirado o inválido");
-        setError("Sesión inválida. Inicia sesión de nuevo.");
       } else {
         setError("Error al cargar reportes.");
       }
-
     } catch {
       setError("No se pudo conectar con la API.");
     }
@@ -564,17 +547,11 @@ export default function App() {
   }, [token]);
 
   useEffect(() => {
-    if (!token) return;
-
-    const run = async () => fetchReports(token);
-    // Evitamos llamar setState directamente desde el cuerpo del effect.
-    const t = setTimeout(run, 0);
-
-    const iv = setInterval(() => fetchReports(token), 30000);
-    return () => {
-      clearTimeout(t);
-      clearInterval(iv);
-    };
+    if (token) {
+      fetchReports(token);
+      const iv = setInterval(() => fetchReports(token), 30000);
+      return () => clearInterval(iv);
+    }
   }, [token]);
 
   const handleLogin = (newToken) => {
@@ -595,7 +572,13 @@ export default function App() {
       domain: form.dominio,
       bank_account: form.banco_recaudo,
     };
-    const res = await apiFetch(`${API_BASE}/api/v1/reportes`, token, { method: "POST", body: JSON.stringify(payload) });
+    const res = await apiFetch(`${API_BASE}/api/v1/reportes/`, token, { method: "POST", body: JSON.stringify(form) });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "Error al crear reporte");
+    }
+    await fetchReports(token);
+  };
 
   const handleDelete = async (id) => {
     if (!window.confirm(`¿Eliminar reporte #${id}?`)) return;
@@ -619,7 +602,7 @@ export default function App() {
       `}</style>
 
       <div style={{ display: "flex", minHeight: "100vh" }}>
-        <Sidebar view={view} setView={setView} reportsCount={reports.filter((r) => getRiskLevel(r.score_riesgo ?? 0) === "alto").length} />
+        <Sidebar view={view} setView={setView} reportsCount={reports.filter((r) => getRiskLevel(r.risk_score ?? 0) === "alto").length} />
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
           <div style={{ height: 60, background: "#0f1320", borderBottom: "1px solid rgba(99,130,255,0.12)", display: "flex", alignItems: "center", padding: "0 28px", gap: 16, position: "sticky", top: 0, zIndex: 50 }}>
