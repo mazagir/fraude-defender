@@ -531,7 +531,7 @@ export default function App() {
     if (!t) return;
     setLoading(true); setError("");
     try {
-      const res = await apiFetch(`${API_BASE}/api/v1/reportes/`, t);
+      const res = await apiFetch(`${API_BASE}/api/v1/reportes`, t);
       if (res.ok) {
         const data = await res.json();
         setReports(Array.isArray(data) ? data : []);
@@ -572,7 +572,7 @@ export default function App() {
       domain: form.dominio,
       bank_account: form.banco_recaudo,
     };
-    const res = await apiFetch(`${API_BASE}/api/v1/reportes/`, token, { method: "POST", body: JSON.stringify(form) });
+    const res = await apiFetch(`${API_BASE}/api/v1/reportes`, token, { method: "POST", body: JSON.stringify(form) });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.detail || "Error al crear reporte");
@@ -582,7 +582,7 @@ export default function App() {
 
   const handleDelete = async (id) => {
     if (!window.confirm(`¿Eliminar reporte #${id}?`)) return;
-    const res = await apiFetch(`${API_BASE}/api/v1/reportes/${id}`, token, { method: "DELETE" });
+    const res = await apiFetch(`${API_BASE}/api/v1/reportes${id}`, token, { method: "DELETE" });
     if (res.ok) await fetchReports(token);
   };
 
