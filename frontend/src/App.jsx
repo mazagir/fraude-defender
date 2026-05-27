@@ -566,12 +566,12 @@ export default function App() {
   };
 
   const handleCreateReport = async (form) => {
-    const payload = {
-      description: form.descripcion,
-      phone_number: form.telefono_sospechoso,
-      domain: form.dominio,
-      bank_account: form.banco_recaudo,
-    };
+  const payload = {
+  description: form.descripcion,
+  phone_number: form.telefono_sospechoso,
+  domain: form.dominio,
+  bank_account: form.banco_recaudo,
+};
     const res = await apiFetch(`${API_BASE}/api/v1/reportes`, token, { method: "POST", body: JSON.stringify(form) });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
