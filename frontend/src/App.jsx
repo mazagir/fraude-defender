@@ -572,7 +572,7 @@ export default function App() {
   domain: form.dominio,
   bank_account: form.banco_recaudo,
 };
-    const res = await apiFetch(`${API_BASE}/api/v1/reportes`, token, { method: "POST", body: JSON.stringify(form) });
+    const res = await apiFetch(`${API_BASE}/api/v1/reportes`, token, { method: "POST", body: JSON.stringify(payload) });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(JSON.stringify(err) || "Error al crear reporte");
