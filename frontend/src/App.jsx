@@ -575,7 +575,7 @@ export default function App() {
     const res = await apiFetch(`${API_BASE}/api/v1/reportes`, token, { method: "POST", body: JSON.stringify(form) });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Error al crear reporte");
+      throw new Error(JSON.stringify(err) || "Error al crear reporte");
     }
     await fetchReports(token);
   };
