@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse
+from sqlalchemy import text
 
 # Importar infraestructura y base de datos
 from app.core.config import settings
@@ -12,6 +13,16 @@ from app.models.db import FraudReport, User
 Base.metadata.create_all(bind=engine)
 print("[OK] Tablas de base de datos inicializadas correctamente.")
 
+# Migración automática de columnas nuevas
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN IF NOT EXISTS risk_score INTEGER DEFAULT 0"))
+        conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN IF NOT EXISTS malicious_indicators TEXT DEFAULT ''"))
+        conn.commit()
+        print("[OK] Migración de columnas ejecutada correctamente.")
+except Exception as e:
+    print(f"[INFO] Migración: {e}")
+
 # Importar enrutadores
 from app.api.v1.router import api_router
 from app.api.v1.endpoints.auth import router as auth_router
@@ -20,6 +31,7 @@ from app.api.v1.endpoints.reports import router as reports_router
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
+    redirect_slashes=False,
     description="""
 ## 🛡 AegisShield: Plataforma Avanzada de Inteligencia contra Fraudes
 
@@ -33,8 +45,8 @@ AegisShield es una solución empresarial de ciberseguridad diseñada para:
 ### 🔐 Estándares de Seguridad
 Basado en las recomendaciones del **OWASP Top 10** y el marco de ciberseguridad del **NIST**.
 """,
-    docs_url=None,       # Desactivamos Swagger por defecto para usar la ruta personalizada
-    redoc_url=None       # Desactivamos Redoc
+    docs_url=None,
+    redoc_url=None
 )
 
 # Configuración de Middlewares (CORS)
@@ -49,6 +61,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # ─── SWAGGER PERSONALIZADO ───────────────────────────────────
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
@@ -60,7 +73,7 @@ async def custom_swagger_ui_html():
         swagger_css_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css",
     )
 
-# ─── PÁGINA DE BIENVENIDA (AESTHETIC) ─────────────────────────
+# ─── PÁGINA DE BIENVENIDA ─────────────────────────────────────
 @app.get("/", response_class=HTMLResponse)
 async def home():
     return """
@@ -91,28 +104,9 @@ async def home():
                     margin: 0;
                     overflow: hidden;
                 }
-                .glow-bg {
-                    position: absolute;
-                    width: 500px;
-                    height: 500px;
-                    background: radial-gradient(circle, var(--primary-glow) 0%, rgba(0,0,0,0) 70%);
-                    top: -10%;
-                    left: -10%;
-                    z-index: 0;
-                }
-                .glow-bg-secondary {
-                    position: absolute;
-                    width: 500px;
-                    height: 500px;
-                    background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(0,0,0,0) 70%);
-                    bottom: -10%;
-                    right: -10%;
-                    z-index: 0;
-                }
                 .card {
                     background: rgba(17, 24, 39, 0.75);
                     backdrop-filter: blur(16px);
-                    -webkit-backdrop-filter: blur(16px);
                     padding: 50px 40px;
                     border-radius: 24px;
                     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -120,93 +114,27 @@ async def home():
                     max-width: 650px;
                     text-align: center;
                     z-index: 1;
-                    transition: transform 0.3s ease, box-shadow 0.3s ease;
                 }
-                .card:hover {
-                    transform: translateY(-5px);
-                    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 50px rgba(16, 185, 129, 0.35);
-                }
-                .shield-icon {
-                    font-size: 64px;
-                    margin-bottom: 20px;
-                    display: inline-block;
-                    filter: drop-shadow(0 0 15px var(--primary-color));
-                    animation: pulse 2.5s infinite alternate;
-                }
+                .shield-icon { font-size: 64px; margin-bottom: 20px; display: inline-block; }
                 h1 {
-                    font-size: 42px;
-                    font-weight: 800;
-                    margin: 0;
+                    font-size: 42px; font-weight: 800; margin: 0;
                     background: linear-gradient(to right, #10b981, #3b82f6);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    letter-spacing: -0.5px;
+                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
                 }
-                h2 {
-                    font-size: 20px;
-                    font-weight: 400;
-                    color: var(--text-muted);
-                    margin: 8px 0 25px 0;
-                    text-transform: uppercase;
-                    letter-spacing: 2px;
-                }
-                p {
-                    color: var(--text-muted);
-                    font-size: 16px;
-                    line-height: 1.8;
-                    margin: 0 auto 30px auto;
-                    max-width: 500px;
-                }
-                .button-group {
-                    display: flex;
-                    justify-content: center;
-                    gap: 15px;
-                }
-                .btn {
-                    padding: 14px 28px;
-                    border-radius: 12px;
-                    font-weight: 600;
-                    text-decoration: none;
-                    transition: all 0.25s ease;
-                    font-size: 15px;
-                }
-                .btn-primary {
-                    background: var(--primary-color);
-                    color: #0f172a;
-                    box-shadow: 0 4px 14px var(--primary-glow);
-                }
-                .btn-primary:hover {
-                    background: #34d399;
-                    transform: translateY(-2px);
-                    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-                }
-                .btn-secondary {
-                    background: transparent;
-                    color: var(--text-main);
-                    border: 1px solid rgba(255, 255, 255, 0.15);
-                }
-                .btn-secondary:hover {
-                    background: rgba(255, 255, 255, 0.05);
-                    border-color: rgba(255, 255, 255, 0.3);
-                    transform: translateY(-2px);
-                }
-                @keyframes pulse {
-                    0% { transform: scale(1); }
-                    100% { transform: scale(1.06); }
-                }
+                h2 { font-size: 20px; font-weight: 400; color: var(--text-muted); margin: 8px 0 25px 0; text-transform: uppercase; letter-spacing: 2px; }
+                p { color: var(--text-muted); font-size: 16px; line-height: 1.8; margin: 0 auto 30px auto; max-width: 500px; }
+                .button-group { display: flex; justify-content: center; gap: 15px; }
+                .btn { padding: 14px 28px; border-radius: 12px; font-weight: 600; text-decoration: none; font-size: 15px; }
+                .btn-primary { background: var(--primary-color); color: #0f172a; }
+                .btn-secondary { background: transparent; color: var(--text-main); border: 1px solid rgba(255,255,255,0.15); }
             </style>
         </head>
         <body>
-            <div class="glow-bg"></div>
-            <div class="glow-bg-secondary"></div>
             <div class="card">
                 <span class="shield-icon">🛡️</span>
                 <h1>AegisShield</h1>
                 <h2>Threat Intelligence Platform</h2>
-                <p>
-                    Plataforma avanzada de ciberseguridad orientada a la detección y mitigación 
-                    de fraudes financieros. Monitoreo automatizado de IoCs y telemetría de contramedidas activas.
-                </p>
+                <p>Plataforma avanzada de ciberseguridad orientada a la detección y mitigación de fraudes financieros.</p>
                 <div class="button-group">
                     <a href="/docs" class="btn btn-primary">Acceder a la API</a>
                     <a href="https://github.com/mazagir/fraude-defender" target="_blank" class="btn btn-secondary">Documentación</a>
@@ -216,20 +144,12 @@ async def home():
     </html>
     """
 
-# ─── HEALTH CHECK (KEEP-ALIVE PARA RENDER) ───────────────────
+# ─── HEALTH CHECK ─────────────────────────────────────────────
 @app.get("/health", tags=["Sistema"])
 async def health_check():
-    """
-    Endpoint de health check. Usado para mantener el servidor activo
-    en Render (free tier) y para verificar el estado del servicio.
-    """
     return {"status": "ok", "servicio": settings.PROJECT_NAME, "version": settings.VERSION}
 
-# ─── MONTAJE DE RUTAS VERSIONADAS ────────────────────────────
+# ─── RUTAS ────────────────────────────────────────────────────
 app.include_router(api_router, prefix=settings.API_V1_STR)
-
-# ─── SOPORTE DE COMPATIBILIDAD RETROACTIVA (LEGACY PATHS) ─────
-# Incluimos los mismos routers en la raíz sin el prefijo /api/v1
-# pero ocultos de Swagger para que la documentación permanezca limpia.
 app.include_router(auth_router, prefix="/auth", include_in_schema=False)
 app.include_router(reports_router, prefix="/reportes", include_in_schema=False)
