@@ -14,15 +14,16 @@ Base.metadata.create_all(bind=engine)
 print("[OK] Tablas de base de datos inicializadas correctamente.")
 
 # Migración automática de columnas nuevas
+
 try:
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN IF NOT EXISTS risk_score INTEGER DEFAULT 0"))
         conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN IF NOT EXISTS malicious_indicators TEXT DEFAULT ''"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS rol VARCHAR DEFAULT 'analista'"))
         conn.commit()
         print("[OK] Migración de columnas ejecutada correctamente.")
 except Exception as e:
     print(f"[INFO] Migración: {e}")
-
 # Importar enrutadores
 from app.api.v1.router import api_router
 from app.api.v1.endpoints.auth import router as auth_router
