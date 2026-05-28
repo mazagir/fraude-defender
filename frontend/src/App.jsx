@@ -6,7 +6,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://fraude-defender-api.onrender.com";
-
+const API_PUBLIC = import.meta.env.VITE_API_URL || "https://fraude-defender-api.onrender.com";
 const riskColor = { alto: "#ff4d6d", medio: "#ffb547", bajo: "#00e5b4" };
 const riskBg   = { alto: "rgba(255,77,109,0.12)", medio: "rgba(255,181,71,0.12)", bajo: "rgba(0,229,180,0.1)" };
 
@@ -518,6 +518,152 @@ function AmenazasView({ reports }) {
   );
 }
 
+// ─── VISTA PÚBLICA ─────────────────────────────────────────────────────────
+function PublicView({ onLogin }) {
+  const [vista, setVista] = useState("home");
+  const [form, setForm] = useState({ description: "", phone_number: "", domain: "", bank_account: "" });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleReporte = async () => {
+    if (!form.description.trim()) { setError("La descripción es obligatoria."); return; }
+    setLoading(true); setError("");
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/reportes/publico`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Error al enviar reporte");
+      }
+      setSuccess(true);
+      setForm({ description: "", phone_number: "", domain: "", bank_account: "" });
+    } catch (e) { setError(e.message); }
+    finally { setLoading(false); }
+  };
+
+  const inp = {
+    width: "100%", background: "#0a0d14", border: "1px solid rgba(99,130,255,0.2)",
+    borderRadius: 8, padding: "12px 14px", color: "#e8ecf8", fontSize: 14,
+    fontFamily: "inherit", outline: "none", boxSizing: "border-box", marginBottom: 14,
+  };
+
+  if (vista === "reporte") return (
+    <div style={{ minHeight: "100vh", background: "#0a0d14", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+        style={{ background: "#0f1320", border: "1px solid rgba(99,130,255,0.18)", borderRadius: 16, padding: 40, width: 500, maxWidth: "100%" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+          <button onClick={() => { setVista("home"); setSuccess(false); setError(""); }}
+            style={{ background: "none", border: "none", color: "#6b7fa3", cursor: "pointer", fontSize: 20 }}>←</button>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "#e8ecf8" }}>🚨 Reportar Fraude</div>
+            <div style={{ fontSize: 12, color: "#6b7fa3" }}>Sin registro — completamente anónimo</div>
+          </div>
+        </div>
+
+        {success ? (
+          <div style={{ textAlign: "center", padding: "32px 0" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "#00e5b4", marginBottom: 8 }}>¡Reporte enviado!</div>
+            <div style={{ fontSize: 14, color: "#6b7fa3", marginBottom: 24 }}>Tu reporte fue registrado y será analizado por nuestro equipo.</div>
+            <button onClick={() => { setSuccess(false); setVista("home"); }}
+              style={{ background: "#4f7cff", color: "#fff", padding: "10px 24px", borderRadius: 8, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 14, fontWeight: 600 }}>
+              Volver al inicio
+            </button>
+          </div>
+        ) : (
+          <>
+            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>¿Qué pasó? *</label>
+            <textarea rows={3} placeholder="Describe el fraude, amenaza o estafa..." value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              style={{ ...inp, resize: "vertical" }} />
+            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Teléfono sospechoso</label>
+            <input placeholder="+57 300 000 0000" value={form.phone_number}
+              onChange={(e) => setForm({ ...form, phone_number: e.target.value })} style={inp} />
+            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Dominio / URL / App</label>
+            <input placeholder="prestamofacil.com, WhatsApp, etc." value={form.domain}
+              onChange={(e) => setForm({ ...form, domain: e.target.value })} style={inp} />
+            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Cuenta de recaudo (Nequi, Daviplata...)</label>
+            <input placeholder="3001234567" value={form.bank_account}
+              onChange={(e) => setForm({ ...form, bank_account: e.target.value })} style={inp} />
+            {error && <div style={{ color: "#ff4d6d", fontSize: 12, marginBottom: 12 }}>{error}</div>}
+            <motion.button whileTap={{ scale: 0.98 }} onClick={handleReporte} disabled={loading}
+              style={{ width: "100%", padding: 14, borderRadius: 8, border: "none", background: loading ? "#374080" : "#ff4d6d", color: "#fff", cursor: "pointer", fontSize: 15, fontWeight: 700, fontFamily: "inherit" }}>
+              {loading ? "Enviando..." : "🚨 Enviar Reporte"}
+            </motion.button>
+          </>
+        )}
+      </motion.div>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0a0d14", color: "#e8ecf8", fontFamily: "inherit" }}>
+      {/* Header */}
+      <div style={{ background: "#0f1320", borderBottom: "1px solid rgba(99,130,255,0.15)", padding: "16px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ fontSize: 28 }}>🛡️</div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 16, color: "#e8ecf8" }}>AegisShield</div>
+            <div style={{ fontSize: 10, color: "#6b7fa3", letterSpacing: "1.5px", textTransform: "uppercase" }}>Anti-Fraud LATAM</div>
+          </div>
+        </div>
+        <button onClick={() => setVista("login")}
+          style={{ background: "rgba(79,124,255,0.1)", border: "1px solid rgba(79,124,255,0.3)", color: "#4f7cff", padding: "8px 18px", borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 600 }}>
+          Iniciar Sesión
+        </button>
+      </div>
+
+      {/* Hero */}
+      <div style={{ textAlign: "center", padding: "80px 20px 60px" }}>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div style={{ fontSize: 64, marginBottom: 20 }}>🛡️</div>
+          <h1 style={{ fontSize: 42, fontWeight: 800, margin: "0 0 16px", background: "linear-gradient(135deg,#4f7cff,#00e5b4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            Protege tu comunidad
+          </h1>
+          <p style={{ fontSize: 18, color: "#6b7fa3", maxWidth: 500, margin: "0 auto 40px" }}>
+            Reporta fraudes, préstamos predatorios y estafas digitales. Sin registro, completamente anónimo.
+          </p>
+          <motion.button whileTap={{ scale: 0.97 }} onClick={() => setVista("reporte")}
+            style={{ background: "#ff4d6d", color: "#fff", padding: "16px 40px", borderRadius: 12, border: "none", fontSize: 18, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", boxShadow: "0 8px 32px rgba(255,77,109,0.3)" }}>
+            🚨 Reportar Fraude Ahora
+          </motion.button>
+        </motion.div>
+      </div>
+
+      {/* Cards */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 20, padding: "0 20px 80px", flexWrap: "wrap" }}>
+        {[
+          { icon: "📱", title: "Montadeudas", desc: "Préstamos con intereses abusivos y amenazas" },
+          { icon: "🌐", title: "Phishing", desc: "Sitios falsos que roban tus datos bancarios" },
+          { icon: "💳", title: "Fraude bancario", desc: "Transferencias no autorizadas y clonación" },
+          { icon: "📲", title: "Estafas WhatsApp", desc: "Engaños por mensajería y redes sociales" },
+        ].map((c) => (
+          <motion.div key={c.title} whileHover={{ y: -4 }}
+            style={{ background: "#0f1320", border: "1px solid rgba(99,130,255,0.15)", borderRadius: 12, padding: "24px 20px", width: 200, textAlign: "center" }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>{c.icon}</div>
+            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>{c.title}</div>
+            <div style={{ fontSize: 12, color: "#6b7fa3" }}>{c.desc}</div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Login section */}
+      {vista === "login" && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(10,13,20,0.9)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}
+          onClick={() => setVista("home")}>
+          <div onClick={(e) => e.stopPropagation()}>
+            <LoginView onLogin={onLogin} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── THREAT INTEL ──────────────────────────────────────────────────────────
 function ThreatIntelView({ reports }) {
   const blacklistTel = [...new Set(reports.filter((r) => r.phone_number).map((r) => r.phone_number))];
@@ -637,7 +783,7 @@ export default function App() {
 
   const viewTitles = { dashboard: "Centro de Comando", reportes: "Módulo de Reportes", amenazas: "Amenazas Activas", intel: "Threat Intelligence" };
 
-  if (!token) return <LoginView onLogin={handleLogin} />;
+  if (!token) return <PublicView onLogin={handleLogin} />;
 
   return (
     <>
