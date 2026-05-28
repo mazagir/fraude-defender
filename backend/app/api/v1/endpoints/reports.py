@@ -64,3 +64,13 @@ def obtener_telemetria_defensa():
     Endpoint público para consultar la telemetría de contramedidas activas y ejecuciones.
     """
     return service_obtener_telemetria()
+@router.post("/publico", response_model=FraudReportResponse, status_code=status.HTTP_201_CREATED)
+def crear_reporte_publico(
+    reporte_in: FraudReportCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Endpoint público para que ciudadanos reporten fraudes sin autenticación.
+    No requiere login ni API Key.
+    """
+    return service_crear(reporte_in, db)
