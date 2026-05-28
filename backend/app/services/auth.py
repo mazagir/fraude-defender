@@ -28,7 +28,7 @@ def login_usuario(username: str, password: str, db: Session) -> dict:
             status_code=status.HTTP_401_UNAUTHORIZED, 
             detail="Correo o contraseña incorrectos."
         )
-    token = crear_token({"sub": usuario.email})
+    token = crear_token({"sub": usuario.email, "rol": usuario.rol or "analista"})
     return {
         "access_token": token,
         "token_type": "bearer",

@@ -79,3 +79,14 @@ def obtener_autenticacion_dual(
         
     # 2. Si no hay API Key, requerimos JWT
     return get_usuario_actual(token=token, db=db)
+
+def verificar_admin(
+    usuario: User = Depends(get_usuario_actual)
+) -> User:
+    """Verifica que el usuario sea administrador."""
+    if usuario.rol != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acceso denegado. Se requiere rol de administrador."
+        )
+    return usuario

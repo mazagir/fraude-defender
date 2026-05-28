@@ -33,10 +33,11 @@ class UsuarioResponse(BaseModel):
     nombre: str
     email: str
     es_activo: bool
-
+    rol: str = "analista"
     class Config:
         from_attributes = True
 
+        
 class Token(BaseModel):
     access_token: str
     token_type: str
