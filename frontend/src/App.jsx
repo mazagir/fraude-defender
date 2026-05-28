@@ -179,9 +179,11 @@ function ReportModal({ onClose, onSubmit }) {
 
 // ─── LOGIN ─────────────────────────────────────────────────────────────────
 function LoginView({ onLogin }) {
-  const [form, setForm] = useState({ username: "", password: "" });
+  const [mode, setMode] = useState("login");
+  const [form, setForm] = useState({ username: "", password: "", email: "", nombre: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleLogin = async () => {
     setLoading(true); setError("");
@@ -197,6 +199,26 @@ function LoginView({ onLogin }) {
     finally { setLoading(false); }
   };
 
+  const handleRegister = async () => {
+    if (!form.email || !form.password || !form.nombre) { setError("Todos los campos son obligatorios."); return; }
+    setLoading(true); setError(""); setSuccess("");
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/auth/registro`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, password: form.password, nombre: form.nombre }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Error al registrarse");
+      }
+      setSuccess("¡Cuenta creada! Ya puedes iniciar sesión.");
+      setMode("login");
+      setForm({ ...form, username: form.email });
+    } catch (e) { setError(e.message); }
+    finally { setLoading(false); }
+  };
+
   const inp = { width: "100%", background: "#0a0d14", border: "1px solid rgba(99,130,255,0.2)", borderRadius: 8, padding: "12px 14px", color: "#e8ecf8", fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box", marginBottom: 14 };
 
   return (
@@ -206,17 +228,44 @@ function LoginView({ onLogin }) {
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🛡️</div>
           <div style={{ fontSize: 22, fontWeight: 700, color: "#e8ecf8" }}>AegisShield</div>
-          <div style={{ fontSize: 13, color: "#6b7fa3", marginTop: 4 }}>Plataforma Anti-Fraude LATAM</div>
+          <div style={{ fontSize: 13, color: "#6b7fa3", marginTop: 4 }}>{mode === "login" ? "Plataforma Anti-Fraude LATAM" : "Crear nueva cuenta"}</div>
         </div>
-        <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Usuario o Email</label>
-        <input placeholder="neil@mail.com" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={inp} onKeyDown={(e) => e.key === "Enter" && handleLogin()} />
-        <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Contraseña</label>
-        <input type="password" placeholder="••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} style={inp} onKeyDown={(e) => e.key === "Enter" && handleLogin()} />
+
+        {mode === "register" && (
+          <>
+            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Nombre completo</label>
+            <input placeholder="Tu nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} style={inp} />
+            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Email</label>
+            <input placeholder="tu@email.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={inp} />
+            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Contraseña</label>
+            <input type="password" placeholder="••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} style={inp} onKeyDown={(e) => e.key === "Enter" && handleRegister()} />
+          </>
+        )}
+
+        {mode === "login" && (
+          <>
+            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Usuario o Email</label>
+            <input placeholder="neil@mail.com" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={inp} onKeyDown={(e) => e.key === "Enter" && handleLogin()} />
+            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Contraseña</label>
+            <input type="password" placeholder="••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} style={inp} onKeyDown={(e) => e.key === "Enter" && handleLogin()} />
+          </>
+        )}
+
         {error && <div style={{ color: "#ff4d6d", fontSize: 12, marginBottom: 12, textAlign: "center" }}>{error}</div>}
-        <motion.button whileTap={{ scale: 0.98 }} onClick={handleLogin} disabled={loading}
+        {success && <div style={{ color: "#00e5b4", fontSize: 12, marginBottom: 12, textAlign: "center" }}>{success}</div>}
+
+        <motion.button whileTap={{ scale: 0.98 }} onClick={mode === "login" ? handleLogin : handleRegister} disabled={loading}
           style={{ width: "100%", padding: "12px", borderRadius: 8, border: "none", background: loading ? "#374080" : "#4f7cff", color: "#fff", cursor: "pointer", fontSize: 15, fontWeight: 700, fontFamily: "inherit", marginBottom: 12 }}>
-          {loading ? "Autenticando..." : "Iniciar Sesión"}
+          {loading ? "Procesando..." : mode === "login" ? "Iniciar Sesión" : "Crear Cuenta"}
         </motion.button>
+
+        <div style={{ textAlign: "center", fontSize: 12, color: "#6b7fa3" }}>
+          {mode === "login" ? (
+            <>¿No tienes cuenta?{" "}<span style={{ color: "#4f7cff", cursor: "pointer" }} onClick={() => { setMode("register"); setError(""); setSuccess(""); }}>Regístrate</span></>
+          ) : (
+            <>¿Ya tienes cuenta?{" "}<span style={{ color: "#4f7cff", cursor: "pointer" }} onClick={() => { setMode("login"); setError(""); setSuccess(""); }}>Inicia sesión</span></>
+          )}
+        </div>
       </motion.div>
     </div>
   );
@@ -566,12 +615,12 @@ export default function App() {
   };
 
   const handleCreateReport = async (form) => {
-  const payload = {
-  description: form.descripcion,
-  phone_number: form.telefono_sospechoso,
-  domain: form.dominio,
-  bank_account: form.banco_recaudo,
-};
+    const payload = {
+      description: form.descripcion,
+      phone_number: form.telefono_sospechoso,
+      domain: form.dominio,
+      bank_account: form.banco_recaudo,
+    };
     const res = await apiFetch(`${API_BASE}/api/v1/reportes`, token, { method: "POST", body: JSON.stringify(payload) });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
