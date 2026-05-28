@@ -1,1 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --font-sans: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+
+  --color-cyber-blue: #2563eb;
+  --color-cyber-cyan: #00e5b4;
+  --color-cyber-purple: #8b5cf6;
+  --color-cyber-dark: #0a0d14;
+  --color-cyber-card: #0f1320;
+  --color-cyber-border: rgba(99, 130, 255, 0.15);
+  
+  --animate-grid-move: grid-move 20s linear infinite;
+  --animate-scanline: scanline 6s linear infinite;
+  --animate-radial-pulse: radial-pulse 4s ease-in-out infinite;
+
+  @keyframes grid-move {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 40px; }
+  }
+  @keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+  @keyframes radial-pulse {
+    0%, 100% { opacity: 0.15; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(1.1); }
+  }
+}
+
+/* Base custom resets */
+html, body {
+  background-color: #05070c;
+  color: #e8ecf8;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #05070c;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 130, 255, 0.25);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 229, 180, 0.4);
+}
+
+/* Cyber Grid background effect */
+.cyber-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(99, 130, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 130, 255, 0.05) 1px, transparent 1px);
+}
+
+.cyber-grid-dots {
+  background-size: 20px 20px;
+  background-image: radial-gradient(rgba(0, 229, 180, 0.08) 1px, transparent 1px);
+}
+
+/* Glassmorphism & Cyber Glows */
+.glass-panel {
+  background: rgba(15, 19, 32, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(99, 130, 255, 0.15);
+}
+
+.glow-blue {
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.15);
+}
+.glow-cyan {
+  box-shadow: 0 0 20px rgba(0, 229, 180, 0.15);
+}
+.glow-red {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
+}
+
+.glow-text-cyan {
+  text-shadow: 0 0 10px rgba(0, 229, 180, 0.5);
+}
+
+.glow-border-cyan:hover {
+  border-color: rgba(0, 229, 180, 0.5);
+  box-shadow: 0 0 15px rgba(0, 229, 180, 0.15);
+}
+
+.glow-border-blue:hover {
+  border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 15px rgba(37, 99, 235, 0.15);
+}
+
+/* Scanline effect */
+.scanline-overlay::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 2;
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+}
+
+/* Noise effect overlay */
+.noise-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.015'/%3E%3C/svg%3E");
+}

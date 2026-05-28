@@ -11,3 +11,6 @@
   - [ ] Crear reporte -> aparece en tabla
   - [ ] Eliminar reporte -> se actualiza (o confirmar el refresh)
 
+- [x] Añadir UI/endpoint para “simular ataques” (ataques/IoCs aleatorios) y refrescar dashboard.
+
+

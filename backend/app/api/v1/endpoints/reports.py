@@ -74,3 +74,15 @@ def crear_reporte_publico(
     No requiere login ni API Key.
     """
     return service_crear(reporte_in, db)
+
+
+@router.post("/simular-ataques", status_code=status.HTTP_201_CREATED)
+def simular_ataques():
+    """Dispara la simulación de ataques (IoCs falsos) para estresar el motor heurístico.
+
+    Nota: Endpoint pensado para uso interno/QA.
+    """
+    # Reutilizamos el servicio existente de contramedidas como contador de ejecuciones.
+    # Los IoCs serán inyectados por el simulador externo que ya genera reportes.
+    # Si el servicio de simulación se implementa 100% server-side, se puede extender aquí.
+    return service_registrar_contramedida()

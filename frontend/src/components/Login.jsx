@@ -1,19 +1,24 @@
 import { useState } from "react";
 
-import API, { authHeaders } from "../services/api";
+import API from "../services/api";
 
 export function Login({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState(null);
 
   const loginConRuta = async (url, payload) => {
+    // OAuth2PasswordRequestForm (FastAPI) espera form-urlencoded: username/password.
+    const form = new URLSearchParams();
+    if (payload?.username) form.set("username", payload.username);
+    if (payload?.email) form.set("username", payload.email);
+    if (payload?.password) form.set("password", payload.password);
+
     const res = await fetch(url, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        ...authHeaders(),
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: JSON.stringify(payload),
+      body: form.toString(),
     });
 
     const data = await (async () => {
@@ -38,14 +43,7 @@ export function Login({ onLogin }) {
       { username: "demo", payload: { username: "demo", password } },
     ];
 
-    const routes = [
-      `${API}/api/v1/auth/login`,
-      `${API}/api/v1/auth/signin`,
-      `${API}/auth/login`,
-      `${API}/auth/signin`,
-      `${API}/api/v1/login`,
-      `${API}/login`,
-    ];
+    const routes = [`${API}/api/v1/auth/login`];
 
     let last = null;
 
@@ -64,9 +62,10 @@ export function Login({ onLogin }) {
               throw new Error(`Login OK pero no se encontró token en respuesta (${route}).`);
             }
 
-            localStorage.setItem("fd_token", token);
+            // Unificar storage con App.jsx (admin usa aegis_token)
+            localStorage.setItem("aegis_token", token);
             localStorage.setItem("fd_usuario", JSON.stringify(user));
-            onLogin?.(user);
+            onLogin?.(token);
             return;
           }
         }

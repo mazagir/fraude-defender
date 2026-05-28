@@ -1,12 +1,18 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, AreaChart, Area
+  PieChart, Pie, Cell, AreaChart, Area, RadarChart, PolarGrid, PolarAngleAxis, Radar
 } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
+import { 
+  FaShieldAlt, FaTerminal, FaSync, FaExclamationTriangle, FaCheckCircle, 
+  FaInfoCircle, FaMap, FaUser, FaChartLine, FaRobot, FaLock, FaGlobe, 
+  FaBrain, FaEye, FaPowerOff, FaBug, FaDatabase, FaPlus, FaChevronRight, FaTimes, FaUserPlus,
+  FaTrash
+} from "react-icons/fa";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://fraude-defender-api.onrender.com";
-const API_PUBLIC = import.meta.env.VITE_API_URL || "https://fraude-defender-api.onrender.com";
+
 const riskColor = { alto: "#ff4d6d", medio: "#ffb547", bajo: "#00e5b4" };
 const riskBg   = { alto: "rgba(255,77,109,0.12)", medio: "rgba(255,181,71,0.12)", bajo: "rgba(0,229,180,0.1)" };
 
@@ -21,9 +27,9 @@ function buildMonthlyData(reports) {
   const map = {};
   months.forEach((m) => { map[m] = { name: m, alto: 0, medio: 0, bajo: 0 }; });
   reports.forEach((r) => {
-    const date = new Date(r.created_at || r.fecha_reporte || Date.now());
+    const date = new Date(r.created_at || Date.now());
     const key = months[date.getMonth()];
-    const lvl = getRiskLevel(r.risk_score ?? 0);
+    const lvl = getRiskLevel(r.score_riesgo ?? r.risk_score ?? 0);
     if (map[key]) map[key][lvl]++;
   });
   return Object.values(map);
@@ -38,7 +44,7 @@ function buildTrendData(reports) {
     days[key] = { name: key, reportes: 0 };
   }
   reports.forEach((r) => {
-    const d = new Date(r.created_at || r.fecha_reporte || Date.now());
+    const d = new Date(r.created_at || Date.now());
     if (now - d.getTime() <= 7 * 86400000) {
       const key = d.toLocaleDateString("es-CO", { weekday: "short" });
       if (days[key]) days[key].reportes++;
@@ -54,343 +60,923 @@ async function apiFetch(url, token, options = {}) {
   return fetch(url, { ...options, headers: { ...headers, ...(options.headers || {}) } });
 }
 
-// ─── SIDEBAR ───────────────────────────────────────────────────────────────
-function Sidebar({ view, setView, reportsCount }) {
+// ─── COMPONENT: RISK BADGE ────────────────────────────────────────────────
+function RiskBadge({ level }) {
+  const l = (level || "bajo").toLowerCase();
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold ${riskBg[l]} border-white/5`} style={{ color: riskColor[l] || riskColor.bajo }}>
+      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: riskColor[l] || riskColor.bajo }} />
+      {l.toUpperCase()}
+    </span>
+  );
+}
+
+// ─── COMPONENT: LANDING VIEW ─────────────────────────────────────────────
+function LandingView({ onLaunch }) {
+  const [stats, setStats] = useState({ attacks: 489122, speed: 12, detection: 99.98 });
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStats(prev => ({
+        ...prev,
+        attacks: prev.attacks + Math.floor(Math.random() * 3) + 1
+      }));
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 cyber-grid relative overflow-hidden flex flex-col font-sans select-none">
+      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-900/10 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-900/10 rounded-full blur-[150px] pointer-events-none" />
+
+      {/* Header */}
+      <header className="w-full py-5 px-6 md:px-12 flex justify-between items-center border-b border-slate-800/60 backdrop-blur-md sticky top-0 z-50 bg-slate-950/80">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-400 flex items-center justify-center shadow-lg shadow-blue-500/20 text-xl font-bold">🛡️</div>
+          <div>
+            <div className="font-extrabold text-lg tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-slate-100 to-slate-300">AegisShield</div>
+            <div className="text-[9px] text-cyan-400 tracking-[3px] font-bold uppercase">Threat Intelligence</div>
+          </div>
+        </div>
+        <button 
+          onClick={onLaunch}
+          className="relative group overflow-hidden px-5 py-2.5 rounded-xl border border-blue-500/30 bg-blue-950/40 text-sm font-bold tracking-wide hover:border-cyan-400/50 transition-all cursor-pointer shadow-md"
+        >
+          <span className="relative z-10 flex items-center gap-2 group-hover:text-cyan-300 transition-colors">
+            <FaTerminal className="text-cyan-400 animate-pulse" /> INICIAR CONSOLA
+          </span>
+          <div className="absolute inset-0 -translate-x-full group-hover:translate-x-0 bg-gradient-to-r from-blue-600/20 to-emerald-500/20 transition-transform duration-500" />
+        </button>
+      </header>
+
+      {/* Hero Section */}
+      <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-20 max-w-5xl mx-auto relative z-10">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="space-y-6"
+        >
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-xs font-semibold tracking-wider uppercase mb-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            IA & Detección de Amenazas Activa
+          </div>
+          
+          <h1 className="text-4xl md:text-7xl font-extrabold leading-tight tracking-tight">
+            AegisShield <br className="hidden md:inline" />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 drop-shadow-md">
+              AI-Powered Threat Intelligence
+            </span>
+          </h1>
+          
+          <p className="text-slate-400 text-lg md:text-xl max-w-3xl mx-auto font-light leading-relaxed">
+            Mitigación avanzada de fraudes financieros, envenenamiento inteligente de bases de datos de estafadores ("montadeudas") y monitoreo automatizado de IoCs en tiempo real.
+          </p>
+        </motion.div>
+
+        {/* CTAs */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="flex flex-col sm:flex-row gap-4 mt-10 w-full justify-center"
+        >
+          <button 
+            onClick={onLaunch}
+            className="px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-slate-950 font-extrabold text-base tracking-wide transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer shadow-lg shadow-blue-500/20"
+          >
+            Acceder al SOC Command Center
+          </button>
+        </motion.div>
+
+        {/* Live Counters */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 0.4 }}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-4xl mt-20 border border-slate-800/60 bg-slate-900/30 rounded-2xl p-6 backdrop-blur-sm"
+        >
+          <div className="text-center py-2">
+            <div className="text-xs text-slate-500 uppercase tracking-widest font-bold">Amenazas Mitigadas</div>
+            <div className="text-3xl font-bold font-mono text-cyan-400 mt-2">{stats.attacks.toLocaleString()}</div>
+          </div>
+          <div className="text-center py-2 border-y sm:border-y-0 sm:border-x border-slate-800/60">
+            <div className="text-xs text-slate-500 uppercase tracking-widest font-bold">Latencia de Detección</div>
+            <div className="text-3xl font-bold font-mono text-blue-400 mt-2">{stats.speed} ms</div>
+          </div>
+          <div className="text-center py-2">
+            <div className="text-xs text-slate-500 uppercase tracking-widest font-bold">Efectividad de IA</div>
+            <div className="text-3xl font-bold font-mono text-emerald-400 mt-2">{stats.detection}%</div>
+          </div>
+        </motion.div>
+      </main>
+
+      {/* Features showcase */}
+      <section className="w-full px-6 md:px-12 py-16 bg-slate-950/80 border-t border-slate-900 relative z-10 flex-shrink-0">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="p-6 rounded-2xl bg-slate-900/40 border border-slate-800/50 hover:border-blue-500/30 hover:bg-slate-900/60 transition-all group">
+            <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 text-xl mb-4 group-hover:scale-110 transition-transform">🧠</div>
+            <h3 className="text-lg font-bold text-slate-200">Motor de Riesgo Heurístico</h3>
+            <p className="text-sm text-slate-400 mt-2 leading-relaxed">
+              Algoritmo impulsado por IA que escanea de forma proactiva números, dominios y cuentas en busca de patrones sospechosos.
+            </p>
+          </div>
+          <div className="p-6 rounded-2xl bg-slate-900/40 border border-slate-800/50 hover:border-emerald-500/30 hover:bg-slate-900/60 transition-all group">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 text-xl mb-4 group-hover:scale-110 transition-transform">🛡️</div>
+            <h3 className="text-lg font-bold text-slate-200">Defensa Activa (Decoys)</h3>
+            <p className="text-sm text-slate-400 mt-2 leading-relaxed">
+              Poisoning automatizado contra servidores de estafadores inyectando perfiles falsos para saturar e inutilizar sus bases de datos.
+            </p>
+          </div>
+          <div className="p-6 rounded-2xl bg-slate-900/40 border border-slate-800/50 hover:border-purple-500/30 hover:bg-slate-900/60 transition-all group">
+            <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 text-xl mb-4 group-hover:scale-110 transition-transform">⚡</div>
+            <h3 className="text-lg font-bold text-slate-200">Integración Corporativa</h3>
+            <p className="text-sm text-slate-400 mt-2 leading-relaxed">
+              Endpoints REST y soporte para X-API-KEY dual que permite conectar plataformas externas al SOC central en milisegundos.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="w-full py-6 text-center text-xs text-slate-600 border-t border-slate-900/80 bg-slate-950">
+        © 2026 AegisShield Threat Intelligence Platform. Reservados todos los derechos. Seguridad de nivel gubernamental.
+      </footer>
+    </div>
+  );
+}
+
+// ─── COMPONENT: LOGIN & REGISTER VIEW ──────────────────────────────────────
+function LoginView({ onLogin }) {
+  const [isRegister, setIsRegister] = useState(false);
+  const [form, setForm] = useState({ username: "", password: "", nombre: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleAction = async () => {
+    if (!form.username || !form.password || (isRegister && !form.nombre)) {
+      setError("Por favor completa todos los campos.");
+      return;
+    }
+    setLoading(true); setError(""); setSuccess("");
+    try {
+      if (isRegister) {
+        // REGISTRO
+        const res = await fetch(`${API_BASE}/api/v1/auth/registro`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre: form.nombre, email: form.username, password: form.password })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || "Error en el registro.");
+        }
+        setSuccess("Registro exitoso. Inicia sesión ahora.");
+        setIsRegister(false);
+      } else {
+        // INICIO SESIÓN
+        const body = new URLSearchParams({ username: form.username, password: form.password });
+        const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
+          method: "POST",
+          body,
+          headers: { "Content-Type": "application/x-www-form-urlencoded" }
+        });
+        if (!res.ok) throw new Error("Credenciales inválidas");
+        const data = await res.json();
+        const receivedToken = data.access_token || data.token || Object.values(data)[0];
+        if (!receivedToken) throw new Error("No se recibió token del servidor");
+        onLogin(receivedToken);
+      }
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#05070c] cyber-grid flex items-center justify-center p-4 text-slate-200 select-none relative">
+      <div className="absolute top-[30%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute w-full h-full scanline-overlay pointer-events-none opacity-[0.12]" />
+
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md p-8 rounded-2xl glass-panel glow-blue relative z-10"
+      >
+        <div className="text-center mb-8">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-3xl mx-auto shadow-lg shadow-blue-500/10 mb-4 animate-pulse">🛡️</div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-100">Consola AegisShield</h2>
+          <p className="text-xs text-slate-500 mt-2 uppercase tracking-widest font-mono">SOC ACCESO RESTRINGIDO</p>
+        </div>
+
+        <div className="space-y-4 font-sans">
+          {isRegister && (
+            <div>
+              <label className="text-[10px] text-slate-400 uppercase tracking-widest font-mono font-bold block mb-1.5">Nombre Completo</label>
+              <input 
+                type="text" 
+                placeholder="Ingresa tu nombre" 
+                value={form.nombre}
+                onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                className="w-full bg-[#090c15] border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-blue-500/50 transition-colors"
+                onKeyDown={(e) => e.key === "Enter" && handleAction()}
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="text-[10px] text-slate-400 uppercase tracking-widest font-mono font-bold block mb-1.5">Correo Corporativo</label>
+            <input 
+              type="email" 
+              placeholder="nombre@empresa.com" 
+              value={form.username}
+              onChange={(e) => setForm({ ...form, username: e.target.value })}
+              className="w-full bg-[#090c15] border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-blue-500/50 transition-colors"
+              onKeyDown={(e) => e.key === "Enter" && handleAction()}
+            />
+          </div>
+
+          <div>
+            <label className="text-[10px] text-slate-400 uppercase tracking-widest font-mono font-bold block mb-1.5">Contraseña de Seguridad</label>
+            <input 
+              type="password" 
+              placeholder="••••••••" 
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className="w-full bg-[#090c15] border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-blue-500/50 transition-colors"
+              onKeyDown={(e) => e.key === "Enter" && handleAction()}
+            />
+          </div>
+
+          {error && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 p-3 bg-red-950/20 border border-red-500/20 rounded-xl text-xs text-red-400">
+              <FaExclamationTriangle /> {error}
+            </motion.div>
+          )}
+
+          {success && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 p-3 bg-emerald-950/20 border border-emerald-500/20 rounded-xl text-xs text-emerald-400">
+              <FaCheckCircle /> {success}
+            </motion.div>
+          )}
+
+          <button 
+            onClick={handleAction} 
+            disabled={loading}
+            className="w-full py-3.5 mt-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-slate-950 font-bold tracking-wider uppercase text-xs transition-all cursor-pointer shadow-lg shadow-blue-500/10 flex items-center justify-center gap-2"
+          >
+            {loading ? "Procesando..." : isRegister ? "Registrar Credenciales" : "Acceder al Sistema"}
+          </button>
+        </div>
+
+        <div className="mt-6 pt-5 border-t border-slate-800/60 text-center">
+          <button 
+            onClick={() => {
+              setIsRegister(!isRegister);
+              setError("");
+              setSuccess("");
+            }}
+            className="text-xs text-slate-400 hover:text-cyan-400 transition-colors flex items-center gap-1 mx-auto cursor-pointer"
+          >
+            {isRegister ? (
+              <>¿Ya tienes cuenta? <span className="font-bold text-blue-400">Inicia Sesión</span></>
+            ) : (
+              <>¿No tienes credenciales? <span className="font-bold text-cyan-400">Registrar cuenta</span></>
+            )}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── COMPONENT: SIDEBAR ───────────────────────────────────────────────────
+function Sidebar({ view, setView, reportsCount, onLogout }) {
   const navItems = [
-    { id: "dashboard", icon: "🏠", label: "Dashboard" },
-    { id: "reportes",  icon: "📋", label: "Reportes", badge: reportsCount },
-    { id: "amenazas",  icon: "⚠️", label: "Amenazas" },
-    { id: "intel",     icon: "🧠", label: "Threat Intel" },
-    { id: "admin",     icon: "👑", label: "Admin", adminOnly: true },
+    { id: "dashboard", icon: <FaTerminal />, label: "Consola SOC" },
+    { id: "reportes",  icon: <FaShieldAlt />, label: "Indicadores IoC", badge: reportsCount },
+    { id: "amenazas",  icon: <FaExclamationTriangle />, label: "Vectores de Ataque" },
+    { id: "intel",     icon: <FaBrain />, label: "Threat Intelligence" },
   ];
   return (
-    <aside style={{ width: 220, minHeight: "100vh", background: "#0f1320", borderRight: "1px solid rgba(99,130,255,0.15)", display: "flex", flexDirection: "column", flexShrink: 0, position: "sticky", top: 0, height: "100vh" }}>
-      <div style={{ padding: "24px 20px 18px", borderBottom: "1px solid rgba(99,130,255,0.1)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#4f7cff,#00e5b4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🛡️</div>
+    <aside className="w-[230px] border-r border-slate-800/80 bg-[#070911]/90 flex flex-col flex-shrink-0 h-screen sticky top-0 backdrop-blur-md">
+      <div className="p-6 border-b border-slate-800/50">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/10 text-lg">🛡️</div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: "#e8ecf8" }}>AegisShield</div>
-            <div style={{ fontSize: 10, color: "#6b7fa3", letterSpacing: "1.5px", textTransform: "uppercase" }}>Anti-Fraud</div>
+            <div className="font-extrabold text-sm text-slate-100 tracking-wide">AegisShield</div>
+            <div className="text-[8px] text-cyan-400 tracking-[2px] font-bold uppercase">SOC CONTROL</div>
           </div>
         </div>
       </div>
-      <nav style={{ padding: "16px 12px", flex: 1 }}>
-        <div style={{ fontSize: 10, color: "#6b7fa3", letterSpacing: "1.5px", textTransform: "uppercase", padding: "0 8px", marginBottom: 8 }}>Principal</div>
+      <nav className="flex-1 p-4 space-y-1.5 font-sans">
+        <div className="text-[9px] text-slate-500 uppercase tracking-widest font-bold px-2.5 mb-2.5">SISTEMA</div>
         {navItems.map((item) => (
-          <motion.button key={item.id} whileTap={{ scale: 0.97 }} onClick={() => setView(item.id)}
-            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 8, color: view === item.id ? "#4f7cff" : "#6b7fa3", background: view === item.id ? "rgba(79,124,255,0.1)" : "transparent", border: view === item.id ? "1px solid rgba(79,124,255,0.2)" : "1px solid transparent", cursor: "pointer", fontSize: 13, fontWeight: 500, marginBottom: 2, fontFamily: "inherit", textAlign: "left" }}>
-            <span>{item.icon}</span>{item.label}
-            {item.badge > 0 && <span style={{ marginLeft: "auto", background: "#ff4d6d", color: "#fff", fontSize: 10, padding: "2px 6px", borderRadius: 20, fontWeight: 600 }}>{item.badge > 99 ? "99+" : item.badge}</span>}
-          </motion.button>
+          <button 
+            key={item.id} 
+            onClick={() => setView(item.id)}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+              view === item.id 
+                ? "bg-blue-600/10 text-cyan-400 border border-blue-500/20 shadow-inner" 
+                : "text-slate-400 hover:text-slate-100 hover:bg-slate-900/40 border border-transparent"
+            }`}
+          >
+            <span className="text-sm">{item.icon}</span>
+            {item.label}
+            {item.badge > 0 && (
+              <span className="ml-auto bg-red-500/90 text-white font-mono text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                {item.badge}
+              </span>
+            )}
+          </button>
         ))}
       </nav>
-      <div style={{ padding: 16, borderTop: "1px solid rgba(99,130,255,0.1)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg,#534AB7,#4f7cff)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 600, color: "#fff" }}>AD</div>
-          <div><div style={{ fontSize: 13, fontWeight: 500, color: "#e8ecf8" }}>Admin</div><div style={{ fontSize: 11, color: "#6b7fa3" }}>Analista</div></div>
-          <div style={{ width: 7, height: 7, background: "#00e5b4", borderRadius: "50%", marginLeft: "auto", animation: "pulse 2s infinite" }} />
+      
+      {/* User Session Info */}
+      <div className="p-4 border-t border-slate-800/50 space-y-3 bg-slate-950/40">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-blue-900/30 flex items-center justify-center text-blue-400 text-xs font-bold font-mono">AN</div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-bold text-slate-300 truncate">Analista SOC</div>
+            <div className="text-[9px] text-emerald-400 flex items-center gap-1 font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> ACTIVO
+            </div>
+          </div>
         </div>
+        <button 
+          onClick={onLogout}
+          className="w-full py-2 rounded-lg border border-red-500/20 bg-red-950/10 hover:bg-red-950/20 text-red-400 hover:text-red-300 text-[10px] font-bold tracking-wider uppercase transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+        >
+          <FaPowerOff size={10} /> Cerrar Consola
+        </button>
       </div>
     </aside>
   );
 }
 
-function MetricCard({ label, value, color, icon, change, changeDir }) {
-  return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -3 }}
-      style={{ background: "#0f1320", border: "1px solid rgba(99,130,255,0.15)", borderRadius: 12, padding: 20, position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg,${color},transparent)` }} />
-      <div style={{ fontSize: 10, color: "#6b7fa3", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 10 }}>{label}</div>
-      <div style={{ fontSize: 32, fontWeight: 700, color, fontFamily: "monospace", lineHeight: 1 }}>{value}</div>
-      {change && <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 8, fontSize: 11, color: changeDir === "up" ? "#ff4d6d" : "#00e5b4" }}>{changeDir === "up" ? "↑" : "↓"} {change}</div>}
-      <div style={{ position: "absolute", top: 18, right: 18, fontSize: 22, opacity: 0.18 }}>{icon}</div>
-    </motion.div>
-  );
-}
+// ─── COMPONENT: WORLD THREAT HOTSPOT MAP (CINEMATIC SVG) ────────────────────
+function WorldThreatMap() {
+  const [beacons, setBeacons] = useState([
+    { id: 1, x: 220, y: 150, risk: "alto", name: "EE.UU. (East)" },
+    { id: 2, x: 310, y: 260, risk: "alto", name: "Colombia (Bogotá Hub)" },
+    { id: 3, x: 480, y: 120, risk: "medio", name: "Alemania (Frankfurt)" },
+    { id: 4, x: 720, y: 180, risk: "bajo", name: "Japón (Tokyo Server)" },
+    { id: 5, x: 350, y: 310, risk: "alto", name: "Brasil (São Paulo)" }
+  ]);
 
-function RiskBadge({ level }) {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 9px", borderRadius: 6, fontSize: 11, fontWeight: 600, background: riskBg[level], color: riskColor[level] }}>
-      <span style={{ width: 5, height: 5, borderRadius: "50%", background: riskColor[level], display: "inline-block" }} />
-      {level.charAt(0).toUpperCase() + level.slice(1)}
-    </span>
-  );
-}
-
-const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div style={{ background: "#161b2c", border: "1px solid rgba(99,130,255,0.25)", borderRadius: 8, padding: "10px 14px", fontSize: 12 }}>
-      <div style={{ color: "#e8ecf8", fontWeight: 600, marginBottom: 6 }}>{label}</div>
-      {payload.map((p) => (
-        <div key={p.dataKey} style={{ color: p.color, marginBottom: 3 }}>
-          {p.dataKey === "alto" ? "Alto" : p.dataKey === "medio" ? "Medio" : p.dataKey === "bajo" ? "Bajo" : "Reportes"}: <strong>{p.value}</strong>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// ─── MODAL NUEVO REPORTE ───────────────────────────────────────────────────
-function ReportModal({ onClose, onSubmit }) {
-  const [form, setForm] = useState({ telefono_sospechoso: "", dominio: "", descripcion: "", banco_recaudo: "" });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleSubmit = async () => {
-    if (!form.descripcion.trim()) { setError("La descripción es obligatoria."); return; }
-    setLoading(true); setError("");
-    try { await onSubmit(form); onClose(); }
-    catch (e) { setError(e.message || "Error al crear reporte."); }
-    finally { setLoading(false); }
-  };
-
-  const inp = { width: "100%", background: "#0a0d14", border: "1px solid rgba(99,130,255,0.2)", borderRadius: 8, padding: "10px 14px", color: "#e8ecf8", fontSize: 13, fontFamily: "inherit", outline: "none", boxSizing: "border-box", marginBottom: 12 };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBeacons(prev => prev.map(b => {
+        if (Math.random() > 0.6) {
+          const risks = ["alto", "medio", "bajo"];
+          return { ...b, risk: risks[Math.floor(Math.random() * risks.length)] };
+        }
+        return b;
+      }));
+    }, 3500);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      style={{ position: "fixed", inset: 0, background: "rgba(10,13,20,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}
-      onClick={onClose}>
-      <motion.div initial={{ scale: 0.92 }} animate={{ scale: 1 }} exit={{ scale: 0.92 }} onClick={(e) => e.stopPropagation()}
-        style={{ background: "#0f1320", border: "1px solid rgba(99,130,255,0.25)", borderRadius: 16, padding: 28, width: 480, maxWidth: "90vw" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: "#e8ecf8" }}>🛡️ Nuevo Reporte de Fraude</div>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: "#6b7fa3", cursor: "pointer", fontSize: 20 }}>✕</button>
+    <div className="w-full relative bg-[#070911] border border-slate-800/80 rounded-2xl p-5 overflow-hidden flex flex-col justify-between h-[300px]">
+      <div className="absolute inset-0 cyber-grid-dots opacity-20 pointer-events-none" />
+      <div className="flex justify-between items-center mb-2 z-10">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+          <FaGlobe className="text-blue-500 animate-spin-slow" /> Threat Hotspot Map
+        </h3>
+        <div className="flex gap-3 text-[9px] font-mono">
+          <span className="flex items-center gap-1 text-red-400"><span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" /> Alto</span>
+          <span className="flex items-center gap-1 text-yellow-400"><span className="w-1.5 h-1.5 rounded-full bg-yellow-500" /> Medio</span>
+          <span className="flex items-center gap-1 text-emerald-400"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Bajo</span>
         </div>
-        <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Descripción *</label>
-        <textarea rows={3} placeholder="Describe el fraude..." value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} style={{ ...inp, resize: "vertical" }} />
-        <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Teléfono sospechoso</label>
-        <input placeholder="+57 300 000 0000" value={form.telefono_sospechoso} onChange={(e) => setForm({ ...form, telefono_sospechoso: e.target.value })} style={inp} />
-        <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Dominio / URL</label>
-        <input placeholder="ejemplo-fraude.com" value={form.dominio} onChange={(e) => setForm({ ...form, dominio: e.target.value })} style={inp} />
-        <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Banco / cuenta de recaudo</label>
-        <input placeholder="Nequi, Daviplata..." value={form.banco_recaudo} onChange={(e) => setForm({ ...form, banco_recaudo: e.target.value })} style={inp} />
-        {error && <div style={{ color: "#ff4d6d", fontSize: 12, marginBottom: 12 }}>{error}</div>}
-        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button onClick={onClose} style={{ padding: "9px 18px", borderRadius: 8, border: "1px solid rgba(99,130,255,0.2)", background: "transparent", color: "#6b7fa3", cursor: "pointer", fontFamily: "inherit" }}>Cancelar</button>
-          <motion.button whileTap={{ scale: 0.97 }} onClick={handleSubmit} disabled={loading}
-            style={{ padding: "9px 22px", borderRadius: 8, border: "none", background: loading ? "#374080" : "#4f7cff", color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "inherit" }}>
-            {loading ? "Enviando..." : "Registrar IoC"}
-          </motion.button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
+      </div>
 
-// ─── LOGIN ─────────────────────────────────────────────────────────────────
-function LoginView({ onLogin }) {
-  const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({ username: "", password: "", email: "", nombre: "" });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+      <div className="flex-1 w-full flex items-center justify-center relative">
+        {/* World Map SVG Mock */}
+        <svg viewBox="0 0 900 400" className="w-full h-full max-h-[220px] opacity-25">
+          {/* North America */}
+          <path d="M120 70 L 190 60 L 260 80 L 280 140 L 240 180 L 180 160 L 160 110 Z" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+          {/* South America */}
+          <path d="M260 210 L 310 220 L 360 270 L 340 360 L 310 370 L 280 290 Z" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+          {/* Europe */}
+          <path d="M430 70 L 490 60 L 530 110 L 480 160 L 440 120 Z" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+          {/* Africa */}
+          <path d="M440 180 L 510 180 L 560 230 L 530 320 L 490 320 L 460 230 Z" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+          {/* Asia */}
+          <path d="M540 60 L 780 70 L 820 180 L 760 270 L 680 280 L 580 220 L 540 150 Z" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+          {/* Connections lines */}
+          <path d="M 310 260 Q 400 100 480 120" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeDasharray="5 5" className="animate-pulse" />
+          <path d="M 220 150 Q 260 200 310 260" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="3 3" />
+          <path d="M 310 260 Q 500 280 720 180" fill="none" stroke="#00e5b4" strokeWidth="1" strokeDasharray="4 4" />
+        </svg>
 
-  const handleLogin = async () => {
-    setLoading(true); setError("");
-    try {
-      const body = new URLSearchParams({ username: form.username, password: form.password });
-      const res = await fetch(`${API_BASE}/api/v1/auth/login`, { method: "POST", body, headers: { "Content-Type": "application/x-www-form-urlencoded" } });
-      if (!res.ok) throw new Error("Credenciales incorrectas");
-      const data = await res.json();
-      const receivedToken = data.access_token || data.token || Object.values(data)[0];
-      if (!receivedToken) throw new Error("No se recibió token del servidor");
-      onLogin(receivedToken);
-    } catch (e) { setError(e.message); }
-    finally { setLoading(false); }
-  };
-
-  const handleRegister = async () => {
-    if (!form.email || !form.password || !form.nombre) { setError("Todos los campos son obligatorios."); return; }
-    setLoading(true); setError(""); setSuccess("");
-    try {
-      const res = await fetch(`${API_BASE}/api/v1/auth/registro`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email, password: form.password, nombre: form.nombre }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || "Error al registrarse");
-      }
-      setSuccess("¡Cuenta creada! Ya puedes iniciar sesión.");
-      setMode("login");
-      setForm({ ...form, username: form.email });
-    } catch (e) { setError(e.message); }
-    finally { setLoading(false); }
-  };
-
-  const inp = { width: "100%", background: "#0a0d14", border: "1px solid rgba(99,130,255,0.2)", borderRadius: 8, padding: "12px 14px", color: "#e8ecf8", fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box", marginBottom: 14 };
-
-  return (
-    <div style={{ minHeight: "100vh", background: "#0a0d14", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-        style={{ background: "#0f1320", border: "1px solid rgba(99,130,255,0.18)", borderRadius: 16, padding: 40, width: 400, maxWidth: "90vw" }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>🛡️</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: "#e8ecf8" }}>AegisShield</div>
-          <div style={{ fontSize: 13, color: "#6b7fa3", marginTop: 4 }}>{mode === "login" ? "Plataforma Anti-Fraude LATAM" : "Crear nueva cuenta"}</div>
-        </div>
-
-        {mode === "register" && (
-          <>
-            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Nombre completo</label>
-            <input placeholder="Tu nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} style={inp} />
-            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Email</label>
-            <input placeholder="tu@email.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={inp} />
-            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Contraseña</label>
-            <input type="password" placeholder="••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} style={inp} onKeyDown={(e) => e.key === "Enter" && handleRegister()} />
-          </>
-        )}
-
-        {mode === "login" && (
-          <>
-            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Usuario o Email</label>
-            <input placeholder="neil@mail.com" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={inp} onKeyDown={(e) => e.key === "Enter" && handleLogin()} />
-            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Contraseña</label>
-            <input type="password" placeholder="••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} style={inp} onKeyDown={(e) => e.key === "Enter" && handleLogin()} />
-          </>
-        )}
-
-        {error && <div style={{ color: "#ff4d6d", fontSize: 12, marginBottom: 12, textAlign: "center" }}>{error}</div>}
-        {success && <div style={{ color: "#00e5b4", fontSize: 12, marginBottom: 12, textAlign: "center" }}>{success}</div>}
-
-        <motion.button whileTap={{ scale: 0.98 }} onClick={mode === "login" ? handleLogin : handleRegister} disabled={loading}
-          style={{ width: "100%", padding: "12px", borderRadius: 8, border: "none", background: loading ? "#374080" : "#4f7cff", color: "#fff", cursor: "pointer", fontSize: 15, fontWeight: 700, fontFamily: "inherit", marginBottom: 12 }}>
-          {loading ? "Procesando..." : mode === "login" ? "Iniciar Sesión" : "Crear Cuenta"}
-        </motion.button>
-
-        <div style={{ textAlign: "center", fontSize: 12, color: "#6b7fa3" }}>
-          {mode === "login" ? (
-            <>¿No tienes cuenta?{" "}<span style={{ color: "#4f7cff", cursor: "pointer" }} onClick={() => { setMode("register"); setError(""); setSuccess(""); }}>Regístrate</span></>
-          ) : (
-            <>¿Ya tienes cuenta?{" "}<span style={{ color: "#4f7cff", cursor: "pointer" }} onClick={() => { setMode("login"); setError(""); setSuccess(""); }}>Inicia sesión</span></>
-          )}
-        </div>
-      </motion.div>
+        {/* Pulse Beacons */}
+        {beacons.map(b => (
+          <div 
+            key={b.id} 
+            className="absolute"
+            style={{ 
+              left: `${(b.x / 900) * 100}%`, 
+              top: `${(b.y / 400) * 100}%` 
+            }}
+          >
+            <span className={`flex h-4 w-4 relative items-center justify-center -translate-x-1/2 -translate-y-1/2`}>
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${
+                b.risk === "alto" ? "bg-red-500" : b.risk === "medio" ? "bg-yellow-500" : "bg-emerald-500"
+              }`} />
+              <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                b.risk === "alto" ? "bg-red-500" : b.risk === "medio" ? "bg-yellow-500" : "bg-emerald-500"
+              } shadow-md`} />
+            </span>
+            <div className="absolute left-3 -top-2 scale-75 origin-left bg-slate-950/90 border border-slate-800 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded text-slate-300 hidden md:block select-none pointer-events-none">
+              {b.name}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
-// ─── DASHBOARD ─────────────────────────────────────────────────────────────
-function DashboardView({ reports }) {
+// ─── COMPONENT: EXPLAINABLE AI REASONING PANEL ─────────────────────────────
+function AIReasoningPanel({ selectedReport }) {
+  // Datos mock para cuando no hay reporte seleccionado
+  const defaultReport = {
+    descripcion: "Reporte de prueba: dominio de cobro abusivo gota a gota.",
+    phone_number: "+573129871109",
+    bank_account: "Nequi - 3129871109",
+    domain: "rapicreditos-colombia.xyz",
+    risk_score: 84
+  };
+
+  const r = selectedReport || defaultReport;
+  const level = getRiskLevel(r.score_riesgo ?? r.risk_score ?? 0);
+  const color = riskColor[level];
+
+  return (
+    <div className="bg-[#070911] border border-slate-800/80 rounded-2xl p-5 flex flex-col gap-4 font-sans select-none relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none" />
+      
+      <div className="flex justify-between items-center border-b border-slate-800/60 pb-3">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+          <FaBrain className="text-cyan-400 animate-pulse" /> AI Threat Assessment
+        </h3>
+        <span className="text-[10px] text-cyan-400/80 bg-cyan-950/20 border border-cyan-800/30 px-2 py-0.5 rounded font-mono font-bold">
+          EXPLAINABLE AI
+        </span>
+      </div>
+
+      <div className="flex items-center gap-5">
+        {/* Progress Gauge */}
+        <div className="relative w-20 h-20 flex items-center justify-center flex-shrink-0">
+          <svg className="w-full h-full transform -rotate-90">
+            <circle cx="40" cy="40" r="34" stroke="rgba(255,255,255,0.03)" strokeWidth="6" fill="transparent" />
+            <circle 
+              cx="40" cy="40" r="34" 
+              stroke={color} 
+              strokeWidth="6" 
+              fill="transparent" 
+              strokeDasharray={`${2 * Math.PI * 34}`}
+              strokeDashoffset={`${2 * Math.PI * 34 * (1 - (r.score_riesgo ?? r.risk_score ?? 70) / 100)}`}
+              strokeLinecap="round"
+              className="transition-all duration-1000"
+            />
+          </svg>
+          <div className="absolute flex flex-col items-center justify-center">
+            <span className="text-xl font-bold font-mono" style={{ color }}>{r.score_riesgo ?? r.risk_score ?? 70}%</span>
+            <span className="text-[8px] text-slate-500 uppercase tracking-wider">Confianza</span>
+          </div>
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] text-slate-500 uppercase tracking-wider font-mono">Indicador Evaluado</div>
+          <div className="text-sm font-bold text-slate-200 truncate mt-0.5">
+            {r.dominio ?? r.domain ? (r.dominio ?? r.domain) : r.telefono_sospechoso ?? r.phone_number ? (r.telefono_sospechoso ?? r.phone_number) : "Multiple IoC"}
+          </div>
+          <p className="text-xs text-slate-400 line-clamp-2 mt-1.5 leading-relaxed italic">
+            "{r.descripcion ?? r.description}"
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-2 text-xs border-t border-slate-800/50 pt-3">
+        <div className="text-[9px] text-slate-500 uppercase tracking-widest font-bold mb-2">Factores de Riesgo Clave</div>
+        
+        <div className="flex justify-between items-center py-1 border-b border-slate-900">
+          <span className="text-slate-400 flex items-center gap-1.5">
+            <span className="w-1 h-1 rounded-full bg-cyan-400" /> TLD de Alto Riesgo
+          </span>
+          <span className="font-mono text-cyan-400 font-bold">Si (.xyz / .click)</span>
+        </div>
+
+        <div className="flex justify-between items-center py-1 border-b border-slate-900">
+          <span className="text-slate-400 flex items-center gap-1.5">
+            <span className="w-1 h-1 rounded-full bg-cyan-400" /> Coincidencia de Patrón Estafa
+          </span>
+          <span className="font-mono text-cyan-400 font-bold">Alto</span>
+        </div>
+
+        <div className="flex justify-between items-center py-1 border-b border-slate-900">
+          <span className="text-slate-400 flex items-center gap-1.5">
+            <span className="w-1 h-1 rounded-full bg-cyan-400" /> Geolocalización de Llamada
+          </span>
+          <span className="font-mono text-slate-300">LATAM (Colombia)</span>
+        </div>
+
+        <div className="flex justify-between items-center py-1">
+          <span className="text-slate-400 flex items-center gap-1.5">
+            <span className="w-1 h-1 rounded-full bg-cyan-400" /> Banco Recaudador Asociado
+          </span>
+          <span className="font-mono text-yellow-400 font-bold">{r.banco_recaudo ?? r.bank_account ? "Registrado" : "No detectado"}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── COMPONENT: DASHBOARD VIEW ─────────────────────────────────────────────
+function DashboardView({ reports, onTriggerAttackSimulation, isSimulatingAttack }) {
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [simulatedLogs, setSimulatedLogs] = useState([
+    { id: 1, time: "10:52:10", type: "info", text: "Iniciando AegisShield SOC Core..." },
+    { id: 2, time: "10:52:12", type: "success", text: "Conexión Supabase DB - OK." },
+    { id: 3, time: "10:52:18", type: "warning", text: "Búsqueda sospechosa detectada en lista negra." },
+    { id: 4, time: "10:52:25", type: "danger", text: "Phishing detectado en el dominio: rapicredito.xyz" }
+  ]);
+
   const total  = reports.length;
-  const altos  = reports.filter((r) => getRiskLevel(r.risk_score ?? 0) === "alto").length;
-  const medios = reports.filter((r) => getRiskLevel(r.risk_score ?? 0) === "medio").length;
-  const bajos  = reports.filter((r) => getRiskLevel(r.risk_score ?? 0) === "bajo").length;
+  const altos  = reports.filter((r) => getRiskLevel(r.score_riesgo ?? r.risk_score ?? 0) === "alto").length;
+  const medios = reports.filter((r) => getRiskLevel(r.score_riesgo ?? r.risk_score ?? 0) === "medio").length;
+  const bajos  = reports.filter((r) => getRiskLevel(r.score_riesgo ?? r.risk_score ?? 0) === "bajo").length;
+  
   const monthlyData = buildMonthlyData(reports);
   const trendData   = buildTrendData(reports);
+  
   const pieData = [
-    { name: "Alto",  value: altos,  color: "#ff4d6d" },
-    { name: "Medio", value: medios, color: "#ffb547" },
-    { name: "Bajo",  value: bajos,  color: "#00e5b4" },
-  ].filter((d) => d.value > 0);
-  const card = (s) => ({ background: "#0f1320", border: "1px solid rgba(99,130,255,0.15)", borderRadius: 12, padding: 20, ...s });
+    { name: "Alto",  value: altos || 1,  color: "#ff4d6d" },
+    { name: "Medio", value: medios || 1, color: "#ffb547" },
+    { name: "Bajo",  value: bajos || 1,  color: "#00e5b4" },
+  ];
+
+  // Logs stream simulator
+  useEffect(() => {
+    const pool = [
+      { type: "info", text: "Escaneando indicadores de compromiso (IoC)..." },
+      { type: "success", text: "Envenenador de base de datos ejecutó contramedida activa." },
+      { type: "warning", text: "Tráfico inusual detectado desde IP de hosting en AWS." },
+      { type: "danger", text: "Dominio fraudulento reportado: Nequi-verificacion.xyz" },
+      { type: "info", text: "Sincronizando logs con feeds de CrowdStrike y SentinelOne." },
+      { type: "warning", text: "Múltiples solicitudes fallidas al endpoint de autenticación." },
+      { type: "danger", text: "Alerta de fraude: número de teléfono +57 301 984 8122 asociado a extorsiones." }
+    ];
+
+    const interval = setInterval(() => {
+      const randomItem = pool[Math.floor(Math.random() * pool.length)];
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+      
+      setSimulatedLogs(prev => [
+        { id: Date.now(), time: timeStr, ...randomItem },
+        ...prev.slice(0, 30) // Cap at 30 logs
+      ]);
+    }, 4500);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Escuchar cuando el usuario gatilla simulación de ataque
+  useEffect(() => {
+    if (isSimulatingAttack) {
+      const now = new Date();
+      const timeStr = () => {
+        const d = new Date();
+        return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+      };
+      
+      setSimulatedLogs(prev => [
+        { id: Date.now(), time: timeStr(), type: "danger", text: "🚨 [ATTACK SIMULATION] SQL injection attempt on /api/v1/auth/login" },
+        { id: Date.now() + 1, time: timeStr(), type: "danger", text: "🚨 [ATTACK SIMULATION] Potential phishing campaign detected: 'Daviplata Regalos'" },
+        { id: Date.now() + 2, time: timeStr(), type: "danger", text: "🚨 [ATTACK SIMULATION] Threat engine flagged brute force: 100+ requests/sec" },
+        ...prev
+      ]);
+    }
+  }, [isSimulatingAttack]);
 
   return (
-    <div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 24 }}>
-        <MetricCard label="Total Reportes" value={total} color="#4f7cff" icon="🛡️" change={`${total} registrados`} changeDir="down" />
-        <MetricCard label="Alto Riesgo" value={altos} color="#ff4d6d" icon="🔥" change={altos > 0 ? "Requieren atención" : "Sin alertas"} changeDir={altos > 0 ? "up" : "down"} />
-        <MetricCard label="Riesgo Medio" value={medios} color="#ffb547" icon="⚠️" change="En seguimiento" changeDir="up" />
-        <MetricCard label="Bajo Riesgo" value={bajos} color="#00e5b4" icon="✅" change="Bajo control" changeDir="down" />
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-        <div style={card({})}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: "#e8ecf8" }}>📊 Reportes por Mes</div>
-            <div style={{ display: "flex", gap: 12, fontSize: 11 }}>
-              {[["#ff4d6d","Alto"],["#ffb547","Medio"],["#00e5b4","Bajo"]].map(([c,l]) => (
-                <span key={l} style={{ display: "flex", alignItems: "center", gap: 4, color: "#6b7fa3" }}>
-                  <span style={{ width: 8, height: 8, borderRadius: 2, background: c }} />{l}
-                </span>
-              ))}
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(99,130,255,0.07)" />
-              <XAxis dataKey="name" tick={{ fill: "#6b7fa3", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#6b7fa3", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="alto" fill="#ff4d6d" radius={[3,3,0,0]} />
-              <Bar dataKey="medio" fill="#ffb547" radius={[3,3,0,0]} />
-              <Bar dataKey="bajo" fill="#00e5b4" radius={[3,3,0,0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div style={card({})}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "#e8ecf8", marginBottom: 18 }}>🎯 Distribución de Riesgos</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-            <ResponsiveContainer width={200} height={200}>
-              <PieChart>
-                <Pie data={pieData.length ? pieData : [{ name: "Sin datos", value: 1, color: "#2a3050" }]} cx="50%" cy="50%" innerRadius={58} outerRadius={85} paddingAngle={4} dataKey="value">
-                  {(pieData.length ? pieData : [{ color: "#2a3050" }]).map((entry, i) => <Cell key={i} fill={entry.color} stroke="none" />)}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div style={{ flex: 1 }}>
-              {pieData.map((d) => (
-                <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 3, background: d.color }} />
-                  <div style={{ flex: 1, fontSize: 12, color: "#6b7fa3" }}>{d.name}</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#e8ecf8", fontFamily: "monospace" }}>{d.value}</div>
-                  <div style={{ fontSize: 11, color: "#6b7fa3", minWidth: 34, textAlign: "right" }}>{total > 0 ? Math.round((d.value / total) * 100) : 0}%</div>
-                </div>
-              ))}
-              <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(99,130,255,0.1)" }}>
-                <div style={{ fontSize: 11, color: "#6b7fa3", marginBottom: 4 }}>Tasa resolución</div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: "#00e5b4", fontFamily: "monospace" }}>{total > 0 ? Math.round(((medios + bajos) / total) * 100) : 0}%</div>
+    <div className="space-y-6">
+      {/* Metric Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "Total Reportes", val: total, color: "#2563eb", icon: <FaShieldAlt className="text-blue-500" />, desc: "IoCs en base de datos" },
+          { label: "Alertas Críticas", val: altos, color: "#ff4d6d", icon: <FaExclamationTriangle className="text-red-500" />, desc: "Requieren atención" },
+          { label: "Riesgo Medio", val: medios, color: "#ffb547", icon: <FaInfoCircle className="text-yellow-500" />, desc: "En observación" },
+          { label: "Bajo Control", val: bajos, color: "#00e5b4", icon: <FaCheckCircle className="text-emerald-500" />, desc: "Bajo riesgo" }
+        ].map((m, i) => (
+          <motion.div 
+            key={i} 
+            whileHover={{ y: -3 }}
+            className="p-5 rounded-2xl bg-[#070911] border border-slate-800/80 glow-border-blue relative overflow-hidden transition-all duration-300 font-sans shadow-md"
+          >
+            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(90deg, ${m.color}, transparent)` }} />
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">{m.label}</p>
+                <h2 className="text-3xl font-bold font-mono tracking-tight text-slate-200 mt-2">{m.val}</h2>
+                <p className="text-[10px] text-slate-400 font-medium mt-1">{m.desc}</p>
+              </div>
+              <div className="p-3 bg-slate-900/50 rounded-xl border border-slate-800/60 text-lg">
+                {m.icon}
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 16 }}>
-        <div style={card({})}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "#e8ecf8", marginBottom: 18 }}>📈 Tendencia (7 días)</div>
-          <ResponsiveContainer width="100%" height={180}>
+      {/* Main Charts & Radar Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Trend Area Chart */}
+        <div className="lg:col-span-2 bg-[#070911] border border-slate-800/80 rounded-2xl p-5 select-none relative overflow-hidden">
+          <div className="flex justify-between items-center mb-5">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <FaChartLine className="text-blue-500" /> Tendencia de Amenazas (7 Días)
+            </h3>
+            <span className="text-[10px] text-emerald-400 bg-emerald-950/20 border border-emerald-800/30 px-2 py-0.5 rounded font-mono font-bold">
+              LIVE
+            </span>
+          </div>
+          <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={trendData}>
               <defs>
                 <linearGradient id="gradBlue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#4f7cff" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#4f7cff" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#2563eb" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(99,130,255,0.07)" />
-              <XAxis dataKey="name" tick={{ fill: "#6b7fa3", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#6b7fa3", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
-              <Tooltip content={<CustomTooltip />} />
-              <Area type="monotone" dataKey="reportes" stroke="#4f7cff" strokeWidth={2} fill="url(#gradBlue)" dot={{ fill: "#4f7cff", r: 4 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(99,130,255,0.03)" vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 10, fontFamily: "monospace" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#64748b", fontSize: 10, fontFamily: "monospace" }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <Tooltip 
+                contentStyle={{ background: '#090d16', border: '1px solid rgba(99,130,255,0.15)', borderRadius: '12px', fontSize: '11px', color: '#e8ecf8' }} 
+                itemStyle={{ color: '#00e5b4' }}
+              />
+              <Area type="monotone" dataKey="reportes" stroke="#2563eb" strokeWidth={2} fill="url(#gradBlue)" dot={{ fill: "#2563eb", r: 3 }} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        <div style={{ ...card({}), padding: 0, overflow: "hidden" }}>
-          <div style={{ padding: "18px 20px", borderBottom: "1px solid rgba(99,130,255,0.1)", fontSize: 14, fontWeight: 600, color: "#e8ecf8" }}>📋 Últimos Reportes</div>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        {/* Threat Radar / Distribution Chart */}
+        <div className="bg-[#070911] border border-slate-800/80 rounded-2xl p-5 select-none relative overflow-hidden flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <FaBug className="text-red-500 animate-pulse" /> Threat Analysis Radar
+            </h3>
+          </div>
+          <div className="flex-1 flex items-center justify-center min-h-[160px]">
+            <ResponsiveContainer width="100%" height={180}>
+              <PieChart>
+                <Pie 
+                  data={pieData} 
+                  cx="50%" cy="50%" 
+                  innerRadius={48} 
+                  outerRadius={65} 
+                  paddingAngle={5} 
+                  dataKey="value"
+                >
+                  {pieData.map((entry, idx) => <Cell key={idx} fill={entry.color} stroke="none" />)}
+                </Pie>
+                <Tooltip contentStyle={{ background: '#090d16', border: '1px solid rgba(99,130,255,0.15)', borderRadius: '8px', fontSize: '10px' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex justify-around text-[10px] font-mono border-t border-slate-900 pt-3 mt-2">
+            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-[#ff4d6d]" /> Alto</div>
+            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-[#ffb547]" /> Medio</div>
+            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-[#00e5b4]" /> Bajo</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Map and AI Explainability Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <WorldThreatMap />
+        <AIReasoningPanel selectedReport={selectedReport} />
+      </div>
+
+      {/* Telemetry Console & Table Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Terminal/Log Consol */}
+        <div className="lg:col-span-2 bg-[#070911] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between h-[350px]">
+          <div className="flex justify-between items-center border-b border-slate-800/60 pb-3 mb-3">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <FaTerminal className="text-cyan-400" /> Live Threat Console
+            </h3>
+            <button 
+              onClick={onTriggerAttackSimulation}
+              className="text-[9px] font-bold uppercase tracking-wider bg-red-950/40 border border-red-500/30 hover:bg-red-900/20 text-red-400 px-2.5 py-1 rounded transition-colors cursor-pointer"
+            >
+              Simular Ataque
+            </button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto space-y-2 pr-1 font-mono text-[10px] leading-relaxed scrollbar-thin">
+            {simulatedLogs.map((log) => (
+              <div key={log.id} className="flex gap-2.5 items-start">
+                <span className="text-slate-500 flex-shrink-0">[{log.time}]</span>
+                <span className={`flex-shrink-0 px-1 py-0.2 rounded text-[9px] font-bold ${
+                  log.type === "danger" ? "bg-red-500/10 text-red-400" :
+                  log.type === "warning" ? "bg-yellow-500/10 text-yellow-400" :
+                  log.type === "success" ? "bg-emerald-500/10 text-emerald-400" :
+                  "bg-blue-500/10 text-blue-400"
+                }`}>
+                  {log.type.toUpperCase()}
+                </span>
+                <span className="text-slate-300 break-words">{log.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Report Table */}
+        <div className="lg:col-span-3 bg-[#070911] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between h-[350px]">
+          <div className="flex justify-between items-center border-b border-slate-800/60 pb-3 mb-3">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <FaDatabase className="text-blue-500" /> Últimos Indicadores IoC
+            </h3>
+            <span className="text-[9px] text-slate-500 font-mono">Haz clic para evaluar en IA</span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto pr-1">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-900 text-[9px] text-slate-500 uppercase tracking-widest font-mono">
+                  <th className="py-2.5 font-bold">ID</th>
+                  <th className="py-2.5 font-bold">Indicador / Dominio</th>
+                  <th className="py-2.5 font-bold">Riesgo</th>
+                  <th className="py-2.5 font-bold text-right">Ver</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-900 text-xs font-sans">
+                {reports.slice(0, 7).map((r, idx) => {
+                  const level = getRiskLevel(r.score_riesgo ?? r.risk_score ?? 0);
+                  return (
+                    <tr 
+                      key={r.id ?? idx} 
+                      onClick={() => setSelectedReport(r)}
+                      className={`hover:bg-slate-900/30 transition-colors cursor-pointer group ${
+                        selectedReport?.id === r.id ? "bg-slate-900/40" : ""
+                      }`}
+                    >
+                      <td className="py-3 font-mono text-slate-500">#{r.id}</td>
+                      <td className="py-3 font-medium text-slate-200">
+                        <div className="max-w-[200px] truncate">{r.dominio || r.telefono_sospechoso || "MULTIPLE"}</div>
+                        <div className="text-[10px] text-slate-500 max-w-[200px] truncate">{r.descripcion}</div>
+                      </td>
+                      <td className="py-3"><RiskBadge level={level} /></td>
+                      <td className="py-3 text-right">
+                        <span className="inline-flex items-center justify-center p-1.5 rounded-lg border border-slate-800 bg-slate-950/40 text-slate-400 group-hover:text-cyan-400 group-hover:border-cyan-500/20 transition-all">
+                          <FaEye size={10} />
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {reports.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="py-10 text-center text-slate-500 text-xs font-mono">
+                      No hay reportes registrados en Supabase.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── COMPONENT: REPORTES VIEW ──────────────────────────────────────────────
+function ReportesView({ reports, onDelete, token, onOpenModal }) {
+  const [search, setSearch] = useState("");
+  const [filterRisk, setFilterRisk] = useState("todos");
+
+  const filtered = reports.filter((r) => {
+    const level = getRiskLevel(r.score_riesgo ?? r.risk_score ?? 0);
+    const matchRisk = filterRisk === "todos" || level === filterRisk;
+    const q = search.toLowerCase();
+    const matchSearch = !q 
+      || (r.descripcion || "").toLowerCase().includes(q) 
+      || String(r.id).includes(q) 
+      || (r.telefono_sospechoso || "").includes(q) 
+      || (r.dominio || "").includes(q);
+    return matchRisk && matchSearch;
+  });
+
+  return (
+    <div className="space-y-6 font-sans">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#070911] border border-slate-800/80 rounded-2xl p-5">
+        <div>
+          <h2 className="text-lg font-bold text-slate-200">Base de Datos de Amenazas</h2>
+          <p className="text-xs text-slate-500 mt-1">Busca, filtra y administra Indicadores de Compromiso (IoCs) del SOC.</p>
+        </div>
+        <button 
+          onClick={onOpenModal}
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-slate-950 rounded-xl font-bold tracking-wide text-xs transition-all cursor-pointer shadow-md"
+        >
+          <FaPlus size={11} /> Nuevo Reporte
+        </button>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-3 w-full justify-between">
+        <input 
+          placeholder="🔍 Buscar amenaza (ID, Teléfono, Dominio)..." 
+          value={search} 
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 bg-[#070911] border border-slate-800/80 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-blue-500/50 transition-colors" 
+        />
+        <div className="flex gap-2 flex-wrap">
+          {["todos","alto","medio","bajo"].map((f) => (
+            <button 
+              key={f} 
+              onClick={() => setFilterRisk(f)}
+              className={`px-4 py-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                filterRisk === f 
+                  ? "bg-blue-600/10 text-cyan-400 border-blue-500/30" 
+                  : "bg-[#070911] text-slate-400 border-slate-800/80 hover:bg-slate-900/40"
+              }`}
+            >
+              {f === "todos" ? "Todos" : f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-[#070911] border border-slate-800/80 rounded-2xl overflow-hidden shadow-md">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
-              <tr style={{ background: "rgba(22,27,44,0.8)" }}>
-                {["ID","Descripción","Riesgo"].map((h) => (
-                  <th key={h} style={{ padding: "9px 16px", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, color: "#6b7fa3", textAlign: "left", borderBottom: "1px solid rgba(99,130,255,0.08)", fontWeight: 500 }}>{h}</th>
-                ))}
+              <tr className="bg-slate-950/60 border-b border-slate-850 text-[10px] text-slate-500 uppercase tracking-widest font-mono">
+                <th className="p-4 font-bold">ID</th>
+                <th className="p-4 font-bold">Descripción de la Amenaza</th>
+                <th className="p-4 font-bold">Teléfono</th>
+                <th className="p-4 font-bold">Dominio</th>
+                <th className="p-4 font-bold">Score</th>
+                <th className="p-4 font-bold">Riesgo</th>
+                <th className="p-4 font-bold">Fecha</th>
+                <th className="p-4 font-bold text-right">Acción</th>
               </tr>
             </thead>
-            <tbody>
-              {reports.slice(0, 6).map((r, i) => (
-                <motion.tr key={r.id ?? i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
-                  style={{ borderBottom: "1px solid rgba(99,130,255,0.05)" }}>
-                  <td style={{ padding: "11px 16px", fontSize: 11, color: "#6b7fa3", fontFamily: "monospace" }}>#{r.id}</td>
-                  <td style={{ padding: "11px 16px", fontSize: 12, color: "#c5cde8", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.description}</td>
-                  <td style={{ padding: "11px 16px" }}><RiskBadge level={getRiskLevel(r.risk_score ?? 0)} /></td>
-                </motion.tr>
-              ))}
-              {reports.length === 0 && (
-                <tr><td colSpan={3} style={{ padding: 24, textAlign: "center", color: "#6b7fa3", fontSize: 13 }}>Sin reportes registrados aún.</td></tr>
+            <tbody className="divide-y divide-slate-900 text-xs">
+              <AnimatePresence>
+                {filtered.map((r, i) => {
+                  const level = getRiskLevel(r.score_riesgo ?? r.risk_score ?? 0);
+                  const fecha = r.created_at ? new Date(r.created_at).toLocaleDateString("es-CO") : "—";
+                  return (
+                    <motion.tr 
+                      key={r.id} 
+                      initial={{ opacity: 0, y: 6 }} 
+                      animate={{ opacity: 1, y: 0 }} 
+                      exit={{ opacity: 0 }} 
+                      transition={{ delay: i * 0.02 }}
+                      className="hover:bg-slate-900/20 transition-colors group"
+                    >
+                      <td className="p-4 font-mono text-slate-500">#{r.id}</td>
+                      <td className="p-4 font-medium text-slate-200 max-w-[200px] truncate" title={r.descripcion}>
+                        {r.descripcion}
+                      </td>
+                      <td className="p-4 font-mono text-slate-400">{r.telefono_sospechoso || "—"}</td>
+                      <td className="p-4 text-slate-400 font-medium">{r.dominio || "—"}</td>
+                      <td className="p-4 font-bold font-mono" style={{ color: riskColor[level] }}>
+                        {r.score_riesgo ?? r.risk_score ?? 0}
+                      </td>
+                      <td className="p-4"><RiskBadge level={level} /></td>
+                      <td className="p-4 text-slate-500 font-mono">{fecha}</td>
+                      <td className="p-4 text-right">
+                        {token && (
+                          <button 
+                            onClick={() => onDelete(r.id)} 
+                            className="bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/30 text-red-400 p-2 rounded-xl transition-all cursor-pointer"
+                            title="Eliminar IoC"
+                          >
+                            <FaTrash size={11} />
+                          </button>
+                        )}
+                      </td>
+                    </motion.tr>
+                  );
+                })}
+              </AnimatePresence>
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="p-10 text-center text-slate-500 text-xs font-mono">
+                    No se encontraron IoCs registrados.
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -400,311 +986,125 @@ function DashboardView({ reports }) {
   );
 }
 
-// ─── REPORTES ──────────────────────────────────────────────────────────────
-function ReportesView({ reports, onDelete, token }) {
-  const [search, setSearch] = useState("");
-  const [filterRisk, setFilterRisk] = useState("todos");
-  const filtered = reports.filter((r) => {
-    const level = getRiskLevel(r.risk_score ?? 0);
-    const matchRisk = filterRisk === "todos" || level === filterRisk;
-    const q = search.toLowerCase();
-    const matchSearch = !q || (r.description || "").toLowerCase().includes(q) || String(r.id).includes(q) || (r.phone_number || "").includes(q) || (r.domain || "").includes(q);
-    return matchRisk && matchSearch;
-  });
-
-  return (
-    <div>
-      <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
-        <input placeholder="🔍 Buscar..." value={search} onChange={(e) => setSearch(e.target.value)}
-          style={{ flex: 1, minWidth: 200, background: "#0f1320", border: "1px solid rgba(99,130,255,0.2)", borderRadius: 8, padding: "10px 14px", color: "#e8ecf8", fontSize: 13, fontFamily: "inherit", outline: "none" }} />
-        {["todos","alto","medio","bajo"].map((f) => (
-          <button key={f} onClick={() => setFilterRisk(f)}
-            style={{ padding: "9px 14px", borderRadius: 8, border: "1px solid", borderColor: filterRisk === f ? "rgba(79,124,255,0.4)" : "rgba(99,130,255,0.15)", background: filterRisk === f ? "rgba(79,124,255,0.12)" : "transparent", color: filterRisk === f ? "#4f7cff" : "#6b7fa3", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
-            {f === "todos" ? "Todos" : f.charAt(0).toUpperCase() + f.slice(1)}
-          </button>
-        ))}
-        <div style={{ fontSize: 12, color: "#6b7fa3", alignSelf: "center" }}>{filtered.length} resultado{filtered.length !== 1 ? "s" : ""}</div>
-      </div>
-      <div style={{ background: "#0f1320", border: "1px solid rgba(99,130,255,0.15)", borderRadius: 12, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ background: "rgba(22,27,44,0.9)" }}>
-              {["ID","Descripción","Teléfono","Dominio","Score","Riesgo","Fecha","Acción"].map((h) => (
-                <th key={h} style={{ padding: "11px 16px", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, color: "#6b7fa3", textAlign: "left", borderBottom: "1px solid rgba(99,130,255,0.1)", fontWeight: 500 }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <AnimatePresence>
-              {filtered.map((r, i) => {
-                const level = getRiskLevel(r.risk_score ?? 0);
-                const fecha = r.created_at ? new Date(r.created_at).toLocaleDateString("es-CO") : "—";
-                return (
-                  <motion.tr key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ delay: i * 0.03 }}
-                    style={{ borderBottom: "1px solid rgba(99,130,255,0.05)" }}>
-                    <td style={{ padding: "12px 16px", fontSize: 11, color: "#6b7fa3", fontFamily: "monospace" }}>#{r.id}</td>
-                    <td style={{ padding: "12px 16px", fontSize: 12, color: "#c5cde8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.description}</td>
-                    <td style={{ padding: "12px 16px", fontSize: 11, color: "#6b7fa3", fontFamily: "monospace" }}>{r.phone_number || "—"}</td>
-                    <td style={{ padding: "12px 16px", fontSize: 11, color: "#6b7fa3" }}>{r.domain || "—"}</td>
-                    <td style={{ padding: "12px 16px", fontSize: 12, color: riskColor[level], fontWeight: 700, fontFamily: "monospace" }}>{r.risk_score ?? 0}</td>
-                    <td style={{ padding: "12px 16px" }}><RiskBadge level={level} /></td>
-                    <td style={{ padding: "12px 16px", fontSize: 11, color: "#6b7fa3" }}>{fecha}</td>
-                    <td style={{ padding: "12px 16px" }}>
-                      {token && <button onClick={() => onDelete(r.id)} style={{ background: "rgba(255,77,109,0.1)", border: "1px solid rgba(255,77,109,0.2)", color: "#ff4d6d", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>🗑</button>}
-                    </td>
-                  </motion.tr>
-                );
-              })}
-            </AnimatePresence>
-            {filtered.length === 0 && <tr><td colSpan={8} style={{ padding: 32, textAlign: "center", color: "#6b7fa3", fontSize: 13 }}>Sin reportes.</td></tr>}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-// ─── AMENAZAS ──────────────────────────────────────────────────────────────
+// ─── COMPONENT: AMENAZAS VIEW ──────────────────────────────────────────────
 function AmenazasView({ reports }) {
   const telefonos = {}, dominios = {};
   reports.forEach((r) => {
-    if (r.phone_number) telefonos[r.phone_number] = (telefonos[r.phone_number] || 0) + 1;
-    if (r.domain) dominios[r.domain] = (dominios[r.domain] || 0) + 1;
+    if (r.telefono_sospechoso) telefonos[r.telefono_sospechoso] = (telefonos[r.telefono_sospechoso] || 0) + 1;
+    if (r.dominio) dominios[r.dominio] = (dominios[r.dominio] || 0) + 1;
   });
-  const topTel = Object.entries(telefonos).sort((a,b) => b[1]-a[1]).slice(0,10);
-  const topDom = Object.entries(dominios).sort((a,b) => b[1]-a[1]).slice(0,10);
-  const altos  = reports.filter((r) => getRiskLevel(r.risk_score ?? 0) === "alto").slice(0, 8);
-  const card = (s) => ({ background: "#0f1320", border: "1px solid rgba(99,130,255,0.15)", borderRadius: 12, ...s });
+  
+  const topTel = Object.entries(telefonos).sort((a,b) => b[1]-a[1]).slice(0, 5);
+  const topDom = Object.entries(dominios).sort((a,b) => b[1]-a[1]).slice(0, 5);
+  const altos  = reports.filter((r) => getRiskLevel(r.score_riesgo ?? r.risk_score ?? 0) === "alto").slice(0, 5);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-      <div style={card({ padding: 20, gridColumn: "1/-1" })}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "#e8ecf8", marginBottom: 16 }}>📱 Teléfonos más reportados</div>
-        {topTel.length === 0 ? <div style={{ color: "#6b7fa3", fontSize: 13, padding: "20px 0" }}>Sin datos aún.</div> : (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 font-sans select-none">
+      {/* Top Telephones */}
+      <div className="bg-[#070911] border border-slate-800/80 rounded-2xl p-5">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-5 flex items-center gap-2">
+          📱 Teléfonos más Reportados
+        </h3>
+        {topTel.length === 0 ? (
+          <div className="py-12 text-center text-slate-500 text-xs font-mono">Sin datos registrados aún.</div>
+        ) : (
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={topTel.map(([t,c]) => ({ name: t.slice(-8), count: c }))} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(99,130,255,0.07)" horizontal={false} />
-              <XAxis type="number" tick={{ fill: "#6b7fa3", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
-              <YAxis type="category" dataKey="name" tick={{ fill: "#6b7fa3", fontSize: 11 }} axisLine={false} tickLine={false} width={80} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="count" fill="#4f7cff" radius={[0,4,4,0]} />
+            <BarChart data={topTel.map(([t, c]) => ({ name: t.slice(-10), count: c }))}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(99,130,255,0.03)" vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 9, fontFamily: "monospace" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#64748b", fontSize: 9, fontFamily: "monospace" }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <Tooltip contentStyle={{ background: '#090d16', border: '1px solid rgba(99,130,255,0.15)', borderRadius: '8px', fontSize: '10px' }} />
+              <Bar dataKey="count" fill="#2563eb" radius={[4,4,0,0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
       </div>
-      <div style={card({ padding: 20 })}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "#e8ecf8", marginBottom: 16 }}>🌐 Dominios sospechosos</div>
-        {topDom.length === 0 ? <div style={{ color: "#6b7fa3", fontSize: 13 }}>Sin dominios.</div> : topDom.map(([d,c]) => (
-          <div key={d} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-            <div style={{ flex: 1, fontSize: 12, color: "#c5cde8", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d}</div>
-            <div style={{ background: "rgba(255,77,109,0.12)", color: "#ff4d6d", padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600 }}>{c}x</div>
-          </div>
-        ))}
-      </div>
-      <div style={card({ padding: 20 })}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "#e8ecf8", marginBottom: 16 }}>🔥 Amenazas Críticas</div>
-        {altos.length === 0 ? <div style={{ color: "#6b7fa3", fontSize: 13 }}>Sin amenazas críticas.</div> : altos.map((r, i) => (
-          <motion.div key={r.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-            style={{ background: "rgba(255,77,109,0.07)", border: "1px solid rgba(255,77,109,0.15)", borderRadius: 8, padding: "10px 14px", marginBottom: 8 }}>
-            <div style={{ fontSize: 12, color: "#e8ecf8", marginBottom: 4 }}>{r.description}</div>
-            <div style={{ display: "flex", gap: 12, fontSize: 11, color: "#6b7fa3" }}>
-              <span>Score: <strong style={{ color: "#ff4d6d" }}>{r.risk_score}</strong></span>
-              {r.phone_number && <span>📱 {r.phone_number}</span>}
-              {r.domain && <span>🌐 {r.domain}</span>}
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
-// ─── VISTA PÚBLICA ─────────────────────────────────────────────────────────
-function PublicView({ onLogin }) {
-  const [vista, setVista] = useState("home");
-  const [form, setForm] = useState({ description: "", phone_number: "", domain: "", bank_account: "" });
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleReporte = async () => {
-    if (!form.description.trim()) { setError("La descripción es obligatoria."); return; }
-    setLoading(true); setError("");
-    try {
-      const res = await fetch(`${API_BASE}/api/v1/reportes/publico`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || "Error al enviar reporte");
-      }
-      setSuccess(true);
-      setForm({ description: "", phone_number: "", domain: "", bank_account: "" });
-    } catch (e) { setError(e.message); }
-    finally { setLoading(false); }
-  };
-
-  const inp = {
-    width: "100%", background: "#0a0d14", border: "1px solid rgba(99,130,255,0.2)",
-    borderRadius: 8, padding: "12px 14px", color: "#e8ecf8", fontSize: 14,
-    fontFamily: "inherit", outline: "none", boxSizing: "border-box", marginBottom: 14,
-  };
-
-  if (vista === "reporte") return (
-    <div style={{ minHeight: "100vh", background: "#0a0d14", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-        style={{ background: "#0f1320", border: "1px solid rgba(99,130,255,0.18)", borderRadius: 16, padding: 40, width: 500, maxWidth: "100%" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-          <button onClick={() => { setVista("home"); setSuccess(false); setError(""); }}
-            style={{ background: "none", border: "none", color: "#6b7fa3", cursor: "pointer", fontSize: 20 }}>←</button>
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: "#e8ecf8" }}>🚨 Reportar Fraude</div>
-            <div style={{ fontSize: 12, color: "#6b7fa3" }}>Sin registro — completamente anónimo</div>
-          </div>
-        </div>
-
-        {success ? (
-          <div style={{ textAlign: "center", padding: "32px 0" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: "#00e5b4", marginBottom: 8 }}>¡Reporte enviado!</div>
-            <div style={{ fontSize: 14, color: "#6b7fa3", marginBottom: 24 }}>Tu reporte fue registrado y será analizado por nuestro equipo.</div>
-            <button onClick={() => { setSuccess(false); setVista("home"); }}
-              style={{ background: "#4f7cff", color: "#fff", padding: "10px 24px", borderRadius: 8, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 14, fontWeight: 600 }}>
-              Volver al inicio
-            </button>
-          </div>
+      {/* Top Domains */}
+      <div className="bg-[#070911] border border-slate-800/80 rounded-2xl p-5">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-5 flex items-center gap-2">
+          🌐 Dominios más Reportados
+        </h3>
+        {topDom.length === 0 ? (
+          <div className="py-12 text-center text-slate-500 text-xs font-mono">Sin datos registrados aún.</div>
         ) : (
-          <>
-            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>¿Qué pasó? *</label>
-            <textarea rows={3} placeholder="Describe el fraude, amenaza o estafa..." value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              style={{ ...inp, resize: "vertical" }} />
-            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Teléfono sospechoso</label>
-            <input placeholder="+57 300 000 0000" value={form.phone_number}
-              onChange={(e) => setForm({ ...form, phone_number: e.target.value })} style={inp} />
-            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Dominio / URL / App</label>
-            <input placeholder="prestamofacil.com, WhatsApp, etc." value={form.domain}
-              onChange={(e) => setForm({ ...form, domain: e.target.value })} style={inp} />
-            <label style={{ fontSize: 11, color: "#6b7fa3", textTransform: "uppercase" }}>Cuenta de recaudo (Nequi, Daviplata...)</label>
-            <input placeholder="3001234567" value={form.bank_account}
-              onChange={(e) => setForm({ ...form, bank_account: e.target.value })} style={inp} />
-            {error && <div style={{ color: "#ff4d6d", fontSize: 12, marginBottom: 12 }}>{error}</div>}
-            <motion.button whileTap={{ scale: 0.98 }} onClick={handleReporte} disabled={loading}
-              style={{ width: "100%", padding: 14, borderRadius: 8, border: "none", background: loading ? "#374080" : "#ff4d6d", color: "#fff", cursor: "pointer", fontSize: 15, fontWeight: 700, fontFamily: "inherit" }}>
-              {loading ? "Enviando..." : "🚨 Enviar Reporte"}
-            </motion.button>
-          </>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={topDom.map(([d, c]) => ({ name: d.length > 15 ? d.slice(0, 12) + "..." : d, count: c }))}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(99,130,255,0.03)" vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 9 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#64748b", fontSize: 9 }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <Tooltip contentStyle={{ background: '#090d16', border: '1px solid rgba(99,130,255,0.15)', borderRadius: '8px', fontSize: '10px' }} />
+              <Bar dataKey="count" fill="#00e5b4" radius={[4,4,0,0]} />
+            </BarChart>
+          </ResponsiveContainer>
         )}
-      </motion.div>
-    </div>
-  );
+      </div>
 
-  return (
-    <div style={{ minHeight: "100vh", background: "#0a0d14", color: "#e8ecf8", fontFamily: "inherit" }}>
-      {/* Header */}
-      <div style={{ background: "#0f1320", borderBottom: "1px solid rgba(99,130,255,0.15)", padding: "16px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ fontSize: 28 }}>🛡️</div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 16, color: "#e8ecf8" }}>AegisShield</div>
-            <div style={{ fontSize: 10, color: "#6b7fa3", letterSpacing: "1.5px", textTransform: "uppercase" }}>Anti-Fraud LATAM</div>
-          </div>
+      {/* Critical Threats List */}
+      <div className="lg:col-span-2 bg-[#070911] border border-slate-800/80 rounded-2xl p-5">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
+          🔥 Amenazas Críticas de Alta Prioridad
+        </h3>
+        <div className="space-y-3">
+          {altos.map((r, i) => (
+            <motion.div 
+              key={r.id} 
+              initial={{ opacity: 0, x: -8 }} 
+              animate={{ opacity: 1, x: 0 }} 
+              transition={{ delay: i * 0.05 }}
+              className="bg-red-500/5 border border-red-500/10 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3"
+            >
+              <div>
+                <div className="text-xs font-bold text-slate-200">{r.descripcion}</div>
+                <div className="flex gap-4 text-[10px] text-slate-500 font-mono mt-1">
+                  {r.telefono_sospechoso && <span>📱 {r.telefono_sospechoso}</span>}
+                  {r.dominio && <span>🌐 {r.dominio}</span>}
+                  {r.banco_recaudo && <span>🏦 {r.banco_recaudo}</span>}
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-bold font-mono text-red-400">Score: {r.score_riesgo ?? r.risk_score}%</span>
+                <RiskBadge level="alto" />
+              </div>
+            </motion.div>
+          ))}
+          {altos.length === 0 && (
+            <div className="py-12 text-center text-slate-500 text-xs font-mono">No hay amenazas críticas registradas.</div>
+          )}
         </div>
-        <button onClick={() => setVista("login")}
-          style={{ background: "rgba(79,124,255,0.1)", border: "1px solid rgba(79,124,255,0.3)", color: "#4f7cff", padding: "8px 18px", borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 600 }}>
-          Iniciar Sesión
-        </button>
       </div>
-
-      {/* Hero */}
-      <div style={{ textAlign: "center", padding: "80px 20px 60px" }}>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <div style={{ fontSize: 64, marginBottom: 20 }}>🛡️</div>
-          <h1 style={{ fontSize: 42, fontWeight: 800, margin: "0 0 16px", background: "linear-gradient(135deg,#4f7cff,#00e5b4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            Protege tu comunidad
-          </h1>
-          <p style={{ fontSize: 18, color: "#6b7fa3", maxWidth: 500, margin: "0 auto 40px" }}>
-            Reporta fraudes, préstamos predatorios y estafas digitales. Sin registro, completamente anónimo.
-          </p>
-          <motion.button whileTap={{ scale: 0.97 }} onClick={() => setVista("reporte")}
-            style={{ background: "#ff4d6d", color: "#fff", padding: "16px 40px", borderRadius: 12, border: "none", fontSize: 18, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", boxShadow: "0 8px 32px rgba(255,77,109,0.3)" }}>
-            🚨 Reportar Fraude Ahora
-          </motion.button>
-        </motion.div>
-      </div>
-
-      {/* Cards */}
-      <div style={{ display: "flex", justifyContent: "center", gap: 20, padding: "0 20px 80px", flexWrap: "wrap" }}>
-        {[
-          { icon: "📱", title: "Montadeudas", desc: "Préstamos con intereses abusivos y amenazas" },
-          { icon: "🌐", title: "Phishing", desc: "Sitios falsos que roban tus datos bancarios" },
-          { icon: "💳", title: "Fraude bancario", desc: "Transferencias no autorizadas y clonación" },
-          { icon: "📲", title: "Estafas WhatsApp", desc: "Engaños por mensajería y redes sociales" },
-        ].map((c) => (
-          <motion.div key={c.title} whileHover={{ y: -4 }}
-            style={{ background: "#0f1320", border: "1px solid rgba(99,130,255,0.15)", borderRadius: 12, padding: "24px 20px", width: 200, textAlign: "center" }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>{c.icon}</div>
-            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>{c.title}</div>
-            <div style={{ fontSize: 12, color: "#6b7fa3" }}>{c.desc}</div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Login section */}
-      {vista === "login" && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(10,13,20,0.9)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}
-          onClick={() => setVista("home")}>
-          <div onClick={(e) => e.stopPropagation()}>
-            <LoginView onLogin={onLogin} />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
-// ─── THREAT INTEL ──────────────────────────────────────────────────────────
+// ─── COMPONENT: THREAT INTEL VIEW ──────────────────────────────────────────
 function ThreatIntelView({ reports }) {
-  const blacklistTel = [...new Set(reports.filter((r) => r.phone_number).map((r) => r.phone_number))];
-  const blacklistDom = [...new Set(reports.filter((r) => r.domain).map((r) => r.domain))];
-  const blacklistBan = [...new Set(reports.filter((r) => r.banco_recaudo).map((r) => r.banco_recaudo))];
-  const scoreData = [
-    { rango: "0-20",   count: reports.filter((r) => (r.risk_score ?? 0) <= 20).length },
-    { rango: "21-40",  count: reports.filter((r) => (r.risk_score ?? 0) > 20  && (r.risk_score ?? 0) <= 40).length },
-    { rango: "41-60",  count: reports.filter((r) => (r.risk_score ?? 0) > 40  && (r.risk_score ?? 0) <= 60).length },
-    { rango: "61-80",  count: reports.filter((r) => (r.risk_score ?? 0) > 60  && (r.risk_score ?? 0) <= 80).length },
-    { rango: "81-100", count: reports.filter((r) => (r.risk_score ?? 0) > 80).length },
-  ];
-  const card = (s) => ({ background: "#0f1320", border: "1px solid rgba(99,130,255,0.15)", borderRadius: 12, ...s });
-  const listStyle = { fontFamily: "monospace", fontSize: 12, color: "#c5cde8", padding: "8px 12px", background: "rgba(99,130,255,0.05)", borderRadius: 6, marginBottom: 6, display: "block" };
+  const blacklistTel = [...new Set(reports.filter((r) => r.telefono_sospechoso).map((r) => r.telefono_sospechoso))];
+  const blacklistDom = [...new Set(reports.filter((r) => r.dominio).map((r) => r.dominio))];
+  const blacklistBan = [...new Set(reports.filter((r) => r.banco_recaudo ?? r.bank_account).map((r) => r.banco_recaudo ?? r.bank_account))];
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
-      <div style={card({ padding: 20, gridColumn: "1/-1" })}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "#e8ecf8", marginBottom: 16 }}>🧠 Distribución de Scores</div>
-        <ResponsiveContainer width="100%" height={180}>
-          <BarChart data={scoreData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(99,130,255,0.07)" />
-            <XAxis dataKey="rango" tick={{ fill: "#6b7fa3", fontSize: 12 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: "#6b7fa3", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
-            <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="count" radius={[4,4,0,0]}>
-              {scoreData.map((_, i) => <Cell key={i} fill={["#00e5b4","#00e5b4","#ffb547","#ff4d6d","#ff4d6d"][i]} />)}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans select-none">
       {[
-        { title: "📵 Teléfonos en lista negra", items: blacklistTel },
-        { title: "🌐 Dominios bloqueados", items: blacklistDom },
-        { title: "🏦 Cuentas de recaudo", items: blacklistBan },
-      ].map(({ title, items }) => (
-        <div key={title} style={card({ padding: 20 })}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#e8ecf8", marginBottom: 14 }}>{title} <span style={{ color: "#6b7fa3", fontWeight: 400, fontSize: 12 }}>({items.length})</span></div>
-          <div style={{ maxHeight: 220, overflowY: "auto" }}>
-            {items.length === 0 ? <div style={{ color: "#6b7fa3", fontSize: 12 }}>Sin registros</div> : items.map((item) => <span key={item} style={listStyle}>{item}</span>)}
+        { title: "📵 Teléfonos Bloqueados", items: blacklistTel, icon: "📱", color: "text-red-400" },
+        { title: "🌐 Dominios en Lista Negra", items: blacklistDom, icon: "🌐", color: "text-blue-400" },
+        { title: "🏦 Cuentas Identificadas", items: blacklistBan, icon: "🏦", color: "text-emerald-400" }
+      ].map((list, i) => (
+        <div key={i} className="bg-[#070911] border border-slate-800/80 rounded-2xl p-5 flex flex-col h-[400px]">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center justify-between">
+            <span>{list.icon} {list.title}</span>
+            <span className="font-mono text-[10px] text-slate-500">({list.items.length})</span>
+          </h3>
+          <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-thin">
+            {list.items.map((item, idx) => (
+              <div key={idx} className="bg-slate-950/60 border border-slate-900 rounded-xl p-3 font-mono text-xs flex justify-between items-center">
+                <span className="text-slate-300 truncate max-w-[80%]">{item}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+              </div>
+            ))}
+            {list.items.length === 0 && (
+              <div className="py-24 text-center text-slate-600 text-xs font-mono">Sin registros guardados.</div>
+            )}
           </div>
         </div>
       ))}
@@ -712,14 +1112,192 @@ function ThreatIntelView({ reports }) {
   );
 }
 
+// ─── COMPONENT: MODAL REGISTRO DE REPORTE ──────────────────────────────────
+function ReportModal({ onClose, onSubmit }) {
+  const [form, setForm] = useState({ telefono_sospechoso: "", dominio: "", descripcion: "", banco_recaudo: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [aiScore, setAiScore] = useState(null);
+  const [aiLevel, setAiLevel] = useState("");
+  const [isScanning, setIsScanning] = useState(false);
+
+  // Simulación de escaneo/análisis de IA local pre-submit
+  const triggerAiScan = () => {
+    if (!form.descripcion.trim()) return;
+    setIsScanning(true);
+    setTimeout(() => {
+      let score = 30;
+      const desc = form.descripcion.toLowerCase();
+      const dom = form.dominio.toLowerCase();
+      
+      if (dom.includes(".xyz") || dom.includes(".click")) score += 30;
+      if (desc.includes("estafa") || desc.includes("amenaza") || desc.includes("montadeudas")) score += 25;
+      if (form.telefono_sospechoso.startsWith("+") && !form.telefono_sospechoso.startsWith("+57")) score += 15;
+      
+      score = Math.min(score, 100);
+      setAiScore(score);
+      setAiLevel(score >= 70 ? "alto" : score >= 40 ? "medio" : "bajo");
+      setIsScanning(false);
+    }, 1500);
+  };
+
+  const handleSubmit = async () => {
+    if (!form.descripcion.trim()) { setError("La descripción es requerida."); return; }
+    if (!form.telefono_sospechoso && !form.dominio && !form.banco_recaudo) {
+      setError("Debes ingresar al menos un indicador (teléfono, dominio o cuenta bancaria).");
+      return;
+    }
+    setLoading(true); setError("");
+    try {
+      // Mapea los campos esperados por el backend en snake_case inglés
+      const payload = {
+        phone_number: form.telefono_sospechoso,
+        bank_account: form.banco_recaudo,
+        domain: form.dominio,
+        description: form.descripcion,
+        risk_level: aiLevel.toUpperCase() || "BAJO"
+      };
+      await onSubmit(payload);
+      onClose();
+    }
+    catch (e) {
+      setError(e.message || "Error al crear reporte.");
+    }
+    finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans select-none">
+      <motion.div 
+        initial={{ scale: 0.96, opacity: 0 }} 
+        animate={{ scale: 1, opacity: 1 }} 
+        exit={{ scale: 0.96, opacity: 0 }}
+        className="bg-[#070911] border border-slate-800/80 rounded-2xl p-6 w-full max-w-lg shadow-2xl relative"
+      >
+        <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-slate-200 transition-colors cursor-pointer text-sm">
+          <FaTimes />
+        </button>
+
+        <div className="flex items-center gap-3 border-b border-slate-900 pb-4 mb-5">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 text-lg">🛡️</div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-200">Registrar Indicador IoC</h3>
+            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-mono">AegisShield Risk Engine</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="text-[10px] text-slate-500 uppercase tracking-widest font-mono font-bold block mb-1">Descripción del Incidente *</label>
+            <textarea 
+              rows={3} 
+              placeholder="Ej: Amenazas mediante WhatsApp cobrando cobro abusivo gota a gota..." 
+              value={form.descripcion} 
+              onChange={(e) => setForm({ ...form, descripcion: e.target.value })} 
+              onBlur={triggerAiScan}
+              className="w-full bg-[#090c15] border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 outline-none focus:border-blue-500/50 transition-colors"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-[10px] text-slate-500 uppercase tracking-widest font-mono font-bold block mb-1">Teléfono Sospechoso</label>
+              <input 
+                placeholder="+57312..." 
+                value={form.telefono_sospechoso} 
+                onChange={(e) => setForm({ ...form, telefono_sospechoso: e.target.value })} 
+                onBlur={triggerAiScan}
+                className="w-full bg-[#090c15] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-blue-500/50 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-500 uppercase tracking-widest font-mono font-bold block mb-1">Dominio / URL</label>
+              <input 
+                placeholder="ejemplo.xyz" 
+                value={form.dominio} 
+                onChange={(e) => setForm({ ...form, dominio: e.target.value })} 
+                onBlur={triggerAiScan}
+                className="w-full bg-[#090c15] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-blue-500/50 transition-colors"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] text-slate-500 uppercase tracking-widest font-mono font-bold block mb-1">Banco / Cuenta de Recaudo</label>
+            <input 
+              placeholder="Nequi, Daviplata, Bancolombia..." 
+              value={form.banco_recaudo} 
+              onChange={(e) => setForm({ ...form, banco_recaudo: e.target.value })} 
+              className="w-full bg-[#090c15] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-blue-500/50 transition-colors"
+            />
+          </div>
+
+          {/* AI Pre-evaluation scanning */}
+          <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 flex items-center justify-between relative overflow-hidden min-h-[64px]">
+            {isScanning ? (
+              <div className="flex items-center gap-3">
+                <span className="w-4 h-4 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+                <span className="text-xs font-mono text-cyan-400">Analizando indicadores con IA...</span>
+              </div>
+            ) : aiScore !== null ? (
+              <div className="flex justify-between items-center w-full">
+                <div>
+                  <div className="text-[9px] text-slate-500 uppercase tracking-wider font-mono">Evaluación de Riesgo Previa</div>
+                  <div className="text-xs font-bold text-slate-300 mt-1 flex items-center gap-1.5">
+                    Riesgo Detectado: <RiskBadge level={aiLevel} />
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[9px] text-slate-500 uppercase tracking-wider font-mono">Puntuación Heurística</div>
+                  <div className="text-lg font-bold font-mono text-cyan-400 mt-0.5">{aiScore}/100</div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-slate-500 text-xs font-mono flex items-center gap-2">
+                <FaRobot /> Rellena los datos para activar el pre-análisis de IA.
+              </div>
+            )}
+          </div>
+
+          {error && (
+            <div className="flex items-center gap-2 p-3 bg-red-950/20 border border-red-500/20 rounded-xl text-xs text-red-400 font-sans">
+              <FaExclamationTriangle /> {error}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-3">
+            <button 
+              onClick={onClose} 
+              className="px-4 py-2.5 border border-slate-850 bg-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/30 rounded-xl text-xs font-bold cursor-pointer transition-all"
+            >
+              Cancelar
+            </button>
+            <button 
+              onClick={handleSubmit} 
+              disabled={loading || isScanning}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-slate-950 font-bold text-xs cursor-pointer shadow-md transition-all flex items-center gap-1.5"
+            >
+              {loading ? "Registrando..." : "Confirmar e Inyectar IoC"}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // ─── MAIN APP ──────────────────────────────────────────────────────────────
 export default function App() {
-  const [token, setToken]         = useState(() => localStorage.getItem("aegis_token") || "");
-  const [view, setView]           = useState("dashboard");
-  const [reports, setReports]     = useState([]);
-  const [loading, setLoading]     = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [error, setError]         = useState("");
+  const [inConsole, setInConsole]   = useState(false);
+  const [token, setToken]           = useState(() => localStorage.getItem("aegis_token") || "");
+  const [view, setView]             = useState("dashboard");
+  const [reports, setReports]       = useState([]);
+  const [loading, setLoading]       = useState(false);
+  const [showModal, setShowModal]   = useState(false);
+  const [error, setError]           = useState("");
+  const [isSimulatingAttack, setIsSimulatingAttack] = useState(false);
 
   // ── fetch con token explícito para evitar race condition ──
   const fetchReports = useCallback(async (tkn) => {
@@ -730,9 +1308,21 @@ export default function App() {
       const res = await apiFetch(`${API_BASE}/api/v1/reportes`, t);
       if (res.ok) {
         const data = await res.json();
-        setReports(Array.isArray(data) ? data : []);
+        const list = Array.isArray(data) ? data : [];
+        // Normaliza nombres de campos para que la UI funcione con el backend
+        setReports(
+          list.map((r) => ({
+            ...r,
+            telefono_sospechoso: r.telefono_sospechoso ?? r.phone_number,
+            banco_recaudo: r.banco_recaudo ?? r.bank_account,
+            dominio: r.dominio ?? r.domain,
+            descripcion: r.descripcion ?? r.description,
+            score_riesgo: r.score_riesgo ?? r.risk_score,
+            riesgo: r.riesgo ?? r.risk_level,
+          }))
+        );
       } else if (res.status === 401) {
-        console.warn("Token expirado o inválido");
+        setError("Sesión expirada. Inicia sesión de nuevo.");
       } else {
         setError("Error al cargar reportes.");
       }
@@ -743,103 +1333,177 @@ export default function App() {
   }, [token]);
 
   useEffect(() => {
-    if (token) {
-      fetchReports(token);
-      const iv = setInterval(() => fetchReports(token), 30000);
-      return () => clearInterval(iv);
-    }
-  }, [token]);
+    if (!token) return;
+    fetchReports(token);
+    const iv = setInterval(() => fetchReports(token), 30000);
+    return () => clearInterval(iv);
+  }, [token, fetchReports]);
 
   const handleLogin = (newToken) => {
     localStorage.setItem("aegis_token", newToken);
     setToken(newToken);
-    // Usar el token directamente, no esperar al estado
     setTimeout(() => fetchReports(newToken), 100);
   };
 
   const handleLogout = () => {
-    setToken(""); localStorage.removeItem("aegis_token"); setReports([]);
+    setToken(""); 
+    localStorage.removeItem("aegis_token"); 
+    setReports([]);
+    setInConsole(false);
   };
 
   const handleCreateReport = async (form) => {
-    const payload = {
-      description: form.descripcion,
-      phone_number: form.telefono_sospechoso,
-      domain: form.dominio,
-      bank_account: form.banco_recaudo,
-    };
-    const res = await apiFetch(`${API_BASE}/api/v1/reportes`, token, { method: "POST", body: JSON.stringify(payload) });
+    const res = await apiFetch(`${API_BASE}/api/v1/reportes`, token, { 
+      method: "POST", 
+      body: JSON.stringify(form) 
+    });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(JSON.stringify(err) || "Error al crear reporte");
+      throw new Error(err.detail || "Error al crear reporte");
     }
     await fetchReports(token);
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm(`¿Eliminar reporte #${id}?`)) return;
-    const res = await apiFetch(`${API_BASE}/api/v1/reportes${id}`, token, { method: "DELETE" });
+    if (!window.confirm(`¿Seguro que deseas eliminar el reporte #${id}?`)) return;
+    const res = await apiFetch(`${API_BASE}/api/v1/reportes/${id}`, token, { method: "DELETE" });
     if (res.ok) await fetchReports(token);
   };
 
- const viewTitles = { dashboard: "Centro de Comando", reportes: "Módulo de Reportes", amenazas: "Amenazas Activas", intel: "Threat Intelligence", admin: "Panel de Administración" };
+  const handleTriggerAttackSimulation = async () => {
+    setIsSimulatingAttack(true);
+    try {
+      const mockThreats = [
+        {
+          description: "🚨 [SIMULATED ATTACK] Inyección SQL & Fuerza Bruta detectada.",
+          phone_number: "+573009990000",
+          domain: "sqli-attack-source.xyz",
+          bank_account: "Nequi - 3009990000",
+          risk_level: "alto"
+        },
+        {
+          description: "🚨 [SIMULATED ATTACK] Campaña activa de phishing imitando portal corporativo.",
+          phone_number: "+573155554444",
+          domain: "verificar-aegis-shield.click",
+          bank_account: "Daviplata - 3155554444",
+          risk_level: "alto"
+        }
+      ];
 
-  if (!token) return <PublicView onLogin={handleLogin} />;
+      for (const threat of mockThreats) {
+        await handleCreateReport(threat);
+      }
+    } catch (e) {
+      console.error("Error al simular ataque en base de datos:", e);
+    }
+    setTimeout(() => setIsSimulatingAttack(false), 2000); // Reset after 2s
+  };
+
+  // 1. Mostrar landing page si el usuario no ha hecho click en "Iniciar Consola"
+  if (!inConsole && !token) {
+    return <LandingView onLaunch={() => setInConsole(true)} />;
+  }
+
+  // 2. Si dio click en iniciar consola pero no está autenticado, pide login
+  if (!token) {
+    return <LoginView onLogin={handleLogin} />;
+  }
+
+  const viewTitles = { 
+    dashboard: "SOC Command Center", 
+    reportes: "Módulo de Reportes IoC", 
+    amenazas: "Vectores de Amenazas Activos", 
+    intel: "Threat Intelligence Feeds" 
+  };
 
   return (
-    <>
-      <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #0a0d14; color: #e8ecf8; font-family: 'Space Grotesk', system-ui, sans-serif; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0a0d14; }
-        ::-webkit-scrollbar-thumb { background: rgba(99,130,255,0.2); border-radius: 3px; }
-        @keyframes pulse { 0%,100% { box-shadow: 0 0 0 3px rgba(0,229,180,0.15); } 50% { box-shadow: 0 0 0 6px rgba(0,229,180,0.07); } }
-      `}</style>
+    <div className="flex min-h-screen bg-[#05070c] text-slate-100 font-sans relative overflow-hidden select-none">
+      {/* Screen Red Flash Overlay on attack simulation */}
+      <AnimatePresence>
+        {isSimulatingAttack && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.25 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-red-600 z-50 pointer-events-none"
+          />
+        )}
+      </AnimatePresence>
 
-      <div style={{ display: "flex", minHeight: "100vh" }}>
-        <Sidebar view={view} setView={setView} reportsCount={reports.filter((r) => getRiskLevel(r.risk_score ?? 0) === "alto").length} />
+      <Sidebar 
+        view={view} 
+        setView={setView} 
+        reportsCount={reports.filter((r) => getRiskLevel(r.score_riesgo ?? r.risk_score ?? 0) === "alto").length} 
+        onLogout={handleLogout}
+      />
 
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-          <div style={{ height: 60, background: "#0f1320", borderBottom: "1px solid rgba(99,130,255,0.12)", display: "flex", alignItems: "center", padding: "0 28px", gap: 16, position: "sticky", top: 0, zIndex: 50 }}>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#e8ecf8" }}>{viewTitles[view]}</div>
-              <div style={{ fontSize: 11, color: "#6b7fa3" }}>AegisShield · {new Date().toLocaleDateString("es-CO",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</div>
-            </div>
-            <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
-              {loading && <div style={{ fontSize: 12, color: "#6b7fa3" }}>⟳ Actualizando...</div>}
-              {error && <div style={{ fontSize: 12, color: "#ff4d6d" }}>{error}</div>}
-              <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(0,229,180,0.08)", border: "1px solid rgba(0,229,180,0.2)", padding: "4px 12px", borderRadius: 20, fontSize: 11, color: "#00e5b4", fontWeight: 500 }}>
-                <div style={{ width: 6, height: 6, background: "#00e5b4", borderRadius: "50%", animation: "pulse 1.5s infinite" }} /> EN VIVO
-              </div>
-              <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowModal(true)}
-                style={{ background: "#4f7cff", color: "#fff", padding: "8px 16px", borderRadius: 8, border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                + Nuevo Reporte
-              </motion.button>
-              <button onClick={handleLogout}
-                style={{ background: "transparent", border: "1px solid rgba(255,77,109,0.25)", color: "#ff4d6d", padding: "7px 12px", borderRadius: 8, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
-                Salir
-              </button>
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header console */}
+        <header className="h-[60px] bg-[#070911]/90 border-b border-slate-800/80 backdrop-blur-md flex items-center justify-between px-8 sticky top-0 z-40">
+          <div>
+            <div className="text-sm font-bold text-slate-200">{viewTitles[view]}</div>
+            <div className="text-[10px] text-slate-500 font-mono">
+              AegisShield Platform · {new Date().toLocaleDateString("es-CO", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
             </div>
           </div>
 
-          <div style={{ padding: 28, flex: 1 }}>
-            <AnimatePresence mode="wait">
-              <motion.div key={view} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
-                {view === "dashboard" && <DashboardView reports={reports} />}
-                {view === "reportes"  && <ReportesView reports={reports} onDelete={handleDelete} token={token} />}
-                {view === "amenazas"  && <AmenazasView reports={reports} />}
-                {view === "intel"     && <ThreatIntelView reports={reports} />}
-                {view === "admin"     && <AdminView token={token} />}
-              </motion.div>
-            </AnimatePresence>
+          <div className="flex items-center gap-4">
+            {loading && <div className="text-[10px] text-slate-500 font-mono animate-pulse">⟳ Cargando...</div>}
+            {error && <div className="text-[10px] text-red-400 font-mono">{error}</div>}
+            
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/5 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-wider rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" /> CONECTADO
+            </div>
+
+            <button 
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-slate-950 font-bold text-[11px] rounded-lg tracking-wide transition-all cursor-pointer shadow-md"
+            >
+              + Nuevo Reporte
+            </button>
           </div>
-        </div>
+        </header>
+
+        {/* Content body */}
+        <main className="p-8 flex-1 overflow-y-auto">
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={view} 
+              initial={{ opacity: 0, y: 8 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0, y: -8 }} 
+              transition={{ duration: 0.18 }}
+            >
+              {view === "dashboard" && (
+                <DashboardView 
+                  reports={reports} 
+                  onTriggerAttackSimulation={handleTriggerAttackSimulation}
+                  isSimulatingAttack={isSimulatingAttack}
+                />
+              )}
+              {view === "reportes" && (
+                <ReportesView 
+                  reports={reports} 
+                  onDelete={handleDelete} 
+                  token={token} 
+                  onOpenModal={() => setShowModal(true)} 
+                />
+              )}
+              {view === "amenazas" && <AmenazasView reports={reports} />}
+              {view === "intel" && <ThreatIntelView reports={reports} />}
+            </motion.div>
+          </AnimatePresence>
+        </main>
       </div>
 
       <AnimatePresence>
-        {showModal && <ReportModal onClose={() => setShowModal(false)} onSubmit={handleCreateReport} />}
+        {showModal && (
+          <ReportModal 
+            onClose={() => setShowModal(false)} 
+            onSubmit={handleCreateReport} 
+          />
+        )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }
