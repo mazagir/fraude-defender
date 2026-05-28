@@ -61,6 +61,7 @@ function Sidebar({ view, setView, reportsCount }) {
     { id: "reportes",  icon: "📋", label: "Reportes", badge: reportsCount },
     { id: "amenazas",  icon: "⚠️", label: "Amenazas" },
     { id: "intel",     icon: "🧠", label: "Threat Intel" },
+    { id: "admin",     icon: "👑", label: "Admin", adminOnly: true },
   ];
   return (
     <aside style={{ width: 220, minHeight: "100vh", background: "#0f1320", borderRight: "1px solid rgba(99,130,255,0.15)", display: "flex", flexDirection: "column", flexShrink: 0, position: "sticky", top: 0, height: "100vh" }}>
@@ -781,7 +782,7 @@ export default function App() {
     if (res.ok) await fetchReports(token);
   };
 
-  const viewTitles = { dashboard: "Centro de Comando", reportes: "Módulo de Reportes", amenazas: "Amenazas Activas", intel: "Threat Intelligence" };
+ const viewTitles = { dashboard: "Centro de Comando", reportes: "Módulo de Reportes", amenazas: "Amenazas Activas", intel: "Threat Intelligence", admin: "Panel de Administración" };
 
   if (!token) return <PublicView onLogin={handleLogin} />;
 
@@ -829,6 +830,7 @@ export default function App() {
                 {view === "reportes"  && <ReportesView reports={reports} onDelete={handleDelete} token={token} />}
                 {view === "amenazas"  && <AmenazasView reports={reports} />}
                 {view === "intel"     && <ThreatIntelView reports={reports} />}
+                {view === "admin"     && <AdminView token={token} />}
               </motion.div>
             </AnimatePresence>
           </div>
