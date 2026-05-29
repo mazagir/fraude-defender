@@ -72,7 +72,7 @@ function RiskBadge({ level }) {
 }
 
 // ─── COMPONENT: LANDING VIEW ─────────────────────────────────────────────
-function LandingView({ onLaunch }) {
+function LandingView({ onLaunch, onPublicView }) {
   const [stats, setStats] = useState({ attacks: 489122, speed: 12, detection: 99.98 });
   
   useEffect(() => {
@@ -142,6 +142,12 @@ function LandingView({ onLaunch }) {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="flex flex-col sm:flex-row gap-4 mt-10 w-full justify-center"
         >
+          <button 
+            onClick={onPublicView}
+            className="px-8 py-4 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-white font-extrabold text-base tracking-wide transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer shadow-lg border border-slate-600 flex items-center justify-center gap-2"
+          >
+            <FaEye /> Ver Reportes (Público)
+          </button>
           <button 
             onClick={onLaunch}
             className="px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-slate-950 font-extrabold text-base tracking-wide transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer shadow-lg shadow-blue-500/20"
@@ -1288,9 +1294,81 @@ function ReportModal({ onClose, onSubmit }) {
   );
 }
 
+// ─── COMPONENT: PUBLIC REPORTS VIEW ──────────────────────────────────────
+function PublicReportsView({ onBack, onNewReport }) {
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadPublic() {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/reports/publico/listar`);
+        if (res.ok) {
+          const data = await res.json();
+          setReports(data.slice(0, 50)); // Mostrar los últimos 50
+        }
+      } catch (e) {
+        console.error("Error cargando reportes públicos", e);
+      }
+      setLoading(false);
+    }
+    loadPublic();
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-[#05070c] text-slate-200 cyber-grid flex flex-col font-sans relative">
+      <header className="w-full py-5 px-6 border-b border-slate-800/60 flex justify-between items-center bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-xl shadow-lg border border-slate-700">👁️</div>
+          <div>
+            <div className="font-extrabold text-lg text-slate-100">Portal Público de Denuncias</div>
+            <div className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">AegisShield</div>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={onNewReport} className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs transition-colors flex items-center gap-2 cursor-pointer shadow-md shadow-red-900/50">
+            <FaExclamationTriangle /> Denunciar Fraude (Anónimo)
+          </button>
+          <button onClick={onBack} className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold text-xs transition-colors cursor-pointer">
+            Volver
+          </button>
+        </div>
+      </header>
+
+      <main className="flex-1 p-8 max-w-5xl mx-auto w-full">
+        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2"><FaShieldAlt className="text-blue-500"/> Últimas Alertas Comunitarias</h2>
+        {loading ? (
+          <div className="text-center py-20 text-slate-500 animate-pulse font-mono">Cargando base de datos pública...</div>
+        ) : (
+          <div className="grid gap-4">
+            {reports.map((r, i) => (
+              <div key={i} className="bg-slate-900/50 border border-slate-800/80 p-5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <RiskBadge level={r.risk_level ?? r.riesgo} />
+                    <span className="text-[10px] text-slate-500 font-mono">{new Date(r.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <div className="text-sm text-slate-300">
+                    <span className="font-bold text-slate-100">{r.domain ?? r.phone_number ?? "Múltiples IoCs"}</span> - {r.description}
+                  </div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <div className="text-[9px] uppercase tracking-widest text-slate-500 font-mono">Score Riesgo</div>
+                  <div className="text-xl font-bold font-mono text-cyan-400">{r.risk_score ?? r.score_riesgo ?? "N/A"}/100</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
 // ─── MAIN APP ──────────────────────────────────────────────────────────────
 export default function App() {
   const [inConsole, setInConsole]   = useState(false);
+  const [inPublicView, setInPublicView] = useState(false);
   const [token, setToken]           = useState(() => localStorage.getItem("aegis_token") || "");
   const [view, setView]             = useState("dashboard");
   const [reports, setReports]       = useState([]);
@@ -1399,9 +1477,45 @@ export default function App() {
     setTimeout(() => setIsSimulatingAttack(false), 2000); // Reset after 2s
   };
 
-  // 1. Mostrar landing page si el usuario no ha hecho click en "Iniciar Consola"
-  if (!inConsole && !token) {
-    return <LandingView onLaunch={() => setInConsole(true)} />;
+  // 1. Mostrar landing page si el usuario no ha hecho click en "Iniciar Consola" ni en "Ver Reportes Públicos"
+  if (!inConsole && !inPublicView && !token) {
+    return <LandingView 
+      onLaunch={() => setInConsole(true)} 
+      onPublicView={() => setInPublicView(true)}
+    />;
+  }
+
+  // 1.5 Vista pública anónima
+  if (inPublicView && !token) {
+    return (
+      <>
+        <PublicReportsView 
+          onBack={() => setInPublicView(false)} 
+          onNewReport={() => setShowModal(true)} 
+        />
+        <AnimatePresence>
+          {showModal && (
+            <ReportModal 
+              onClose={() => setShowModal(false)} 
+              onSubmit={async (form) => {
+                const res = await fetch(`${API_BASE}/api/v1/reports/publico`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(form)
+                });
+                if (res.ok) {
+                  setShowModal(false);
+                  setInPublicView(false);
+                  setTimeout(() => setInPublicView(true), 100); // Hacky reload
+                } else {
+                  throw new Error("Error registrando denuncia");
+                }
+              }} 
+            />
+          )}
+        </AnimatePresence>
+      </>
+    );
   }
 
   // 2. Si dio click en iniciar consola pero no está autenticado, pide login

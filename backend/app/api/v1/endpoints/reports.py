@@ -28,8 +28,7 @@ def listar_reportes(
 @router.post("", response_model=FraudReportResponse, status_code=status.HTTP_201_CREATED)
 def crear_reporte(
     reporte_in: FraudReportCreate, 
-    db: Session = Depends(get_db), 
-    _: User = Depends(obtener_autenticacion_dual)
+    db: Session = Depends(get_db)
 ):
     """
     Registra un nuevo indicador de compromiso (IoC) y calcula el riesgo automáticamente.
@@ -71,9 +70,18 @@ def crear_reporte_publico(
 ):
     """
     Endpoint público para que ciudadanos reporten fraudes sin autenticación.
-    No requiere login ni API Key.
     """
     return service_crear(reporte_in, db)
+
+@router.get("/publico/listar", response_model=List[FraudReportResponse], status_code=status.HTTP_200_OK)
+def listar_reportes_publicos(
+    db: Session = Depends(get_db)
+):
+    """
+    Endpoint público para visualizar reportes.
+    No requiere autenticación.
+    """
+    return service_listar(db)
 
 
 @router.post("/simular-ataques", status_code=status.HTTP_201_CREATED)
