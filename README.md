@@ -1,57 +1,97 @@
 <div align="center">
 
-# 🛡️ AegisShield | Anti-Fraud Intelligence
-### *Next-Generation Threat Intelligence & Cybersecurity Platform*
+<img src="https://raw.githubusercontent.com/mazagir/fraude-defender/main/docs/screenshots/hero-banner.png" alt="AegisShield Hero Banner" width="100%">
 
-[![Build Status](https://img.shields.io/badge/status-active-brightgreen?style=flat-square)]()
-[![Backend](https://img.shields.io/badge/backend-FastAPI-blue?style=flat-square&logo=fastapi)]()
-[![Frontend](https://img.shields.io/badge/frontend-React-61DAFB?style=flat-square&logo=react)]()
+# 🛡️ AegisShield | Anti-Fraud Intelligence Platform
+### *Plataforma de Ciberseguridad de Próxima Generación y Mitigación de Fraude*
 
-**AegisShield** es una solución técnica diseñada para la detección, correlación y mitigación de infraestructura maliciosa en tiempo real. Construido para combatir el fraude financiero digital mediante análisis heurístico y automatización de procesos de seguridad (SOAR).
+[![Status](https://img.shields.io/badge/Estado-Activo%20y%20Protegiendo-00e5b4?style=for-the-badge&logo=shield&logoColor=white)]()
+[![Backend](https://img.shields.io/badge/Backend-FastAPI-2563eb?style=for-the-badge&logo=fastapi&logoColor=white)]()
+[![Frontend](https://img.shields.io/badge/Frontend-React-61DAFB?style=for-the-badge&logo=react&logoColor=black)]()
+[![Licencia](https://img.shields.io/badge/Licencia-MIT-purple?style=for-the-badge)]()
 
-[🚀 Live Demo](https://fraude-defender-1176.vercel.app) | [📖 API Documentation](https://fraude-defender-api.onrender.com/docs)
+**AegisShield** es tu Centro de Operaciones de Seguridad (SOC) definitivo. Una solución diseñada arquitectónicamente para la detección proactiva, correlación instantánea y mitigación en tiempo real de infraestructura maliciosa (IoCs) y esquemas de fraude financiero como extorsiones y "gota a gota".
+
+[🚀 Ver Demo en Vivo](https://fraude-defender-1176.vercel.app) | [📖 Documentación API](https://fraude-defender-api.onrender.com/docs) | [🐛 Reportar Bug](https://github.com/mazagir/fraude-defender/issues)
+
+</div>
+
+<br />
+
+> **“Defendiendo el ciberespacio financiero, un indicador de compromiso a la vez.”**
+
+---
+
+## 🔥 Características Principales
+
+*   🧠 **Motor Heurístico de Riesgo impulsado por IA**: Algoritmos de scoring avanzados que clasifican automáticamente la severidad y el nivel de amenaza de dominios, cuentas bancarias y números de contacto (IoCs).
+*   🌐 **Portal Público de Denuncias Anónimas**: Interfaz comunitaria segura donde los ciudadanos pueden alertar sobre fraudes sin comprometer su identidad, creando inteligencia colectiva.
+*   📊 **Telemetría Dinámica en Vivo**: Consola de SOC (Command Center) con gráficos interactivos, mapas de calor (Threat Hotspot Map) y streaming de logs de incidentes simulados/reales en tiempo real.
+*   🔐 **Arquitectura de Seguridad Gubernamental**: Autenticación reforzada con JWT y diseño de base de datos protegido contra inyecciones e intercepciones.
+
+---
+
+## 📸 Interfaz de Usuario (Command Center)
+
+*(💡 ¡Ayúdanos a mostrar la belleza del proyecto! Sube tus capturas de pantalla en la carpeta `docs/screenshots/` con los nombres indicados abajo)*
+
+<div align="center">
+  
+| 🎛️ Consola Central (Dashboard) | 🚨 Modal de Inteligencia de Amenazas |
+| :---: | :---: |
+| <img src="docs/screenshots/dashboard-overview.png" alt="SOC Dashboard" width="400"> | <img src="docs/screenshots/threat-modal.png" alt="Threat Modal" width="400"> |
+| *Monitoreo en vivo de telemetría y contramedidas* | *Motor de IA evaluando el riesgo de un IoC* |
 
 </div>
 
 ---
 
-## ⚡ Core Features
-*   **Heuristic Risk Engine**: Algoritmos de scoring para clasificar la peligrosidad de dominios y números de contacto.
-*   **Dynamic Telemetry**: Visualización de incidentes mediante gráficos interactivos integrados.
-*   **Security First**: Arquitectura de autenticación basada en JWT y protección de endpoints críticos.
-*   **Threat Intelligence**: Base de conocimiento centralizada para firmas de ataque y patrones de fraude.
+## 🛠 Stack Tecnológico de Vanguardia
+
+AegisShield está construido con las mejores herramientas de la industria para asegurar latencia ultra-baja y escalabilidad masiva:
+
+| Capa | Tecnologías | Descripción |
+| :--- | :--- | :--- |
+| **Backend** | Python 3.13, FastAPI, SQLAlchemy | Arquitectura asíncrona de altísimo rendimiento para el motor heurístico. |
+| **Frontend** | React, Vite, Tailwind CSS, Recharts | Interfaz *Glassmorphism* reactiva, animaciones de Framer Motion. |
+| **Infraestructura** | PostgreSQL, Vercel, Render | Base de datos relacional robusta con despliegue CI/CD automatizado. |
 
 ---
 
-## 🛠 Tech Stack
-| Domain | Technology |
-| :--- | :--- |
-| **Backend** | Python 3.13, FastAPI, Uvicorn, SQLAlchemy |
-| **Frontend** | React, Vite, Tailwind CSS, Recharts |
-| **Database** | PostgreSQL |
-| **Deployment** | Vercel (FE) & Render (BE) |
+## 🚀 Despliegue y Ejecución Local
 
----
+¿Quieres levantar tu propio entorno SOC en minutos? AegisShield está diseñado con principios de Arquitectura Limpia para ser plug-and-play.
 
-## 🖼️ Architecture & Workflow
-
-*(Las capturas a continuación muestran el flujo de respuesta ante un incidente)*
-
-| Dashboard Overview | Incident Intelligence |
-| :--- | :--- |
-| ![Dashboard](docs/screenshots/dashboard-top.png) | ![Threats](docs/screenshots/active-threats.png) |
-
----
-
-## 🚀 Get Started
-El proyecto está diseñado bajo principios de arquitectura limpia. Para ejecutar el entorno de desarrollo:
-
+### 1️⃣ Clonar el repositorio
 ```bash
-# Clone el repositorio
-git clone [https://github.com/mazagir/fraude-defender.git](https://github.com/mazagir/fraude-defender.git)
+git clone https://github.com/mazagir/fraude-defender.git
+cd fraude-defender
+```
 
-# Instale dependencias del backend
-cd backend && pip install -r requirements.txt
+### 2️⃣ Levantar el Backend (Motor de IA)
+```bash
+cd backend
+pip install -r requirements.txt
 
-# Despliegue del entorno
-uvicorn main:app --reload
+# (Opcional) Inicializa el usuario Administrador y Datos Semilla
+python seed.py
+python create_admin.py --nombre "Admin" --email "admin@aegis.com" --password "TuClaveSegura123"
+
+# Iniciar servidor
+uvicorn app.main:app --reload
+```
+
+### 3️⃣ Levantar el Frontend (SOC Console)
+En una nueva terminal:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+---
+
+<div align="center">
+  Hecho con 💻 y 🛡️ por la comunidad para combatir el fraude digital. <br/>
+  <strong>Si este proyecto te ha resultado útil o interesante, no olvides dejar una ⭐ en GitHub.</strong>
+</div>
