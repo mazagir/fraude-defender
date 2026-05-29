@@ -258,33 +258,13 @@ function LoginView({ onLogin }) {
     } catch (e) {
       setError(e.message);
     } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-[#05070c] cyber-grid flex items-center justify-center p-4 text-slate-200 select-none relative">
-      <div className="absolute top-[30%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute w-full h-full scanline-overlay pointer-events-none opacity-[0.12]" />
-
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <motion.div 
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md p-8 rounded-2xl glass-panel glow-blue relative z-10"
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        className="w-[95%] sm:w-[600px] bg-[#070911] border border-slate-800/80 rounded-2xl shadow-2xl relative flex flex-col max-h-[95vh]"
       >
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-3xl mx-auto shadow-lg shadow-blue-500/10 mb-4 animate-pulse">🛡️</div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-100">Consola AegisShield</h2>
-          <p className="text-xs text-slate-500 mt-2 uppercase tracking-widest font-mono">SOC ACCESO RESTRINGIDO</p>
-        </div>
-
-        <div className="space-y-4 font-sans">
-          {isRegister && (
-            <div>
-              <label className="text-[10px] text-slate-400 uppercase tracking-widest font-mono font-bold block mb-1.5">Nombre Completo</label>
-              <input 
-                type="text" 
                 placeholder="Ingresa tu nombre" 
                 value={form.nombre}
                 onChange={(e) => setForm({ ...form, nombre: e.target.value })}
@@ -361,7 +341,7 @@ function LoginView({ onLogin }) {
 }
 
 // ─── COMPONENT: SIDEBAR ───────────────────────────────────────────────────
-function Sidebar({ view, setView, reportsCount, onLogout }) {
+function Sidebar({ view, setView, reportsCount, onLogout, isOpen, setIsOpen }) {
   const navItems = [
     { id: "dashboard", icon: <FaTerminal />, label: "Consola SOC" },
     { id: "reportes",  icon: <FaShieldAlt />, label: "Indicadores IoC", badge: reportsCount },
@@ -369,16 +349,25 @@ function Sidebar({ view, setView, reportsCount, onLogout }) {
     { id: "intel",     icon: <FaBrain />, label: "Threat Intelligence" },
   ];
   return (
-    <aside className="w-[230px] border-r border-slate-800/80 bg-[#070911]/90 flex flex-col flex-shrink-0 h-screen sticky top-0 backdrop-blur-md">
-      <div className="p-6 border-b border-slate-800/50">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/10 text-lg">🛡️</div>
-          <div>
-            <div className="font-extrabold text-sm text-slate-100 tracking-wide">AegisShield</div>
-            <div className="text-[8px] text-cyan-400 tracking-[2px] font-bold uppercase">SOC CONTROL</div>
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-[230px] border-r border-slate-800/80 bg-[#070911]/95 flex flex-col flex-shrink-0 h-screen transition-transform duration-300 md:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"} backdrop-blur-md`}>
+        <div className="p-6 border-b border-slate-800/50 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/10 text-lg">🛡️</div>
+            <div>
+              <div className="font-extrabold text-sm text-slate-100 tracking-wide">AegisShield</div>
+              <div className="text-[8px] text-cyan-400 tracking-[2px] font-bold uppercase">SOC CONTROL</div>
+            </div>
           </div>
+          <button className="md:hidden text-slate-400 text-xl" onClick={() => setIsOpen(false)}><FaTimes /></button>
         </div>
-      </div>
       <nav className="flex-1 p-4 space-y-1.5 font-sans">
         <div className="text-[9px] text-slate-500 uppercase tracking-widest font-bold px-2.5 mb-2.5">SISTEMA</div>
         {navItems.map((item) => (
@@ -420,7 +409,9 @@ function Sidebar({ view, setView, reportsCount, onLogout }) {
           <FaPowerOff size={10} /> Cerrar Consola
         </button>
       </div>
+      </div>
     </aside>
+    </>
   );
 }
 
@@ -1317,19 +1308,19 @@ function PublicReportsView({ onBack, onNewReport }) {
 
   return (
     <div className="min-h-screen bg-[#05070c] text-slate-200 cyber-grid flex flex-col font-sans relative">
-      <header className="w-full py-5 px-6 border-b border-slate-800/60 flex justify-between items-center bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="flex items-center gap-3">
+      <header className="w-full py-4 md:py-5 px-4 md:px-6 border-b border-slate-800/60 flex flex-col md:flex-row justify-between items-center bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 gap-3 md:gap-0">
+        <div className="flex items-center gap-3 self-start md:self-auto">
           <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-xl shadow-lg border border-slate-700">👁️</div>
           <div>
             <div className="font-extrabold text-lg text-slate-100">Portal Público de Denuncias</div>
             <div className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">AegisShield</div>
           </div>
         </div>
-        <div className="flex gap-3">
-          <button onClick={onNewReport} className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs transition-colors flex items-center gap-2 cursor-pointer shadow-md shadow-red-900/50">
-            <FaExclamationTriangle /> Denunciar Fraude (Anónimo)
+        <div className="flex gap-2 w-full md:w-auto justify-end">
+          <button onClick={onNewReport} className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs transition-colors flex items-center gap-2 cursor-pointer shadow-md shadow-red-900/50 flex-1 md:flex-none justify-center">
+            <FaExclamationTriangle /> Denunciar
           </button>
-          <button onClick={onBack} className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold text-xs transition-colors cursor-pointer">
+          <button onClick={onBack} className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold text-xs transition-colors cursor-pointer flex-1 md:flex-none justify-center">
             Volver
           </button>
         </div>
@@ -1369,6 +1360,7 @@ function PublicReportsView({ onBack, onNewReport }) {
 export default function App() {
   const [inConsole, setInConsole]   = useState(false);
   const [inPublicView, setInPublicView] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [token, setToken]           = useState(() => localStorage.getItem("aegis_token") || "");
   const [view, setView]             = useState("dashboard");
   const [reports, setReports]       = useState([]);
@@ -1546,18 +1538,28 @@ export default function App() {
 
       <Sidebar 
         view={view} 
-        setView={setView} 
+        setView={(v) => { setView(v); setIsSidebarOpen(false); }} 
         reportsCount={reports.filter((r) => getRiskLevel(r.score_riesgo ?? r.risk_score ?? 0) === "alto").length} 
         onLogout={handleLogout}
+        isOpen={isSidebarOpen}
+        setIsOpen={setIsSidebarOpen}
       />
 
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header console */}
-        <header className="h-[60px] bg-[#070911]/90 border-b border-slate-800/80 backdrop-blur-md flex items-center justify-between px-8 sticky top-0 z-40">
-          <div>
-            <div className="text-sm font-bold text-slate-200">{viewTitles[view]}</div>
-            <div className="text-[10px] text-slate-500 font-mono">
-              AegisShield Platform · {new Date().toLocaleDateString("es-CO", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+        <header className="h-[60px] bg-[#070911]/90 border-b border-slate-800/80 backdrop-blur-md flex items-center justify-between px-4 md:px-8 sticky top-0 z-40">
+          <div className="flex items-center gap-3">
+            <button 
+              className="md:hidden text-slate-400 hover:text-slate-200 text-xl"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              ☰
+            </button>
+            <div>
+              <div className="text-sm font-bold text-slate-200">{viewTitles[view]}</div>
+              <div className="text-[10px] text-slate-500 font-mono hidden sm:block">
+                AegisShield Platform · {new Date().toLocaleDateString("es-CO", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+              </div>
             </div>
           </div>
 
@@ -1579,7 +1581,7 @@ export default function App() {
         </header>
 
         {/* Content body */}
-        <main className="p-8 flex-1 overflow-y-auto">
+        <main className="p-4 md:p-8 flex-1 overflow-y-auto">
           <AnimatePresence mode="wait">
             <motion.div 
               key={view} 
