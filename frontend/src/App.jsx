@@ -1302,7 +1302,7 @@ function PublicReportsView({ onBack, onNewReport }) {
   useEffect(() => {
     async function loadPublic() {
       try {
-        const res = await fetch(`${API_BASE}/api/v1/reports/publico/listar`);
+        const res = await fetch(`${API_BASE}/api/v1/reportes/publico/listar`);
         if (res.ok) {
           const data = await res.json();
           setReports(data.slice(0, 50)); // Mostrar los últimos 50
@@ -1498,7 +1498,7 @@ export default function App() {
             <ReportModal 
               onClose={() => setShowModal(false)} 
               onSubmit={async (form) => {
-                const res = await fetch(`${API_BASE}/api/v1/reports/publico`, {
+                const res = await fetch(`${API_BASE}/api/v1/reportes/publico`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify(form)
