@@ -14,6 +14,10 @@
 
 [🚀 Ver Demo en Vivo](https://fraude-defender-1176.vercel.app) | [📖 Documentación API](https://fraude-defender-api.onrender.com/docs) | [🐛 Reportar Bug](https://github.com/mazagir/fraude-defender/issues)
 
+<br/>
+
+<img src="docs/screenshots/demo.gif" alt="AegisShield Demo" width="100%">
+
 </div>
 
 <br />
@@ -32,8 +36,6 @@
 ---
 
 ## 📸 Interfaz de Usuario (Command Center)
-
-*(💡 ¡Ayúdanos a mostrar la belleza del proyecto! Sube tus capturas de pantalla en la carpeta `docs/screenshots/` con los nombres indicados abajo)*
 
 <div align="center">
 
