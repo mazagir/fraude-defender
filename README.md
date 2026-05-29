@@ -36,11 +36,11 @@
 *(💡 ¡Ayúdanos a mostrar la belleza del proyecto! Sube tus capturas de pantalla en la carpeta `docs/screenshots/` con los nombres indicados abajo)*
 
 <div align="center">
-  
-| 🎛️ Consola Central (Dashboard) | 🚨 Modal de Inteligencia de Amenazas |
-| :---: | :---: |
-| <img src="docs/screenshots/dashboard-overview.png" alt="SOC Dashboard" width="400"> | <img src="docs/screenshots/threat-modal.png" alt="Threat Modal" width="400"> |
-| *Monitoreo en vivo de telemetría y contramedidas* | *Motor de IA evaluando el riesgo de un IoC* |
+
+| 📊 Tablero SOC | 📚 Documentación API | 🌐 Portal Público |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/soc-dashboard.png" alt="SOC Dashboard" width="400"> | <img src="docs/screenshots/api-docs.png" alt="API Docs" width="400"> | <img src="docs/screenshots/portal-publico.png" alt="Portal Público" width="400"> |
+| *Vista central del centro de operaciones* | *Swagger UI de la API* | *Interfaz de reporte anónimo* |
 
 </div>
 
