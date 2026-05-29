@@ -258,13 +258,33 @@ function LoginView({ onLogin }) {
     } catch (e) {
       setError(e.message);
     } finally {
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#05070c] cyber-grid flex items-center justify-center p-4 text-slate-200 select-none relative">
+      <div className="absolute top-[30%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute w-full h-full scanline-overlay pointer-events-none opacity-[0.12]" />
+
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="w-[95%] sm:w-[600px] bg-[#070911] border border-slate-800/80 rounded-2xl shadow-2xl relative flex flex-col max-h-[95vh]"
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md p-8 rounded-2xl glass-panel glow-blue relative z-10"
       >
+        <div className="text-center mb-8">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-3xl mx-auto shadow-lg shadow-blue-500/10 mb-4 animate-pulse">🛡️</div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-100">Consola AegisShield</h2>
+          <p className="text-xs text-slate-500 mt-2 uppercase tracking-widest font-mono">SOC ACCESO RESTRINGIDO</p>
+        </div>
+
+        <div className="space-y-4 font-sans">
+          {isRegister && (
+            <div>
+              <label className="text-[10px] text-slate-400 uppercase tracking-widest font-mono font-bold block mb-1.5">Nombre Completo</label>
+              <input 
+                type="text" 
                 placeholder="Ingresa tu nombre" 
                 value={form.nombre}
                 onChange={(e) => setForm({ ...form, nombre: e.target.value })}
@@ -408,7 +428,6 @@ function Sidebar({ view, setView, reportsCount, onLogout, isOpen, setIsOpen }) {
         >
           <FaPowerOff size={10} /> Cerrar Consola
         </button>
-      </div>
       </div>
     </aside>
     </>
@@ -1171,13 +1190,13 @@ function ReportModal({ onClose, onSubmit }) {
         initial={{ scale: 0.96, opacity: 0 }} 
         animate={{ scale: 1, opacity: 1 }} 
         exit={{ scale: 0.96, opacity: 0 }}
-        className="bg-[#070911] border border-slate-800/80 rounded-2xl p-6 w-full max-w-lg shadow-2xl relative"
+        className="bg-[#070911] border border-slate-800/80 rounded-2xl w-full max-w-lg shadow-2xl relative max-h-[95vh] flex flex-col"
       >
-        <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-slate-200 transition-colors cursor-pointer text-sm">
+        <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-slate-200 transition-colors cursor-pointer text-sm z-10">
           <FaTimes />
         </button>
 
-        <div className="flex items-center gap-3 border-b border-slate-900 pb-4 mb-5">
+        <div className="p-6 pb-4 border-b border-slate-900 flex items-center gap-3 shrink-0">
           <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 text-lg">🛡️</div>
           <div>
             <h3 className="text-sm font-bold text-slate-200">Registrar Indicador IoC</h3>
@@ -1185,7 +1204,7 @@ function ReportModal({ onClose, onSubmit }) {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="p-6 space-y-4 overflow-y-auto shrink">
           <div>
             <label className="text-[10px] text-slate-500 uppercase tracking-widest font-mono font-bold block mb-1">Descripción del Incidente *</label>
             <textarea 
@@ -1198,7 +1217,7 @@ function ReportModal({ onClose, onSubmit }) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-[10px] text-slate-500 uppercase tracking-widest font-mono font-bold block mb-1">Teléfono Sospechoso</label>
               <input 
