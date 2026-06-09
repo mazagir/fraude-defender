@@ -26,23 +26,46 @@
 
 ---
 
-## 🔥 Características Principales
+## 🔥 Características Principales (Transformación SaaS)
 
-*   🧠 **Motor Heurístico de Riesgo impulsado por IA**: Algoritmos de scoring avanzados que clasifican automáticamente la severidad y el nivel de amenaza de dominios, cuentas bancarias y números de contacto (IoCs).
-*   🌐 **Portal Público de Denuncias Anónimas**: Interfaz comunitaria segura donde los ciudadanos pueden alertar sobre fraudes sin comprometer su identidad, creando inteligencia colectiva.
-*   📊 **Telemetría Dinámica en Vivo**: Consola de SOC (Command Center) con gráficos interactivos, mapas de calor (Threat Hotspot Map) y streaming de logs de incidentes simulados/reales en tiempo real.
-*   🔐 **Arquitectura de Seguridad Gubernamental**: Autenticación reforzada con JWT y diseño de base de datos protegido contra inyecciones e intercepciones.
+*   🧠 **Análisis de Estafas Asistido por IA (Gemini 1.5 Flash)**: Integración directa para escanear y traducir amenazas complejas (URLs, SMS, WhatsApp, correos) a explicaciones empáticas y comprensibles para usuarios no técnicos, recomendando acciones inmediatas de autodefensa.
+*   🔗 **5 Canales de Entrada Directa**: Herramientas integradas en el Home para detectar fraudes rápidamente:
+    *   *Analizar URL*: Detección de phishing bancario.
+    *   *Analizar SMS*: Escaneo de falsos empleos o envíos postales.
+    *   *Analizar WhatsApp*: Mitigación de extorsiones y montadeudas.
+    *   *Analizar Correo*: Verificación de remitentes y cuerpos sospechosos.
+    *   *Escanear QR*: Decodificación de códigos físicos alterados (Quishing).
+*   🏆 **Gamificación y Retención (Mi Perfil Seguro)**: Sistema de recompensas XP, reputación, niveles de usuario (como "Guardián de la Comunidad") e insignias digitales desbloqueables en 3D/cyberpunk.
+*   🗺️ **Mapa de Amenazas de Latinoamérica**: Telemetría interactiva en tiempo real y alertas comunitarias localizadas en **Colombia, México, Perú, Chile y Argentina**.
+*   🖥️ **Modo Desarrollador Aislado (SOC Command Center)**: Consola de telemetría, simulación de ataques SQLi/DDoS y base de datos cruda de IoCs oculta del flujo de usuario estándar.
 
 ---
 
-## 📸 Interfaz de Usuario (Command Center)
+## 📸 Capturas de Pantalla (Nueva Interfaz de Usuario)
 
 <div align="center">
 
-| 📊 Tablero SOC | 📚 Documentación API | 🌐 Portal Público |
-| :---: | :---: | :---: |
-| <img src="docs/screenshots/soc-dashboard.png" alt="SOC Dashboard" width="400"> | <img src="docs/screenshots/api-docs.png" alt="API Docs" width="400"> | <img src="docs/screenshots/portal-publico.png" alt="Portal Público" width="400"> |
-| *Vista central del centro de operaciones* | *Swagger UI de la API* | *Interfaz de reporte anónimo* |
+### 1. 🛡️ Detector de Estafas en el Home (Acciones Rápidas con IA)
+<img src="docs/screenshots/detector-estafas.png" alt="AgiShield Detector de Estafas Home" width="100%">
+*Detector unificado sin registro para URLs, SMS, WhatsApp, Correo y QR, integrado con Gemini AI.*
+
+<br/>
+
+### 2. 🗺️ Alertas y Mapa de Calor de la Comunidad LATAM
+<img src="docs/screenshots/mapa-comunidad.png" alt="AgiShield Mapa de Calor LATAM" width="100%">
+*Mapa regional interactivo que detalla tipos de estafa y volumen de incidentes en Colombia, México, Perú, Chile y Argentina.*
+
+<br/>
+
+### 3. 📚 Documentación Interactiva de la API (B2B Core)
+<img src="docs/screenshots/api-docs-header.png" alt="AegisShield API Swagger Header" width="100%">
+*Swagger UI de la plataforma para integraciones y auditorías de seguridad corporativa.*
+
+<br/>
+
+### 4. ⚙️ Endpoints del SOC & Endpoint /analizar
+<img src="docs/screenshots/api-docs-endpoints.png" alt="AegisShield API Endpoints" width="100%">
+*Nuevos endpoints públicos de análisis de sospechas por IA integrados bajo el estándar OpenAPI 3.1.*
 
 </div>
 
@@ -54,36 +77,31 @@ AegisShield está construido con las mejores herramientas de la industria para a
 
 | Capa | Tecnologías | Descripción |
 | :--- | :--- | :--- |
-| **Backend** | Python 3.13, FastAPI, SQLAlchemy | Arquitectura asíncrona de altísimo rendimiento para el motor heurístico. |
-| **Frontend** | React, Vite, Tailwind CSS, Recharts | Interfaz *Glassmorphism* reactiva, animaciones de Framer Motion. |
-| **Infraestructura** | PostgreSQL, Vercel, Render | Base de datos relacional robusta con despliegue CI/CD automatizado. |
+| **Backend** | Python 3.13, FastAPI, SQLAlchemy, SQLite/PostgreSQL | Arquitectura asíncrona de altísimo rendimiento integrada con Gemini 1.5 Flash. |
+| **Frontend** | React 19, Vite, Tailwind CSS, Recharts, Framer Motion | Interfaz *Glassmorphism* reactiva con gamificación integrada y guardado local. |
+| **Infraestructura** | Vercel (Frontend), Render (API) | Despliegue CI/CD automático conectado a la rama principal. |
 
 ---
 
 ## 🚀 Despliegue y Ejecución Local
 
-¿Quieres levantar tu propio entorno SOC en minutos? AegisShield está diseñado con principios de Arquitectura Limpia para ser plug-and-play.
+¿Quieres levantar tu propio entorno en minutos? AegisShield está diseñado con principios de Arquitectura Limpia para ser plug-and-play.
 
-### 1️⃣ Clonar el repositorio
-```bash
-git clone https://github.com/mazagir/fraude-defender.git
-cd fraude-defender
-```
-
-### 2️⃣ Levantar el Backend (Motor de IA)
+### 1️⃣ Levantar el Backend (FastAPI + Gemini AI)
 ```bash
 cd backend
+python -m venv venv
+venv\Scripts\activate      # En Windows
 pip install -r requirements.txt
 
-# (Opcional) Inicializa el usuario Administrador y Datos Semilla
-python seed.py
-python create_admin.py --nombre "Admin" --email "admin@aegis.com" --password "TuClaveSegura123"
+# Configura tu clave de Gemini (Opcional, cuenta con fallback local)
+# Crea un archivo .env en /backend con: GEMINI_API_KEY=tu_api_key
 
 # Iniciar servidor
 uvicorn app.main:app --reload
 ```
 
-### 3️⃣ Levantar el Frontend (SOC Console)
+### 2️⃣ Levantar el Frontend (React + Vite)
 En una nueva terminal:
 ```bash
 cd frontend
@@ -94,6 +112,6 @@ npm run dev
 ---
 
 <div align="center">
-  Hecho con 💻 y 🛡️ por la comunidad para combatir el fraude digital. <br/>
+  Hecho con 💻 y 🛡️ por la comunidad para combatir el fraude digital en Latinoamérica. <br/>
   <strong>Si este proyecto te ha resultado útil o interesante, no olvides dejar una ⭐ en GitHub.</strong>
 </div>
