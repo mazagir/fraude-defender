@@ -17,13 +17,29 @@ print("[OK] Tablas de base de datos inicializadas correctamente.")
 
 try:
     with engine.connect() as conn:
-        conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN IF NOT EXISTS risk_score INTEGER DEFAULT 0"))
-        conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN IF NOT EXISTS malicious_indicators TEXT DEFAULT ''"))
-        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS rol VARCHAR DEFAULT 'analista'"))
+        db_is_sqlite = engine.url.drivername.startswith("sqlite") or "sqlite" in str(engine.url)
+        if db_is_sqlite:
+            # SQLite: Verificar columnas existentes usando PRAGMA
+            res = conn.execute(text("PRAGMA table_info(fraud_reports)")).fetchall()
+            columns = [row[1] for row in res]
+            if "risk_score" not in columns:
+                conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN risk_score INTEGER DEFAULT 0"))
+            if "malicious_indicators" not in columns:
+                conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN malicious_indicators TEXT DEFAULT ''"))
+                
+            res_users = conn.execute(text("PRAGMA table_info(users)")).fetchall()
+            columns_users = [row[1] for row in res_users]
+            if "rol" not in columns_users:
+                conn.execute(text("ALTER TABLE users ADD COLUMN rol VARCHAR DEFAULT 'analista'"))
+        else:
+            # PostgreSQL: Soporta ADD COLUMN IF NOT EXISTS nativamente
+            conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN IF NOT EXISTS risk_score INTEGER DEFAULT 0"))
+            conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN IF NOT EXISTS malicious_indicators TEXT DEFAULT ''"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS rol VARCHAR DEFAULT 'analista'"))
         conn.commit()
         print("[OK] Migración de columnas ejecutada correctamente.")
 except Exception as e:
-    print(f"[INFO] Migración: {e}")
+    print(f"[ERR] Error en migración de columnas: {e}")
 # Importar enrutadores
 from app.api.v1.router import api_router
 from app.api.v1.endpoints.auth import router as auth_router
