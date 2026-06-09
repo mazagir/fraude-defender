@@ -16,7 +16,7 @@
 
 <br/>
 
-<img src="docs/screenshots/demo.gif" alt="AegisShield Demo" width="100%">
+<img src="docs/screenshots/agishield_demo.gif" alt="AegisShield Demo" width="100%">
 
 </div>
 
