@@ -4,21 +4,21 @@ import {
   PieChart, Pie, Cell, AreaChart, Area
 } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  FaShieldAlt, FaTerminal, FaExclamationTriangle, FaCheckCircle, 
-  FaInfoCircle, FaUser, FaChartLine, FaRobot, FaLock, FaGlobe, 
-  FaBrain, FaEye, FaPowerOff, FaBug, FaDatabase, FaPlus, FaTimes, 
-  FaTrash, FaQrcode, FaEnvelope, FaWhatsapp, FaLink, FaAward, 
+import {
+  FaShieldAlt, FaTerminal, FaExclamationTriangle, FaCheckCircle,
+  FaInfoCircle, FaUser, FaChartLine, FaRobot, FaLock, FaGlobe,
+  FaBrain, FaEye, FaPowerOff, FaBug, FaDatabase, FaPlus, FaTimes,
+  FaTrash, FaQrcode, FaEnvelope, FaWhatsapp, FaLink, FaAward,
   FaTrophy, FaUserShield, FaCode, FaChevronRight, FaFilter
 } from "react-icons/fa";
 
-const API_BASE = import.meta.env.VITE_API_URL || 
+const API_BASE = import.meta.env.VITE_API_URL ||
   (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
     ? "http://localhost:8000"
     : "https://fraude-defender-api.onrender.com");
 
 const riskColor = { critical: "#ff2a51", alto: "#ff4d6d", medio: "#ffb547", bajo: "#00e5b4" };
-const riskBg   = { critical: "rgba(255,42,81,0.12)", alto: "rgba(255,77,109,0.12)", medio: "rgba(255,181,71,0.12)", bajo: "rgba(0,229,180,0.1)" };
+const riskBg = { critical: "rgba(255,42,81,0.12)", alto: "rgba(255,77,109,0.12)", medio: "rgba(255,181,71,0.12)", bajo: "rgba(0,229,180,0.1)" };
 
 function getRiskLevel(score) {
   if (score >= 76) return "critical";
@@ -68,11 +68,11 @@ export default function App() {
   const [scanInput, setScanInput] = useState("");
   const [emailDetails, setEmailDetails] = useState({ sender: "", subject: "", body: "" });
   const [selectedQrCase, setSelectedQrCase] = useState("");
-  
+
   const [isScanning, setIsScanning] = useState(false);
   const [scanLogs, setScanLogs] = useState([]);
   const [scanResult, setScanResult] = useState(null);
-  
+
   // Persisted local scan history for gamification and conversion
   const [scanHistory, setScanHistory] = useState(() => {
     const cached = localStorage.getItem("aegis_scan_history");
@@ -133,9 +133,9 @@ export default function App() {
         const backendReports = Array.isArray(data) ? data : [];
         setReports(prev => {
           // Filtrar reportes locales temporales (id >= 100) que no existan en el backend
-          const localOnly = prev.filter(r => r.id >= 100 && !backendReports.some(br => 
-            (br.phone_number === r.phone_number || br.telefono_sospechoso === r.telefono_sospechoso) && 
-            (br.domain === r.domain || br.dominio === r.dominio) && 
+          const localOnly = prev.filter(r => r.id >= 100 && !backendReports.some(br =>
+            (br.phone_number === r.phone_number || br.telefono_sospechoso === r.telefono_sospechoso) &&
+            (br.domain === r.domain || br.dominio === r.dominio) &&
             (br.description === r.description || br.descripcion === r.descripcion)
           ));
           return [...localOnly, ...backendReports];
@@ -197,15 +197,15 @@ export default function App() {
       if (!res.ok) throw new Error("Credenciales inválidas");
       const data = await res.json();
       const receivedToken = data.access_token || data.token;
-      
+
       localStorage.setItem("aegis_token", receivedToken);
       setToken(receivedToken);
-      
+
       // Store user details mock/real
       const userData = { email, nombre: email.split("@")[0].toUpperCase(), rol: "analista" };
       localStorage.setItem("aegis_user", JSON.stringify(userData));
       setUser(userData);
-      
+
       // Switch view
       setActiveTab("dashboard");
       fetchReports();
@@ -234,26 +234,26 @@ export default function App() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || "Error en el registro.");
+        // Mostrar error legible según tipo de fallo
+        let msg = err.detail || "Error en el registro.";
+        if (Array.isArray(msg)) {
+          msg = msg.map(e => e.msg || JSON.stringify(e)).join(", ");
+        }
+        if (typeof msg === "string" && msg.toLowerCase().includes("string_too_short")) {
+          msg = "La contraseña debe tener al menos 12 caracteres.";
+        }
+        throw new Error(msg);
       }
-      // Automáticamente iniciar sesión tras registrarse
-      handleLogin(email, password);
-    } catch (e) {
-      setError(e.message || "Error en el registro. Registrando localmente para demostración.");
-      // MOCK REGISTER FOR PORTFOLIO
-      const userData = { email, nombre, rol: "analista" };
-      localStorage.setItem("aegis_token", "mock-token-12345");
-      localStorage.setItem("aegis_user", JSON.stringify(userData));
-      setToken("mock-token-12345");
-      setUser(userData);
-      
+      // Registro exitoso - iniciar sesión automáticamente
+      await handleLogin(email, password);
       // Unlock badge for registration
       if (!unlockedBadges.includes("defensor_registrado")) {
         setUnlockedBadges(prev => [...prev, "defensor_registrado"]);
         setUserReputation(prev => prev + 50);
       }
-      
-      setActiveTab("dashboard");
+    } catch (e) {
+      // Sólo mostrar el error, NO hacer mock-login
+      setError(e.message || "Error en el registro. Intenta nuevamente.");
     } finally {
       setLoading(false);
     }
@@ -279,7 +279,7 @@ export default function App() {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.detail || "Error al enviar el reporte.");
       }
-      
+
       // Agregar reputación si reporta amenaza
       setUserReputation(prev => prev + 30);
       if (!unlockedBadges.includes("primer_reporte")) {
@@ -359,7 +359,7 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         setScanResult(data);
-        
+
         // Add to history
         const newHistoryItem = {
           id: Date.now(),
@@ -370,7 +370,7 @@ export default function App() {
           date: "Ahora mismo"
         };
         setScanHistory(prev => [newHistoryItem, ...prev.slice(0, 15)]);
-        
+
         // Gamification check: increase reputation slightly per scan
         setUserReputation(prev => prev + 5);
         if (data.score >= 50 && !unlockedBadges.includes("cazador_phishing")) {
@@ -386,7 +386,7 @@ export default function App() {
       const mockApi = new GeminiFallbackSimulator();
       const data = mockApi.generateMockResult(scanType, queryValue);
       setScanResult(data);
-      
+
       const newHistoryItem = {
         id: Date.now(),
         type: scanType,
@@ -410,7 +410,7 @@ export default function App() {
       { id: Date.now() + 1, time: new Date().toLocaleTimeString(), type: "danger", text: "🚨 [SIMULACIÓN SOC] Inyección SQL detectada desde IP 192.168.12.9" },
       ...prev
     ]);
-    
+
     // Inject mock report
     const payload = {
       description: "🚨 [ATAQUE SIMULADO] Intento masivo de phishing detectado.",
@@ -434,11 +434,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#05070c] text-slate-100 font-sans relative overflow-hidden flex flex-col md:flex-row select-none">
-      
+
       {/* Screen Red Flash Overlay on attack simulation */}
       <AnimatePresence>
         {isSimulatingAttack && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.2 }}
             exit={{ opacity: 0 }}
@@ -448,7 +448,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* ─── SIDEBAR & NAVIGATION ─── */}
-      <Sidebar 
+      <Sidebar
         token={token}
         user={user}
         activeTab={activeTab}
@@ -467,11 +467,11 @@ export default function App() {
 
       {/* ─── MAIN CONTENT CONTAINER ─── */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        
+
         {/* Top Header */}
         <header className="h-[65px] bg-[#070911]/90 border-b border-slate-800/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-40">
           <div className="flex items-center gap-3">
-            <button 
+            <button
               className="md:hidden text-slate-400 hover:text-slate-200 text-xl"
               onClick={() => setIsSidebarOpen(true)}
             >
@@ -499,7 +499,7 @@ export default function App() {
                 </div>
               </div>
             ) : (
-              <button 
+              <button
                 onClick={() => setAuthMode("login")}
                 className="px-4 py-1.5 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-slate-950 font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
               >
@@ -508,7 +508,7 @@ export default function App() {
             )}
 
             {isDeveloperMode && (
-              <button 
+              <button
                 onClick={handleTriggerAttackSimulation}
                 className="text-[9px] font-bold uppercase tracking-wider bg-red-950/40 border border-red-500/30 hover:bg-red-900/20 text-red-400 px-3 py-1 rounded-xl transition-colors cursor-pointer"
               >
@@ -521,16 +521,16 @@ export default function App() {
         {/* Dynamic Pages */}
         <main className="p-5 md:p-8 flex-grow">
           <AnimatePresence mode="wait">
-            <motion.div 
-              key={activeTab} 
-              initial={{ opacity: 0, y: 10 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              exit={{ opacity: 0, y: -10 }} 
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
               className="max-w-6xl mx-auto w-full h-full"
             >
               {activeTab === "home" && (
-                <HomeView 
+                <HomeView
                   scanType={scanType}
                   setScanType={setScanType}
                   scanInput={scanInput}
@@ -550,7 +550,7 @@ export default function App() {
               )}
 
               {activeTab === "dashboard" && (
-                <DashboardView 
+                <DashboardView
                   token={token}
                   user={user}
                   reports={reports}
@@ -563,7 +563,7 @@ export default function App() {
               )}
 
               {activeTab === "community" && (
-                <CommunityView 
+                <CommunityView
                   reports={reports}
                   selectedCountry={selectedCountry}
                   setSelectedCountry={setSelectedCountry}
@@ -574,7 +574,7 @@ export default function App() {
               )}
 
               {activeTab === "developer" && isDeveloperMode && (
-                <DeveloperSOCView 
+                <DeveloperSOCView
                   reports={reports}
                   simulatedLogs={simulatedLogs}
                   onDelete={handleDeleteReport}
@@ -593,10 +593,10 @@ export default function App() {
       {/* --- AUTH GATE MODAL --- */}
       <AnimatePresence>
         {authMode !== "guest" && authMode !== "" && (
-          <AuthModal 
-            mode={authMode} 
-            setMode={setAuthMode} 
-            onClose={() => setAuthMode("guest")} 
+          <AuthModal
+            mode={authMode}
+            setMode={setAuthMode}
+            onClose={() => setAuthMode("guest")}
             onLogin={handleLogin}
             onRegister={handleRegister}
             error={error}
@@ -619,7 +619,7 @@ function Sidebar({ token, user, activeTab, setActiveTab, isSidebarOpen, setIsSid
   return (
     <>
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm"
           onClick={() => setIsSidebarOpen(false)}
         />
@@ -640,17 +640,16 @@ function Sidebar({ token, user, activeTab, setActiveTab, isSidebarOpen, setIsSid
         <nav className="flex-grow p-4 space-y-1.5">
           <div className="text-[9px] text-slate-500 uppercase tracking-widest font-bold px-2.5 mb-2.5">Navegación</div>
           {userNavItems.map((item) => (
-            <button 
-              key={item.id} 
+            <button
+              key={item.id}
               onClick={() => {
                 setActiveTab(item.id);
                 setIsSidebarOpen(false);
               }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer ${
-                activeTab === item.id 
-                  ? "bg-blue-600/10 text-cyan-400 border border-blue-500/20 shadow-inner" 
-                  : "text-slate-400 hover:text-slate-100 hover:bg-slate-900/40 border border-transparent"
-              }`}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer ${activeTab === item.id
+                ? "bg-blue-600/10 text-cyan-400 border border-blue-500/20 shadow-inner"
+                : "text-slate-400 hover:text-slate-100 hover:bg-slate-900/40 border border-transparent"
+                }`}
             >
               <span className="text-sm">{item.icon}</span>
               {item.label}
@@ -664,9 +663,9 @@ function Sidebar({ token, user, activeTab, setActiveTab, isSidebarOpen, setIsSid
                 <FaCode /> Modo Developer
               </span>
               <label className="relative inline-flex items-center cursor-pointer scale-75">
-                <input 
-                  type="checkbox" 
-                  checked={isDeveloperMode} 
+                <input
+                  type="checkbox"
+                  checked={isDeveloperMode}
                   onChange={(e) => {
                     setIsDeveloperMode(e.target.checked);
                     if (e.target.checked) {
@@ -674,24 +673,23 @@ function Sidebar({ token, user, activeTab, setActiveTab, isSidebarOpen, setIsSid
                     } else if (activeTab === "developer") {
                       setActiveTab("home");
                     }
-                  }} 
-                  className="sr-only peer" 
+                  }}
+                  className="sr-only peer"
                 />
                 <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500 peer-checked:after:bg-slate-950" />
               </label>
             </div>
-            
+
             {isDeveloperMode && (
-              <button 
+              <button
                 onClick={() => {
                   setActiveTab("developer");
                   setIsSidebarOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer ${
-                  activeTab === "developer" 
-                    ? "bg-red-500/10 text-red-400 border border-red-500/20 shadow-inner" 
-                    : "text-slate-500 hover:text-red-400 hover:bg-red-950/10 border border-transparent"
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all cursor-pointer ${activeTab === "developer"
+                  ? "bg-red-500/10 text-red-400 border border-red-500/20 shadow-inner"
+                  : "text-slate-500 hover:text-red-400 hover:bg-red-950/10 border border-transparent"
+                  }`}
               >
                 <FaTerminal /> Consola SOC (CTO)
               </button>
@@ -714,7 +712,7 @@ function Sidebar({ token, user, activeTab, setActiveTab, isSidebarOpen, setIsSid
                   </div>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={onLogout}
                 className="w-full py-2 rounded-lg border border-red-500/20 bg-red-950/10 hover:bg-red-950/20 text-red-400 hover:text-red-300 text-[10px] font-bold tracking-wider uppercase transition-colors cursor-pointer flex items-center justify-center gap-1.5"
               >
@@ -722,7 +720,7 @@ function Sidebar({ token, user, activeTab, setActiveTab, isSidebarOpen, setIsSid
               </button>
             </div>
           ) : (
-            <button 
+            <button
               onClick={onLoginClick}
               className="w-full py-2 rounded-lg border border-slate-800 bg-[#090c15] text-slate-300 text-[10px] font-bold tracking-wider uppercase transition-colors cursor-pointer flex items-center justify-center gap-1.5 hover:border-cyan-500/30"
             >
@@ -736,7 +734,7 @@ function Sidebar({ token, user, activeTab, setActiveTab, isSidebarOpen, setIsSid
 }
 
 // ─── COMPONENT: HOME VIEW (QUICK ACTIONS & RESULTS) ───
-function HomeView({ 
+function HomeView({
   scanType, setScanType, scanInput, setScanInput, emailDetails, setEmailDetails,
   selectedQrCase, setSelectedQrCase, isScanning, scanLogs, scanResult, setScanResult,
   runQuickScan, onRegisterPrompt, token
@@ -759,7 +757,7 @@ function HomeView({
 
   return (
     <div className="space-y-8 font-sans">
-      
+
       {/* Dynamic Header Pitch */}
       <div className="text-center max-w-2xl mx-auto space-y-4">
         <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">
@@ -783,15 +781,13 @@ function HomeView({
               setScanResult(null);
               setScanInput("");
             }}
-            className={`p-4 rounded-2xl border flex flex-col items-center justify-center gap-3 text-center transition-all cursor-pointer select-none ${
-              scanType === action.id 
-                ? "bg-gradient-to-b from-blue-950/40 to-cyan-950/20 border-cyan-400/50 text-cyan-300 shadow-md shadow-blue-500/5"
-                : "bg-[#070911]/60 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700/50 hover:bg-[#070911]/80"
-            }`}
+            className={`p-4 rounded-2xl border flex flex-col items-center justify-center gap-3 text-center transition-all cursor-pointer select-none ${scanType === action.id
+              ? "bg-gradient-to-b from-blue-950/40 to-cyan-950/20 border-cyan-400/50 text-cyan-300 shadow-md shadow-blue-500/5"
+              : "bg-[#070911]/60 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700/50 hover:bg-[#070911]/80"
+              }`}
           >
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${
-              scanType === action.id ? "bg-cyan-500/10 text-cyan-300 animate-pulse" : "bg-slate-900 text-slate-400"
-            }`}>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${scanType === action.id ? "bg-cyan-500/10 text-cyan-300 animate-pulse" : "bg-slate-900 text-slate-400"
+              }`}>
               {action.icon}
             </div>
             <span className="text-[11px] font-bold tracking-wide">{action.label}</span>
@@ -814,32 +810,32 @@ function HomeView({
             <div className="space-y-3 font-sans">
               <div>
                 <label className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block mb-1">Remitente / Email del Emisor</label>
-                <input 
+                <input
                   type="text"
                   placeholder="Ej: alertaseguridad@bancolombia-bloqueo.com"
                   value={emailDetails.sender}
-                  onChange={(e) => setEmailDetails({...emailDetails, sender: e.target.value})}
+                  onChange={(e) => setEmailDetails({ ...emailDetails, sender: e.target.value })}
                   className="w-full bg-[#05070c] border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-blue-500/50 transition-colors"
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block mb-1">Asunto del Correo</label>
-                  <input 
+                  <input
                     type="text"
                     placeholder="Ej: SUSPENSIÓN INMEDIATA DE CUENTA"
                     value={emailDetails.subject}
-                    onChange={(e) => setEmailDetails({...emailDetails, subject: e.target.value})}
+                    onChange={(e) => setEmailDetails({ ...emailDetails, subject: e.target.value })}
                     className="w-full bg-[#05070c] border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-blue-500/50 transition-colors"
                   />
                 </div>
                 <div>
                   <label className="text-[9px] text-slate-500 uppercase tracking-wider block mb-1 font-bold">Cuerpo / Texto del Correo</label>
-                  <input 
+                  <input
                     type="text"
                     placeholder="Ej: Hemos detectado actividad sospechosa..."
                     value={emailDetails.body}
-                    onChange={(e) => setEmailDetails({...emailDetails, body: e.target.value})}
+                    onChange={(e) => setEmailDetails({ ...emailDetails, body: e.target.value })}
                     className="w-full bg-[#05070c] border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-blue-500/50 transition-colors"
                   />
                 </div>
@@ -848,8 +844,8 @@ function HomeView({
           ) : scanType === "qr" ? (
             <div className="space-y-4">
               <label className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block mb-1">Selecciona un escenario de código QR fraudulento a escanear</label>
-              <select 
-                value={selectedQrCase} 
+              <select
+                value={selectedQrCase}
                 onChange={(e) => setSelectedQrCase(e.target.value)}
                 className="w-full bg-[#05070c] border border-slate-850 rounded-xl px-4 py-3 text-xs text-slate-300 outline-none focus:border-cyan-500/50 transition-colors"
               >
@@ -896,7 +892,7 @@ function HomeView({
         {/* Dynamic Scanning Log overlay */}
         <AnimatePresence>
           {isScanning && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -908,9 +904,9 @@ function HomeView({
               </div>
               <div className="max-w-md space-y-2 font-mono text-[10px] text-cyan-400/90 text-left">
                 {scanLogs.map((log, idx) => (
-                  <motion.div 
-                    key={idx} 
-                    initial={{ opacity: 0, x: -5 }} 
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: -5 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="flex gap-2"
                   >
@@ -934,7 +930,7 @@ function HomeView({
           >
             <div className="bg-[#070911] border border-slate-800/80 rounded-3xl p-6 space-y-6 relative overflow-hidden shadow-xl">
               <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none" />
-              
+
               {/* Header result */}
               <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
@@ -948,11 +944,11 @@ function HomeView({
                 <div className="relative w-32 h-32 flex items-center justify-center flex-shrink-0">
                   <svg className="w-full h-full transform -rotate-90">
                     <circle cx="64" cy="64" r="54" stroke="rgba(255,255,255,0.03)" strokeWidth="8" fill="transparent" />
-                    <circle 
-                      cx="64" cy="64" r="54" 
-                      stroke={riskColor[scanResult.level.toLowerCase()] || riskColor.bajo} 
-                      strokeWidth="8" 
-                      fill="transparent" 
+                    <circle
+                      cx="64" cy="64" r="54"
+                      stroke={riskColor[scanResult.level.toLowerCase()] || riskColor.bajo}
+                      strokeWidth="8"
+                      fill="transparent"
                       strokeDasharray={`${2 * Math.PI * 54}`}
                       strokeDashoffset={`${2 * Math.PI * 54 * (1 - (scanResult.score) / 100)}`}
                       strokeLinecap="round"
@@ -1019,7 +1015,7 @@ function HomeView({
                       Regístrate gratis para almacenar este análisis, activar alertas tempranas automáticas de fraudes por WhatsApp y subir de nivel en la comunidad.
                     </p>
                   </div>
-                  <button 
+                  <button
                     onClick={onRegisterPrompt}
                     className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-slate-950 font-bold text-xs tracking-wide cursor-pointer transition-all shrink-0 shadow-md shadow-blue-500/10"
                   >
@@ -1046,8 +1042,8 @@ function DashboardView({ token, user, reports, scanHistory, userReputation, user
   };
 
   const criticalCount = reports.filter(r => getRiskLevel(r.score_riesgo ?? r.risk_score ?? 0) === "critical").length;
-  const highCount     = reports.filter(r => getRiskLevel(r.score_riesgo ?? r.risk_score ?? 0) === "alto").length;
-  const mediumCount   = reports.filter(r => getRiskLevel(r.score_riesgo ?? r.risk_score ?? 0) === "medio").length;
+  const highCount = reports.filter(r => getRiskLevel(r.score_riesgo ?? r.risk_score ?? 0) === "alto").length;
+  const mediumCount = reports.filter(r => getRiskLevel(r.score_riesgo ?? r.risk_score ?? 0) === "medio").length;
 
   // Personal Risk Assessment Level based on scan history
   const historyAverage = scanHistory.length > 0
@@ -1059,7 +1055,7 @@ function DashboardView({ token, user, reports, scanHistory, userReputation, user
 
   return (
     <div className="space-y-6 font-sans">
-      
+
       {/* Dynamic profile summary card */}
       <div className="bg-[#070911]/60 border border-slate-800/80 rounded-3xl p-6 relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="absolute top-0 right-0 w-36 h-36 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -1090,8 +1086,8 @@ function DashboardView({ token, user, reports, scanHistory, userReputation, user
             <span className="text-cyan-400">{userReputation} / 300 XP</span>
           </div>
           <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-850">
-            <div 
-              className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-500" 
+            <div
+              className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-500"
               style={{ width: `${Math.min((userReputation / 300) * 100, 100)}%` }}
             />
           </div>
@@ -1110,11 +1106,11 @@ function DashboardView({ token, user, reports, scanHistory, userReputation, user
             <div className="relative w-28 h-28 flex items-center justify-center flex-shrink-0">
               <svg className="w-full h-full transform -rotate-90">
                 <circle cx="56" cy="56" r="46" stroke="rgba(255,255,255,0.03)" strokeWidth="7" fill="transparent" />
-                <circle 
-                  cx="56" cy="56" r="46" 
-                  stroke={personalRiskColor} 
-                  strokeWidth="7" 
-                  fill="transparent" 
+                <circle
+                  cx="56" cy="56" r="46"
+                  stroke={personalRiskColor}
+                  strokeWidth="7"
+                  fill="transparent"
                   strokeDasharray={`${2 * Math.PI * 46}`}
                   strokeDashoffset={`${2 * Math.PI * 46 * (1 - (historyAverage || 10) / 100)}`}
                   strokeLinecap="round"
@@ -1175,13 +1171,12 @@ function DashboardView({ token, user, reports, scanHistory, userReputation, user
               const b = badgeDetails[bKey];
               const unlocked = unlockedBadges.includes(bKey);
               return (
-                <div 
+                <div
                   key={bKey}
-                  className={`flex flex-col items-center justify-center p-2.5 rounded-xl border relative group cursor-help ${
-                    unlocked 
-                      ? "bg-slate-900/40 border-cyan-500/20 text-cyan-400"
-                      : "bg-[#05070c] border-slate-900 text-slate-600 opacity-40"
-                  }`}
+                  className={`flex flex-col items-center justify-center p-2.5 rounded-xl border relative group cursor-help ${unlocked
+                    ? "bg-slate-900/40 border-cyan-500/20 text-cyan-400"
+                    : "bg-[#05070c] border-slate-900 text-slate-600 opacity-40"
+                    }`}
                 >
                   <span className="text-2xl">{b.icon}</span>
                   <div className="absolute bottom-[-5px] scale-0 group-hover:scale-100 bg-slate-950 border border-slate-800 text-[9px] font-mono text-slate-300 px-2.5 py-1.5 rounded-xl w-48 text-center z-50 transition-all pointer-events-none left-1/2 -translate-x-1/2 shadow-lg leading-relaxed">
@@ -1306,8 +1301,8 @@ function CommunityView({ reports, selectedCountry, setSelectedCountry, latamThre
     if (r.domain) topDomains[r.domain] = (topDomains[r.domain] || 0) + 1;
   });
 
-  const sortedNumbers = Object.entries(topNumbers).sort((a,b) => b[1]-a[1]).slice(0, 4);
-  const sortedDomains = Object.entries(topDomains).sort((a,b) => b[1]-a[1]).slice(0, 4);
+  const sortedNumbers = Object.entries(topNumbers).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const sortedDomains = Object.entries(topDomains).sort((a, b) => b[1] - a[1]).slice(0, 4);
 
   // LATAM Map marker coordinates
   const markers = [
@@ -1320,7 +1315,7 @@ function CommunityView({ reports, selectedCountry, setSelectedCountry, latamThre
 
   return (
     <div className="space-y-6 font-sans">
-      
+
       {/* Title Header */}
       <div className="bg-[#070911]/60 border border-slate-800/80 rounded-3xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -1337,7 +1332,7 @@ function CommunityView({ reports, selectedCountry, setSelectedCountry, latamThre
 
       <AnimatePresence>
         {showForm && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
@@ -1351,28 +1346,28 @@ function CommunityView({ reports, selectedCountry, setSelectedCountry, latamThre
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold block mb-1">Teléfono Sospechoso</label>
-                  <input 
+                  <input
                     placeholder="Ej: +57310..."
                     value={form.phone_number}
-                    onChange={(e) => setForm({...form, phone_number: e.target.value})}
+                    onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
                     className="w-full bg-[#05070c] border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-red-500/30 transition-colors"
                   />
                 </div>
                 <div>
                   <label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold block mb-1">Dominio / URL</label>
-                  <input 
+                  <input
                     placeholder="Ej: login-verificacion.click"
                     value={form.domain}
-                    onChange={(e) => setForm({...form, domain: e.target.value})}
+                    onChange={(e) => setForm({ ...form, domain: e.target.value })}
                     className="w-full bg-[#05070c] border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-red-500/30 transition-colors"
                   />
                 </div>
                 <div>
                   <label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold block mb-1">Cuenta Recaudo (Bancos)</label>
-                  <input 
+                  <input
                     placeholder="Ej: Nequi 312..."
                     value={form.bank_account}
-                    onChange={(e) => setForm({...form, bank_account: e.target.value})}
+                    onChange={(e) => setForm({ ...form, bank_account: e.target.value })}
                     className="w-full bg-[#05070c] border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-red-500/30 transition-colors"
                   />
                 </div>
@@ -1380,11 +1375,11 @@ function CommunityView({ reports, selectedCountry, setSelectedCountry, latamThre
 
               <div>
                 <label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold block mb-1">Descripción de la estafa *</label>
-                <textarea 
+                <textarea
                   rows={3}
                   placeholder="Detalla cómo operan (ej. Amenazan con enviar fotos a mis contactos de WhatsApp si no pago interés)..."
                   value={form.description}
-                  onChange={(e) => setForm({...form, description: e.target.value})}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
                   className="w-full bg-[#05070c] border border-slate-850 rounded-xl px-4 py-3 text-xs text-slate-200 outline-none focus:border-red-500/30 transition-colors"
                   required
                 />
@@ -1397,15 +1392,15 @@ function CommunityView({ reports, selectedCountry, setSelectedCountry, latamThre
               )}
 
               <div className="flex justify-end gap-3">
-                <button 
-                  type="button" 
-                  onClick={() => setShowForm(false)} 
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
                   className="px-4 py-2 text-xs font-bold text-slate-400 hover:text-slate-200 cursor-pointer"
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-xl cursor-pointer transition-colors shadow-md"
                 >
                   {token ? "Inyectar Reporte Validado" : "Enviar Denuncia Anónima"}
@@ -1418,7 +1413,7 @@ function CommunityView({ reports, selectedCountry, setSelectedCountry, latamThre
 
       {/* LATAM Map & Local Scams Row */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        
+
         {/* LATAM Map Vector Container */}
         <div className="lg:col-span-3 bg-[#070911]/60 border border-slate-800/80 rounded-3xl p-5 flex flex-col justify-between h-[380px] relative overflow-hidden">
           <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2 z-10">
@@ -1434,7 +1429,7 @@ function CommunityView({ reports, selectedCountry, setSelectedCountry, latamThre
               <path d="M 60 50 L 80 80 L 100 80 L 110 90" fill="none" stroke="#334155" strokeWidth="1" />
               {/* South America main mock */}
               <path d="M 110 90 Q 180 90 200 150 Q 220 220 180 320 Q 140 340 130 310 Q 120 220 110 170 Q 100 120 110 90 Z" fill="#1e293b" stroke="#334155" strokeWidth="1" />
-              
+
               {/* Connection curves */}
               <path d="M 50 50 Q 100 80 140 110" fill="none" stroke="#b91c1c" strokeWidth="1" strokeDasharray="3 3" className="animate-pulse" />
               <path d="M 140 110 Q 110 200 130 160" fill="none" stroke="#ef4444" strokeWidth="1.2" strokeDasharray="4 4" />
@@ -1450,12 +1445,10 @@ function CommunityView({ reports, selectedCountry, setSelectedCountry, latamThre
                 style={{ left: `${mark.x}px`, top: `${mark.y}px` }}
               >
                 <span className="flex h-5 w-5 relative items-center justify-center">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${
-                    selectedCountry === mark.name ? "bg-red-500" : "bg-cyan-500"
-                  }`} />
-                  <span className={`relative inline-flex rounded-full h-3 w-3 ${
-                    selectedCountry === mark.name ? "bg-red-500" : "bg-cyan-400"
-                  } shadow-md border border-slate-950`} />
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${selectedCountry === mark.name ? "bg-red-500" : "bg-cyan-500"
+                    }`} />
+                  <span className={`relative inline-flex rounded-full h-3 w-3 ${selectedCountry === mark.name ? "bg-red-500" : "bg-cyan-400"
+                    } shadow-md border border-slate-950`} />
                 </span>
                 <span className="absolute left-6 -top-2 bg-slate-950/90 border border-slate-800 text-[8px] font-bold px-1.5 py-0.5 rounded font-mono text-slate-300 pointer-events-none opacity-80 group-hover:opacity-100 whitespace-nowrap">
                   {mark.name}
@@ -1476,7 +1469,7 @@ function CommunityView({ reports, selectedCountry, setSelectedCountry, latamThre
               <span>📌 Telemetría: {selectedCountry}</span>
               <span className="text-[9px] text-cyan-400 font-mono">EN VIVO</span>
             </h3>
-            
+
             <div className="space-y-4">
               <div>
                 <div className="text-[9px] text-slate-500 uppercase tracking-widest font-mono">Principales Estafas Detectadas</div>
@@ -1495,9 +1488,8 @@ function CommunityView({ reports, selectedCountry, setSelectedCountry, latamThre
               <div>
                 <div className="text-[9px] text-slate-500 uppercase tracking-widest font-mono">Severidad Regional</div>
                 <div className="mt-1">
-                  <span className={`px-2 py-0.5 rounded font-mono text-[9px] font-bold ${
-                    latamThreats[selectedCountry].risk === "Crítico" ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-orange-500/10 text-orange-400 border border-orange-500/20"
-                  }`}>
+                  <span className={`px-2 py-0.5 rounded font-mono text-[9px] font-bold ${latamThreats[selectedCountry].risk === "Crítico" ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-orange-500/10 text-orange-400 border border-orange-500/20"
+                    }`}>
                     {latamThreats[selectedCountry].risk.toUpperCase()}
                   </span>
                 </div>
@@ -1562,7 +1554,7 @@ function CommunityView({ reports, selectedCountry, setSelectedCountry, latamThre
 function DeveloperSOCView({ reports, simulatedLogs, onDelete, selectedReport, setSelectedReport, onSimulateAttack, isSimulating, token }) {
   return (
     <div className="space-y-6 font-sans">
-      
+
       {/* Developer Banner */}
       <div className="bg-[#18110b] border border-yellow-500/20 rounded-3xl p-5 flex items-center gap-3">
         <span className="text-2xl text-yellow-500">⚠️</span>
@@ -1573,14 +1565,14 @@ function DeveloperSOCView({ reports, simulatedLogs, onDelete, selectedReport, se
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        
+
         {/* Real-time Log Stream Console */}
         <div className="lg:col-span-2 bg-[#070911] border border-slate-800/85 rounded-3xl p-5 h-[360px] flex flex-col justify-between">
           <div className="flex justify-between items-center border-b border-slate-900 pb-3 mb-3">
             <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
               <FaTerminal className="text-cyan-400" /> SOC Terminal Telemetría
             </h3>
-            <button 
+            <button
               onClick={onSimulateAttack}
               className="text-[9px] font-bold uppercase tracking-wider bg-red-950/30 border border-red-500/30 text-red-400 px-2.5 py-1 rounded transition-colors cursor-pointer"
             >
@@ -1592,12 +1584,11 @@ function DeveloperSOCView({ reports, simulatedLogs, onDelete, selectedReport, se
             {simulatedLogs.map((log) => (
               <div key={log.id} className="flex gap-2 items-start">
                 <span className="text-slate-600">[{log.time}]</span>
-                <span className={`px-1 py-0.2 rounded text-[8px] font-bold font-mono ${
-                  log.type === "danger" ? "bg-red-500/10 text-red-400" :
+                <span className={`px-1 py-0.2 rounded text-[8px] font-bold font-mono ${log.type === "danger" ? "bg-red-500/10 text-red-400" :
                   log.type === "warning" ? "bg-yellow-500/10 text-yellow-400" :
-                  log.type === "success" ? "bg-emerald-500/10 text-emerald-400" :
-                  "bg-blue-500/10 text-blue-400"
-                }`}>
+                    log.type === "success" ? "bg-emerald-500/10 text-emerald-400" :
+                      "bg-blue-500/10 text-blue-400"
+                  }`}>
                   {log.type.toUpperCase()}
                 </span>
                 <span className="text-slate-300 break-all">{log.text}</span>
@@ -1649,7 +1640,7 @@ function DeveloperSOCView({ reports, simulatedLogs, onDelete, selectedReport, se
               Selecciona un IoC de la tabla de la derecha para ver los factores de riesgo de la IA.
             </div>
           )}
-          
+
           <div className="text-[9px] text-slate-600 font-mono border-t border-slate-900 pt-2 text-center">
             AegisShield Risk Evaluation Core · v2.0
           </div>
@@ -1676,12 +1667,11 @@ function DeveloperSOCView({ reports, simulatedLogs, onDelete, selectedReport, se
             </thead>
             <tbody className="divide-y divide-slate-900 text-xs">
               {reports.map((r) => (
-                <tr 
+                <tr
                   key={r.id}
                   onClick={() => setSelectedReport(r)}
-                  className={`hover:bg-slate-900/40 transition-colors cursor-pointer ${
-                    selectedReport?.id === r.id ? "bg-slate-900/30" : ""
-                  }`}
+                  className={`hover:bg-slate-900/40 transition-colors cursor-pointer ${selectedReport?.id === r.id ? "bg-slate-900/30" : ""
+                    }`}
                 >
                   <td className="py-3 font-mono text-slate-500">#{r.id}</td>
                   <td className="py-3 text-slate-200 max-w-[200px] truncate" title={r.description}>
@@ -1692,11 +1682,11 @@ function DeveloperSOCView({ reports, simulatedLogs, onDelete, selectedReport, se
                   <td className="py-3 font-mono font-bold text-red-400">{r.risk_score ?? r.score_riesgo ?? 0}%</td>
                   <td className="py-3 text-right">
                     {token && (
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           onDelete(r.id);
-                        }} 
+                        }}
                         className="bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/30 text-red-400 p-1.5 rounded-lg transition-all cursor-pointer"
                       >
                         <FaTrash size={10} />
@@ -1737,7 +1727,7 @@ function AuthModal({ mode, setMode, onClose, onLogin, onRegister, error, loading
 
   return (
     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans select-none">
-      <motion.div 
+      <motion.div
         initial={{ scale: 0.96, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.96, opacity: 0 }}
@@ -1759,14 +1749,14 @@ function AuthModal({ mode, setMode, onClose, onLogin, onRegister, error, loading
 
         {/* SOCIAL LOGINS MOCKUPS */}
         <div className="grid grid-cols-2 gap-3">
-          <button 
+          <button
             type="button"
             onClick={() => onLogin("invitado@google.com", "google-oauth-fake-pass")}
             className="flex items-center justify-center gap-2 py-2.5 border border-slate-800 rounded-xl hover:border-slate-700 bg-[#090c15] text-[11px] font-bold text-slate-300 hover:text-slate-100 transition-all cursor-pointer select-none"
           >
             <span className="text-xs">🌐</span> Google
           </button>
-          <button 
+          <button
             type="button"
             onClick={() => onLogin("invitado@apple.com", "apple-oauth-fake-pass")}
             className="flex items-center justify-center gap-2 py-2.5 border border-slate-800 rounded-xl hover:border-slate-700 bg-[#090c15] text-[11px] font-bold text-slate-300 hover:text-slate-100 transition-all cursor-pointer select-none"
@@ -1785,7 +1775,7 @@ function AuthModal({ mode, setMode, onClose, onLogin, onRegister, error, loading
           {mode === "register" && (
             <div>
               <label className="text-[10px] text-slate-400 uppercase tracking-widest font-mono font-bold block mb-1">Nombre Completo</label>
-              <input 
+              <input
                 type="text"
                 placeholder="Ej: Sofía Rodríguez"
                 value={nombre}
@@ -1798,7 +1788,7 @@ function AuthModal({ mode, setMode, onClose, onLogin, onRegister, error, loading
 
           <div>
             <label className="text-[10px] text-slate-400 uppercase tracking-widest font-mono font-bold block mb-1">Correo Electrónico</label>
-            <input 
+            <input
               type="email"
               placeholder="Ej: sofia@empresa.com"
               value={email}
@@ -1810,14 +1800,20 @@ function AuthModal({ mode, setMode, onClose, onLogin, onRegister, error, loading
 
           <div>
             <label className="text-[10px] text-slate-400 uppercase tracking-widest font-mono font-bold block mb-1">Contraseña</label>
-            <input 
+            <input
               type="password"
-              placeholder="••••••••"
+              placeholder={mode === "register" ? "Mínimo 12 caracteres" : "••••••••"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              minLength={mode === "register" ? 12 : undefined}
               className="w-full bg-[#090c15] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-blue-500/50 transition-colors"
               required
             />
+            {mode === "register" && (
+              <p className="text-[9px] text-slate-500 mt-1 font-mono">
+                🔒 Mínimo 12 caracteres para mayor seguridad
+              </p>
+            )}
           </div>
 
           {error && (
@@ -1826,7 +1822,7 @@ function AuthModal({ mode, setMode, onClose, onLogin, onRegister, error, loading
             </div>
           )}
 
-          <button 
+          <button
             type="submit"
             disabled={loading}
             className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-slate-950 font-bold text-xs tracking-wider uppercase rounded-xl transition-all cursor-pointer shadow-lg shadow-blue-500/10"
@@ -1836,7 +1832,7 @@ function AuthModal({ mode, setMode, onClose, onLogin, onRegister, error, loading
         </form>
 
         <div className="text-center pt-2 border-t border-slate-900">
-          <button 
+          <button
             onClick={() => setMode(mode === "login" ? "register" : "login")}
             className="text-xs text-slate-400 hover:text-cyan-400 transition-colors cursor-pointer"
           >
@@ -1864,15 +1860,15 @@ class GeminiFallbackSimulator {
     if (tipo === "url") {
       if (clean.includes(".xyz") || clean.includes(".click") || clean.includes(".top")) {
         score += 35;
-        indicators.append("Extensión de dominio de bajo costo frecuentemente asociada a estafas (.xyz / .click)");
+        indicators.push("Extensión de dominio de bajo costo frecuentemente asociada a estafas (.xyz / .click)");
       }
       if (clean.includes("nequi") || clean.includes("bancolombia") || clean.includes("daviplata") || clean.includes("banco")) {
         score += 30;
-        indicators.append("Suplantación intencional de marca de billetera móvil o banco popular");
+        indicators.push("Suplantación intencional de marca de billetera móvil o banco popular");
       }
       if (!clean.startsWith("https://")) {
         score += 15;
-        indicators.append("Sitio inseguro: Ausencia de cifrado SSL obligatorio");
+        indicators.push("Sitio inseguro: Ausencia de cifrado SSL obligatorio");
       }
 
       if (score >= 60) {
@@ -1889,18 +1885,18 @@ class GeminiFallbackSimulator {
           "No descargues archivos extraños si te lo pide la web."
         ];
       }
-    } else if (tipo === "whatsapp" || tipo === "mensaje") {
+    } else if (tipo === "whatsapp" || tipo === "mensaje" || tipo === "message") {
       if (clean.includes("deuda") || clean.includes("cobro") || clean.includes("embargo") || clean.includes("difundir")) {
         score += 45;
-        indicators.append("Patrón delictivo de cobranza hostil y extorsión (Montadeudas)");
+        indicators.push("Patrón delictivo de cobranza hostil y extorsión (Montadeudas)");
       }
       if (clean.includes("ganaste") || clean.includes("bono") || clean.includes("premio") || clean.includes("regalo")) {
         score += 35;
-        indicators.append("Señuelo de falsa recompensa económica (Ingeniería Social)");
+        indicators.push("Señuelo de falsa recompensa económica (Ingeniería Social)");
       }
       if (clean.includes("urgente") || clean.includes("hoy mismo") || clean.includes("evitar")) {
         score += 15;
-        indicators.append("Sensación de urgencia ficticia inducida para asustar al usuario");
+        indicators.push("Sensación de urgencia ficticia inducida para asustar al usuario");
       }
 
       if (score >= 60) {
@@ -1917,14 +1913,14 @@ class GeminiFallbackSimulator {
           "Nunca verifiques códigos de WhatsApp recibidos por terceros."
         ];
       }
-    } else if (tipo === "correo") {
+    } else if (tipo === "correo" || tipo === "email") {
       if (clean.includes("seguridad") || clean.includes("suspender") || clean.includes("actualizacion")) {
         score += 25;
-        indicators.append("Uso de ingeniería social fingiendo problemas en tu cuenta bancaria");
+        indicators.push("Uso de ingeniería social fingiendo problemas en tu cuenta bancaria");
       }
       if (clean.includes("millon") || clean.includes("premio") || clean.includes("loteria")) {
         score += 40;
-        indicators.append("Suplantación bancaria / Sorteo masivo no verificado");
+        indicators.push("Suplantación bancaria / Sorteo masivo no verificado");
       }
 
       if (score >= 50) {
@@ -1943,9 +1939,9 @@ class GeminiFallbackSimulator {
       }
     } else {
       // QR / default
-      if (clean.includes("menú") || clean.includes("pago")) {
+      if (clean.includes("menú") || clean.includes("menu") || clean.includes("pago")) {
         score += 30;
-        indicators.append("Enlace externo de cobro atípico contenido en código QR");
+        indicators.push("Enlace externo de cobro atípico contenido en código QR");
       }
       explanation = "El código QR redirige a una URL externa. Recuerda verificar siempre a dónde te envía el escáner antes de confirmar el acceso.";
       recommendations = [

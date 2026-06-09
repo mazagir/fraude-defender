@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Fallback local sqlite for local development/testing
+# Fallback local sqlite para desarrollo/testing local
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./aegis_shield.db")
 
 connect_args = {}
@@ -23,11 +23,6 @@ SessionLocal = sessionmaker(
 
 Base = declarative_base()
 
-# ... (lo que ya tienes arriba en el archivo)
-
-Base = declarative_base()
-
-# 1. Agrega esta función que es la que está buscando tu backend:
 def get_db():
     db = SessionLocal()
     try:
