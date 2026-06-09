@@ -9,7 +9,8 @@ import {
   FaInfoCircle, FaUser, FaChartLine, FaRobot, FaLock, FaGlobe,
   FaBrain, FaEye, FaPowerOff, FaBug, FaDatabase, FaPlus, FaTimes,
   FaTrash, FaQrcode, FaEnvelope, FaWhatsapp, FaLink, FaAward,
-  FaTrophy, FaUserShield, FaCode, FaChevronRight, FaFilter
+  FaTrophy, FaUserShield, FaCode, FaChevronRight, FaFilter,
+  FaFire, FaBell, FaUserSecret, FaSkull
 } from "react-icons/fa";
 
 const API_BASE = import.meta.env.VITE_API_URL ||
@@ -56,6 +57,29 @@ export default function App() {
   const [showModal, setShowModal] = useState(false);
   const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
   const [authMode, setAuthMode] = useState("login"); // login, register, guest
+
+  // --- ENGAGEMENT & NOTIFICATIONS ---
+  const [criticalAlertResult, setCriticalAlertResult] = useState(null); // modal de alerta critica post-escaneo
+  const [showGuestBanner, setShowGuestBanner] = useState(false); // banner onboarding invitado
+
+  // --- RACHA DIARIA (STREAK) ---
+  const [streak, setStreak] = useState(() => {
+    return parseInt(localStorage.getItem("aegis_streak") || "0");
+  });
+
+  // Función para actualizar la racha al hacer un escaneo
+  const updateStreak = () => {
+    const today = new Date().toDateString();
+    const lastDate = localStorage.getItem("aegis_last_scan_date");
+    if (lastDate === today) return; // ya escaneó hoy, no cambiar racha
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isConsecutive = lastDate === yesterday.toDateString();
+    const newStreak = isConsecutive ? streak + 1 : 1;
+    setStreak(newStreak);
+    localStorage.setItem("aegis_streak", String(newStreak));
+    localStorage.setItem("aegis_last_scan_date", today);
+  };
 
   // --- GENERAL TELEMETRY ---
   const [reports, setReports] = useState([]);
@@ -201,26 +225,35 @@ export default function App() {
       localStorage.setItem("aegis_token", receivedToken);
       setToken(receivedToken);
 
-      // Store user details mock/real
-      const userData = { email, nombre: email.split("@")[0].toUpperCase(), rol: "analista" };
+      // Guardar datos del usuario desde la respuesta o derivar del email
+      const serverUser = data.usuario;
+      const userData = serverUser
+        ? { email: serverUser.email, nombre: serverUser.nombre, rol: serverUser.rol }
+        : { email, nombre: email.split("@")[0].toUpperCase(), rol: "analista" };
       localStorage.setItem("aegis_user", JSON.stringify(userData));
       setUser(userData);
 
-      // Switch view
+      // ✅ BUG 2 FIX: cerrar el modal Y redirigir al dashboard
+      setAuthMode("");
+      setShowGuestBanner(false);
       setActiveTab("dashboard");
       fetchReports();
     } catch (e) {
       setError(e.message || "Error al iniciar sesión.");
-      // MOCK LOGIN FOR DEVELOPMENT / DEMOS
-      const userData = { email, nombre: email.split("@")[0].toUpperCase(), rol: "analista" };
-      localStorage.setItem("aegis_token", "mock-token-12345");
-      localStorage.setItem("aegis_user", JSON.stringify(userData));
-      setToken("mock-token-12345");
-      setUser(userData);
-      setActiveTab("dashboard");
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ BUG 1 FIX: Modo invitado anónimo — sesión local sin cuenta
+  const handleGuestLogin = () => {
+    const guestData = { email: "", nombre: "Invitado", rol: "guest" };
+    setUser(guestData);
+    localStorage.setItem("aegis_user", JSON.stringify(guestData));
+    // No guardamos token real — el invitado usa endpoints públicos
+    setAuthMode("");
+    setShowGuestBanner(true); // mostrar banner de onboarding
+    setActiveTab("home");
   };
 
   const handleRegister = async (nombre, email, password) => {
@@ -371,18 +404,27 @@ export default function App() {
         };
         setScanHistory(prev => [newHistoryItem, ...prev.slice(0, 15)]);
 
-        // Gamification check: increase reputation slightly per scan
+        // Gamification
         setUserReputation(prev => prev + 5);
         if (data.score >= 50 && !unlockedBadges.includes("cazador_phishing")) {
-          // Unlocks phishing hunter if they detect a high threat
           setUnlockedBadges(prev => [...prev, "cazador_phishing"]);
         }
+
+        // 🚨 Alerta critica si score > 70
+        if (data.score > 70) {
+          setCriticalAlertResult(data);
+          // Vibración en dispositivos móviles
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        }
+
+        // Actualizar racha diaria
+        updateStreak();
 
       } else {
         throw new Error("API falló");
       }
     } catch {
-      // Mock result if backend is offline
+      // Mock result si backend offline
       const mockApi = new GeminiFallbackSimulator();
       const data = mockApi.generateMockResult(scanType, queryValue);
       setScanResult(data);
@@ -397,6 +439,13 @@ export default function App() {
       };
       setScanHistory(prev => [newHistoryItem, ...prev.slice(0, 15)]);
       setUserReputation(prev => prev + 5);
+
+      // 🚨 Alerta critica también en mock
+      if (data.score > 70) {
+        setCriticalAlertResult(data);
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      }
+      updateStreak();
     } finally {
       setIsScanning(false);
     }
@@ -559,6 +608,7 @@ export default function App() {
                   userLevel={userLevel}
                   unlockedBadges={unlockedBadges}
                   setAuthMode={setAuthMode}
+                  streak={streak}
                 />
               )}
 
@@ -590,17 +640,38 @@ export default function App() {
         </main>
       </div>
 
+      {/* --- GUEST ONBOARDING BANNER --- */}
+      <AnimatePresence>
+        {showGuestBanner && !token && (
+          <GuestBanner
+            onRegister={() => { setShowGuestBanner(false); setAuthMode("register"); }}
+            onDismiss={() => setShowGuestBanner(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* --- AUTH GATE MODAL --- */}
       <AnimatePresence>
         {authMode !== "guest" && authMode !== "" && (
           <AuthModal
             mode={authMode}
             setMode={setAuthMode}
-            onClose={() => setAuthMode("guest")}
+            onClose={() => { setAuthMode(""); setShowGuestBanner(true); }}
             onLogin={handleLogin}
             onRegister={handleRegister}
+            onGuest={handleGuestLogin}
             error={error}
             loading={loading}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* --- CRITICAL RISK ALERT MODAL --- */}
+      <AnimatePresence>
+        {criticalAlertResult && (
+          <CriticalAlertModal
+            result={criticalAlertResult}
+            onClose={() => setCriticalAlertResult(null)}
           />
         )}
       </AnimatePresence>
@@ -869,7 +940,7 @@ function HomeView({
             />
           )}
 
-          <div className="flex justify-end pt-2">
+          <div className="flex flex-col items-end gap-2 pt-2">
             <button
               onClick={runQuickScan}
               disabled={isScanning}
@@ -886,6 +957,8 @@ function HomeView({
                 </>
               )}
             </button>
+            {/* 🔴 CTA de urgencia */}
+            <UrgencyCTA />
           </div>
         </div>
 
@@ -1031,8 +1104,138 @@ function HomeView({
   );
 }
 
+// ─── COMPONENT: URGENCY CTA (live threat counter) ───
+function UrgencyCTA() {
+  const [count, setCount] = useState(37);
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setCount(prev => prev + (Math.random() > 0.7 ? 1 : 0));
+    }, 8000);
+    return () => clearInterval(iv);
+  }, []);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-center gap-1.5 text-[10px] font-bold font-mono text-slate-400"
+    >
+      <span className="w-2 h-2 rounded-full bg-red-500 animate-ping inline-block" />
+      <span className="text-red-400">{count}</span> amenazas críticas detectadas hoy en LATAM
+    </motion.div>
+  );
+}
+
+// ─── COMPONENT: GUEST ONBOARDING BANNER ───
+function GuestBanner({ onRegister, onDismiss }) {
+  return (
+    <motion.div
+      initial={{ y: 80, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: 80, opacity: 0 }}
+      transition={{ type: "spring", stiffness: 260, damping: 20 }}
+      className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-4"
+    >
+      <div className="bg-[#0a0f1e]/95 border border-blue-500/30 rounded-2xl px-5 py-4 flex items-center justify-between gap-4 shadow-2xl shadow-blue-500/10 backdrop-blur-md">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+            <FaUserSecret className="text-cyan-400 text-base" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-slate-200 leading-tight">Estás protegido como Invitado</p>
+            <p className="text-[10px] text-slate-400 truncate">Regístrate para guardar tu historial y desbloquear insignias</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={onRegister}
+            className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 text-slate-950 font-bold text-[10px] uppercase tracking-wide cursor-pointer transition-all hover:from-blue-500 hover:to-cyan-400 shadow-md"
+          >
+            Registrarme
+          </button>
+          <button onClick={onDismiss} className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer">
+            <FaTimes size={12} />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── COMPONENT: CRITICAL ALERT MODAL ───
+function CriticalAlertModal({ result, onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+      <motion.div
+        initial={{ scale: 0.85, opacity: 0 }}
+        animate={[
+          { scale: 1, opacity: 1 },
+          { x: [-4, 4, -4, 4, 0] }
+        ]}
+        transition={{ duration: 0.4, times: [0, 0.1, 0.3, 0.5, 1] }}
+        className="bg-[#0d0510] border border-red-500/40 rounded-3xl w-full max-w-md p-6 shadow-2xl shadow-red-500/10 relative overflow-hidden"
+      >
+        {/* Glow bg */}
+        <div className="absolute inset-0 bg-gradient-to-br from-red-950/30 to-transparent pointer-events-none" />
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-orange-500 to-red-500 animate-pulse" />
+
+        <div className="relative z-10 space-y-5">
+          {/* Header */}
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                <FaSkull className="text-red-400 text-xl animate-pulse" />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-red-400 uppercase tracking-wide">⚠ Amenaza Crítica Detectada</h3>
+                <p className="text-[10px] text-slate-400 font-mono mt-0.5">Nivel de riesgo: CRÍTICO — Actúa ahora</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="text-slate-500 hover:text-slate-300 cursor-pointer transition-colors">
+              <FaTimes size={14} />
+            </button>
+          </div>
+
+          {/* Score meter */}
+          <div className="flex items-center gap-4 bg-red-950/20 border border-red-500/15 rounded-2xl p-4">
+            <div className="text-4xl font-extrabold font-mono text-red-400">{result.score}%</div>
+            <div className="flex-1 space-y-1">
+              <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${result.score}%` }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full"
+                />
+              </div>
+              <p className="text-[9px] text-slate-400 font-mono">{result.explanation?.slice(0, 100)}...</p>
+            </div>
+          </div>
+
+          {/* Top recommendation */}
+          {result.recommendations?.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Acción inmediata</p>
+              <div className="bg-slate-900/60 rounded-xl p-3 text-xs text-slate-300 border border-slate-800 flex gap-2">
+                <span className="text-emerald-400 mt-0.5 flex-shrink-0">✓</span>
+                <span>{result.recommendations[0]}</span>
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={onClose}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-red-700 to-red-600 hover:from-red-600 hover:to-red-500 text-white font-bold text-xs tracking-wider uppercase transition-all cursor-pointer"
+          >
+            Entendido — Tomar Precauciones
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // ─── COMPONENT: DASHBOARD VIEW (GAMIFIED CLIENT) ───
-function DashboardView({ token, user, reports, scanHistory, userReputation, userLevel, unlockedBadges, setAuthMode }) {
+function DashboardView({ token, user, reports, scanHistory, userReputation, userLevel, unlockedBadges, setAuthMode, streak }) {
   // Badges inventory definitions
   const badgeDetails = {
     escudo_inicial: { label: "Escudo Inicial", desc: "Realizaste tu primer escaneo contra estafas.", icon: "🛡️" },
@@ -1079,18 +1282,28 @@ function DashboardView({ token, user, reports, scanHistory, userReputation, user
           </div>
         </div>
 
-        {/* Reputation progress meter */}
+        {/* Reputation progress meter con animación */}
         <div className="w-full md:w-64 space-y-1.5">
           <div className="flex justify-between text-[10px] font-bold text-slate-500">
             <span>Rango de Ciberdefensa</span>
             <span className="text-cyan-400">{userReputation} / 300 XP</span>
           </div>
-          <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-850">
-            <div
-              className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-500"
-              style={{ width: `${Math.min((userReputation / 300) * 100, 100)}%` }}
+          <div className="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800/60">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min((userReputation / 300) * 100, 100)}%` }}
+              transition={{ duration: 1.2, ease: "easeOut", delay: 0.3 }}
+              className="h-full bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 rounded-full shadow-sm shadow-cyan-400/30"
             />
           </div>
+          {/* Racha diaria */}
+          {streak > 0 && (
+            <div className="flex items-center gap-1.5 pt-1">
+              <FaFire className="text-orange-400 text-xs" />
+              <span className="text-[10px] font-bold text-orange-400">{streak} día{streak !== 1 ? 's' : ''} de racha</span>
+              <span className="text-[9px] text-slate-500 font-mono">· ¡Sigue así!</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1173,15 +1386,29 @@ function DashboardView({ token, user, reports, scanHistory, userReputation, user
               return (
                 <div
                   key={bKey}
-                  className={`flex flex-col items-center justify-center p-2.5 rounded-xl border relative group cursor-help ${unlocked
-                    ? "bg-slate-900/40 border-cyan-500/20 text-cyan-400"
-                    : "bg-[#05070c] border-slate-900 text-slate-600 opacity-40"
-                    }`}
+                  className={`flex flex-col items-center justify-center p-2.5 rounded-xl border relative group cursor-help overflow-hidden ${
+                    unlocked
+                      ? "bg-slate-900/40 border-cyan-500/20"
+                      : "bg-[#05070c] border-slate-800/60"
+                  }`}
                 >
-                  <span className="text-2xl">{b.icon}</span>
+                  {/* Icono con blur si está bloqueado */}
+                  <span
+                    className="text-2xl transition-all duration-300"
+                    style={unlocked ? {} : { filter: "blur(3px)", opacity: 0.35 }}
+                  >
+                    {b.icon}
+                  </span>
+                  {/* Candado sobre insignia bloqueada */}
+                  {!unlocked && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <FaLock className="text-slate-500 text-xs" />
+                    </div>
+                  )}
+                  {/* Tooltip */}
                   <div className="absolute bottom-[-5px] scale-0 group-hover:scale-100 bg-slate-950 border border-slate-800 text-[9px] font-mono text-slate-300 px-2.5 py-1.5 rounded-xl w-48 text-center z-50 transition-all pointer-events-none left-1/2 -translate-x-1/2 shadow-lg leading-relaxed">
                     <div className="font-bold text-cyan-400 mb-0.5">{b.label}</div>
-                    {b.desc}
+                    {unlocked ? b.desc : <span className="text-slate-500">🔒 Bloqueada — sigue completando acciones</span>}
                   </div>
                 </div>
               );
@@ -1193,7 +1420,7 @@ function DashboardView({ token, user, reports, scanHistory, userReputation, user
               onClick={() => setAuthMode("register")}
               className="w-full py-2 bg-gradient-to-r from-blue-600/20 to-cyan-500/20 hover:from-blue-600/30 hover:to-cyan-500/30 border border-blue-500/30 text-cyan-400 rounded-xl font-bold text-[10px] tracking-wide uppercase transition-colors cursor-pointer"
             >
-              Regístrate para desbloquear más insignias
+              🔓 Regístrate para desbloquear insignias
             </button>
           )}
         </div>
@@ -1711,7 +1938,7 @@ function DeveloperSOCView({ reports, simulatedLogs, onDelete, selectedReport, se
 }
 
 // ─── COMPONENT: AUTH GATE MODAL (GOOGLE, APPLE MOCKUPS) ───
-function AuthModal({ mode, setMode, onClose, onLogin, onRegister, error, loading }) {
+function AuthModal({ mode, setMode, onClose, onLogin, onRegister, onGuest, error, loading }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nombre, setNombre] = useState("");
@@ -1831,17 +2058,29 @@ function AuthModal({ mode, setMode, onClose, onLogin, onRegister, error, loading
           </button>
         </form>
 
-        <div className="text-center pt-2 border-t border-slate-900">
+        <div className="pt-2 border-t border-slate-900 space-y-3">
+          <div className="text-center">
+            <button
+              onClick={() => setMode(mode === "login" ? "register" : "login")}
+              className="text-xs text-slate-400 hover:text-cyan-400 transition-colors cursor-pointer"
+            >
+              {mode === "login" ? (
+                <>¿No tienes cuenta? <span className="font-bold text-cyan-400">Regístrate aquí</span></>
+              ) : (
+                <>¿Ya tienes cuenta? <span className="font-bold text-blue-400">Inicia Sesión</span></>
+              )}
+            </button>
+          </div>
+          {/* ✅ BUG 1 FIX: Botón de acceso como invitado */}
           <button
-            onClick={() => setMode(mode === "login" ? "register" : "login")}
-            className="text-xs text-slate-400 hover:text-cyan-400 transition-colors cursor-pointer"
+            type="button"
+            onClick={onGuest}
+            className="w-full py-2.5 rounded-xl border border-slate-800 bg-transparent hover:bg-slate-900/40 text-slate-400 hover:text-slate-200 font-semibold text-[11px] tracking-wide uppercase transition-all cursor-pointer flex items-center justify-center gap-2"
           >
-            {mode === "login" ? (
-              <>¿No tienes cuenta? <span className="font-bold text-cyan-400">Regístrate aquí</span></>
-            ) : (
-              <>¿Ya tienes cuenta? <span className="font-bold text-blue-400">Inicia Sesión</span></>
-            )}
+            <FaUserSecret className="text-slate-500" />
+            Continuar como Invitado
           </button>
+          <p className="text-[9px] text-slate-600 text-center font-mono">Sin cuenta · Análisis ilimitados · Sin historial guardado</p>
         </div>
       </motion.div>
     </div>
