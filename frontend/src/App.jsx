@@ -12,7 +12,10 @@ import {
   FaTrophy, FaUserShield, FaCode, FaChevronRight, FaFilter
 } from "react-icons/fa";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_URL || 
+  (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+    ? "http://localhost:8000"
+    : "https://fraude-defender-api.onrender.com");
 
 const riskColor = { critical: "#ff2a51", alto: "#ff4d6d", medio: "#ffb547", bajo: "#00e5b4" };
 const riskBg   = { critical: "rgba(255,42,81,0.12)", alto: "rgba(255,77,109,0.12)", medio: "rgba(255,181,71,0.12)", bajo: "rgba(0,229,180,0.1)" };
@@ -127,14 +130,29 @@ export default function App() {
       const res = await apiFetch(url);
       if (res.ok) {
         const data = await res.json();
-        setReports(Array.isArray(data) ? data : []);
+        const backendReports = Array.isArray(data) ? data : [];
+        setReports(prev => {
+          // Filtrar reportes locales temporales (id >= 100) que no existan en el backend
+          const localOnly = prev.filter(r => r.id >= 100 && !backendReports.some(br => 
+            (br.phone_number === r.phone_number || br.telefono_sospechoso === r.telefono_sospechoso) && 
+            (br.domain === r.domain || br.dominio === r.dominio) && 
+            (br.description === r.description || br.descripcion === r.descripcion)
+          ));
+          return [...localOnly, ...backendReports];
+        });
       } else {
         setError("Error al cargar reportes. Ejecutando con datos de respaldo.");
-        setReports(getFallbackReports());
+        setReports(prev => {
+          const localOnly = prev.filter(r => r.id >= 100);
+          return [...localOnly, ...getFallbackReports()];
+        });
       }
     } catch {
       setError("No se pudo conectar al servidor backend. Usando datos simulados.");
-      setReports(getFallbackReports());
+      setReports(prev => {
+        const localOnly = prev.filter(r => r.id >= 100);
+        return [...localOnly, ...getFallbackReports()];
+      });
     } finally {
       setLoading(false);
     }
