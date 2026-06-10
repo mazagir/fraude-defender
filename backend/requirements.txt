@@ -1,14 +1,35 @@
+# ─── AegisShield Backend — Python Dependencies ─────────────────────────────
+# Instalar con: pip install -r requirements.txt
+
+# Framework principal
 fastapi
 uvicorn[standard]
+
+# Base de datos
 sqlalchemy
-psycopg2-binary
-python-jose[cryptography]
-passlib[bcrypt]
-bcrypt==4.0.1
-python-multipart
-python-dotenv
+psycopg2-binary          # Driver PostgreSQL para producción en Render
+
+# Autenticación y seguridad
+python-jose[cryptography] # JWT (JSON Web Tokens)
+passlib[bcrypt]           # Hashing de contraseñas con bcrypt
+# NOTA: NO fijar bcrypt==4.0.1 aquí. passlib[bcrypt] gestiona su propia
+# dependencia de bcrypt. Fijarlo aquí generaba conflictos de versión.
+python-multipart          # Soporte para formularios OAuth2 (login form)
+
+# Configuración
+python-dotenv             # Cargar variables de entorno desde .env
+
+# Validación de datos
 pydantic
 pydantic[email]
 email-validator
+
+# Rate limiting
+slowapi                   # Rate limiting para FastAPI basado en limits/limits
+
+# Cliente HTTP asíncrono (para llamadas a Gemini API)
 httpx
+
+# Testing
 pytest
+pytest-asyncio            # Para tests async con FastAPI TestClient

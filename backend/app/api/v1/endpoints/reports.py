@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.api.deps import get_db, obtener_autenticacion_dual
@@ -12,8 +12,10 @@ from app.services.reports import (
     registrar_ejecucion_contramedida as service_registrar_contramedida,
     obtener_telemetria_defensa as service_obtener_telemetria
 )
+from app.main import limiter
 
 router = APIRouter()
+
 
 @router.get("", response_model=List[FraudReportResponse], status_code=status.HTTP_200_OK)
 def listar_reportes(
@@ -97,12 +99,15 @@ def simular_ataques():
     return service_registrar_contramedida()
 
 @router.post("/analizar", status_code=status.HTTP_200_OK)
-async def analizar_sospecha(request: AnalysisRequest):
+@limiter.limit("20/minute")  # Protege contra uso masivo de la API de Gemini
+async def analizar_sospecha(request: Request, req_body: AnalysisRequest):
     """
     Endpoint público para analizar un elemento sospechoso de fraude (URL, mensaje, WhatsApp, correo, QR).
     Invoca a Gemini AI y retorna un informe legible y estructurado.
     """
     service = GeminiService()
-    resultado = await service.analizar_sospecha(tipo=request.tipo, contenido=request.contenido)
+    resultado = await service.analizar_sospecha(tipo=req_body.tipo, contenido=req_body.contenido)
     return resultado
+
+
 

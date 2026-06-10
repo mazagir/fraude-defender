@@ -1,45 +1,90 @@
-from fastapi import FastAPI
+import logging
+import sys
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy import text
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
+# ─── Logging estructurado ─────────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format='{"time": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s"}',
+    datefmt="%Y-%m-%dT%H:%M:%S",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+logger = logging.getLogger("aegisshield")
+
+# ─── Rate Limiter ─────────────────────────────────────────────────────────────
+# Usa la IP del cliente como clave de identificación.
+# Los límites son configurables via variable de entorno RATELIMIT_* en el futuro.
+limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
 
 # Importar infraestructura y base de datos
 from app.core.config import settings
 from app.core.database import engine, Base
 from app.models.db import FraudReport, User
 
-# Inicializar tablas de base de datos
-Base.metadata.create_all(bind=engine)
-print("[OK] Tablas de base de datos inicializadas correctamente.")
 
-# Migración automática de columnas nuevas
+def _run_migrations() -> None:
+    """Migración automática de columnas nuevas al arrancar."""
+    try:
+        with engine.connect() as conn:
+            db_is_sqlite = "sqlite" in str(engine.url)
+            if db_is_sqlite:
+                res = conn.execute(text("PRAGMA table_info(fraud_reports)")).fetchall()
+                columns = [row[1] for row in res]
+                if "risk_score" not in columns:
+                    conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN risk_score INTEGER DEFAULT 0"))
+                if "malicious_indicators" not in columns:
+                    conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN malicious_indicators TEXT DEFAULT ''"))
+                res_users = conn.execute(text("PRAGMA table_info(users)")).fetchall()
+                columns_users = [row[1] for row in res_users]
+                if "rol" not in columns_users:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN rol VARCHAR DEFAULT 'analista'"))
+            else:
+                conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN IF NOT EXISTS risk_score INTEGER DEFAULT 0"))
+                conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN IF NOT EXISTS malicious_indicators TEXT DEFAULT ''"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS rol VARCHAR DEFAULT 'analista'"))
+            conn.commit()
+            logger.info("Migración de columnas ejecutada correctamente.")
+    except Exception as e:
+        logger.error(f"Error en migración de columnas: {e}")
 
-try:
-    with engine.connect() as conn:
-        db_is_sqlite = engine.url.drivername.startswith("sqlite") or "sqlite" in str(engine.url)
-        if db_is_sqlite:
-            # SQLite: Verificar columnas existentes usando PRAGMA
-            res = conn.execute(text("PRAGMA table_info(fraud_reports)")).fetchall()
-            columns = [row[1] for row in res]
-            if "risk_score" not in columns:
-                conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN risk_score INTEGER DEFAULT 0"))
-            if "malicious_indicators" not in columns:
-                conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN malicious_indicators TEXT DEFAULT ''"))
-                
-            res_users = conn.execute(text("PRAGMA table_info(users)")).fetchall()
-            columns_users = [row[1] for row in res_users]
-            if "rol" not in columns_users:
-                conn.execute(text("ALTER TABLE users ADD COLUMN rol VARCHAR DEFAULT 'analista'"))
-        else:
-            # PostgreSQL: Soporta ADD COLUMN IF NOT EXISTS nativamente
-            conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN IF NOT EXISTS risk_score INTEGER DEFAULT 0"))
-            conn.execute(text("ALTER TABLE fraud_reports ADD COLUMN IF NOT EXISTS malicious_indicators TEXT DEFAULT ''"))
-            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS rol VARCHAR DEFAULT 'analista'"))
-        conn.commit()
-        print("[OK] Migración de columnas ejecutada correctamente.")
-except Exception as e:
-    print(f"[ERR] Error en migración de columnas: {e}")
+
+def _check_production_safety() -> None:
+    """Verifica configuraciones críticas de seguridad para producción."""
+    if settings.ENVIRONMENT == "production":
+        db_url = str(engine.url)
+        if "sqlite" in db_url:
+            logger.warning(
+                "⚠️  ADVERTENCIA DE PRODUCCIÓN: Se detectó SQLite como base de datos. "
+                "SQLite NO es adecuado para producción en Render (los datos se pierden en cada deploy). "
+                "Configura DATABASE_URL con una URL de PostgreSQL en las variables de entorno de Render."
+            )
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Ciclo de vida de la aplicación: startup y shutdown."""
+    # ── STARTUP ──────────────────────────────────────────────────────────────
+    logger.info(f"Iniciando {settings.PROJECT_NAME} v{settings.VERSION} [{settings.ENVIRONMENT}]")
+    Base.metadata.create_all(bind=engine)
+    logger.info("Tablas de base de datos inicializadas.")
+    _run_migrations()
+    _check_production_safety()
+    logger.info("AegisShield listo para recibir peticiones.")
+    yield
+    # ── SHUTDOWN ─────────────────────────────────────────────────────────────
+    logger.info("AegisShield detenido.")
+
+
 # Importar enrutadores
 from app.api.v1.router import api_router
 from app.api.v1.endpoints.auth import router as auth_router
@@ -49,6 +94,7 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     redirect_slashes=False,
+    lifespan=lifespan,
     description="""
 ## 🛡 AegisShield: Plataforma Avanzada de Inteligencia contra Fraudes
 
@@ -56,7 +102,7 @@ AegisShield es una solución empresarial de ciberseguridad diseñada para:
 
 - **Monitoreo de Indicadores de Compromiso (IoCs)**: Rastreo y registro de números de teléfono, dominios y cuentas bancarias fraudulentas.
 - **Motor de Riesgo Dinámico**: Clasificación y puntuación automática de amenazas mediante análisis heurístico de patrones.
-- **Defensa Activa (Decoys)**: Telemetría de contramedidas y soporte para técnicas de envenenamiento de bases de datos contra ciberdelincuentes (p. ej. "montadeudas").
+- **Defensa Activa (Decoys)**: Telemetría de contramedidas y soporte para técnicas de envenenamiento de bases de datos contra ciberdelincuentes (p. ej. \"montadeudas\").
 - **Seguridad Corporativa**: Soporte para JWT de sesión y claves API (API Keys) para flujos integrados automatizados.
 
 ### 🔐 Estándares de Seguridad
@@ -66,10 +112,13 @@ Basado en las recomendaciones del **OWASP Top 10** y el marco de ciberseguridad 
     redoc_url=None
 )
 
-# Configuración de Middlewares (CORS)
-# CORS
-# Nota: para asegurar que falle menos en entornos de hosting (Vercel/Render) añadimos
-# allow_origin_regex y wildcard de headers/methods.
+# ─── Registrar Rate Limiter ───────────────────────────────────────────────────────
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
+
+# ─── CORS ─────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -84,7 +133,22 @@ app.add_middleware(
 )
 
 
-# ─── SWAGGER PERSONALIZADO ───────────────────────────────────
+# ─── SECURITY HEADERS MIDDLEWARE ──────────────────────────────────────────────
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Añade headers de seguridad HTTP a todas las respuestas."""
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    # En producción con HTTPS, descomentar:
+    # response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
+
+# ─── SWAGGER PERSONALIZADO ────────────────────────────────────────────────────
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
     return get_swagger_ui_html(
@@ -95,7 +159,8 @@ async def custom_swagger_ui_html():
         swagger_css_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css",
     )
 
-# ─── PÁGINA DE BIENVENIDA ─────────────────────────────────────
+
+# ─── PÁGINA DE BIENVENIDA ─────────────────────────────────────────────────────
 @app.get("/", response_class=HTMLResponse)
 async def home():
     return """
@@ -166,12 +231,24 @@ async def home():
     </html>
     """
 
-# ─── HEALTH CHECK ─────────────────────────────────────────────
+
+# ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
 @app.get("/health", tags=["Sistema"])
 async def health_check():
-    return {"status": "ok", "servicio": settings.PROJECT_NAME, "version": settings.VERSION}
+    return {
+        "status": "ok",
+        "servicio": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "environment": settings.ENVIRONMENT,
+    }
 
-# ─── RUTAS ────────────────────────────────────────────────────
+
+# ─── RUTAS VERSIONADAS (/api/v1/...) ─────────────────────────────────────────
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# ─── RUTAS LEGACY (backward-compat con frontend y scripts existentes) ─────────
+# Mantenidas con include_in_schema=False para no contaminar el Swagger.
+# NOTA: El frontend usa /auth/login y /reportes — estos alias lo soportan.
+# Migración planeada: mover el frontend a /api/v1/* en la próxima iteración mayor.
 app.include_router(auth_router, prefix="/auth", include_in_schema=False)
 app.include_router(reports_router, prefix="/reportes", include_in_schema=False)

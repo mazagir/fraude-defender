@@ -94,11 +94,37 @@ python -m venv venv
 venv\Scripts\activate      # En Windows
 pip install -r requirements.txt
 
-# Configura tu clave de Gemini (Opcional, cuenta con fallback local)
-# Crea un archivo .env en /backend con: GEMINI_API_KEY=tu_api_key
+### ⚙️ Variables de entorno obligatorias
+Para desplegar en producción de manera segura, debes configurar las siguientes variables de entorno:
+
+| Variable | Tipo | Descripción | Obligatorio |
+| :--- | :--- | :--- | :--- |
+| `JWT_SECRET_KEY` | `string` | Secreto para firmar tokens JWT (mínimo 32 caracteres). | **Sí** |
+| `ENVIRONMENT` | `string` | Entorno de ejecución: `development`, `production`, `testing`. | No (por defecto: `development`) |
+| `DATABASE_URL` | `string` | URI de la base de datos (ej: `postgresql://...` para producción). | No (por defecto: SQLite local) |
+| `ALLOWED_API_KEYS` | `string` | Lista de API Keys autorizadas para B2B, separadas por comas. | No (por defecto: `aegis_dev_api_key_2026`) |
+| `GEMINI_API_KEY` | `string` | API Key de Google Gemini AI para el escáner inteligente. | No (fallback al motor heurístico) |
+
+> [!IMPORTANT]
+> **JWT_SECRET_KEY** es obligatoria. AegisShield fallará inmediatamente en el startup si no está configurada, previniendo vulnerabilidades por claves débiles por defecto en producción.
+
+### 🐘 Configuración de PostgreSQL en Render
+Para un despliegue persistente en producción con Render (ya que SQLite pierde los datos en cada reinicio del contenedor):
+1. Crea una base de datos en **Render PostgreSQL**.
+2. Copia la URL de conexión de la base de datos.
+3. En la configuración de tu Web Service en Render, añade la variable de entorno `DATABASE_URL` y pégale la URL.
+4. Añade `ENVIRONMENT=production` para habilitar el modo de producción. AegisShield ejecutará automáticamente las migraciones necesarias al arrancar.
+
+### 📸 Captura de Pantallas de Documentación
+Si necesitas regenerar o actualizar las imágenes de demostración del proyecto, levanta la aplicación localmente en `localhost:5173` y guarda las capturas en `docs/screenshots/` con los nombres estándar correspondientes:
+- `detector-estafas.png` (Home/Panel de Escáner)
+- `mapa-comunidad.png` (Mapa regional de calor LATAM)
+- `api-docs-header.png` (Swagger UI de documentación API)
+- `api-docs-endpoints.png` (Detalle de endpoints del SOC)
 
 # Iniciar servidor
 uvicorn app.main:app --reload
+
 ```
 
 ### 2️⃣ Levantar el Frontend (React + Vite)

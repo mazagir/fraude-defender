@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import OAuth2PasswordBearer, APIKeyHeader
@@ -6,6 +7,9 @@ from app.core.database import SessionLocal
 from app.core.config import settings
 from app.core.security import decodificar_token_acceso
 from app.models.db import User
+
+logger = logging.getLogger("aegisshield.security")
+
 
 # JWT scheme definition
 # El tokenUrl apunta al endpoint de login versionado
@@ -23,7 +27,7 @@ def get_db():
         db.close()
 
 def get_usuario_actual(
-    token: str = Security(oauth2_scheme), 
+    token: str = Security(oauth2_scheme),
     db: Session = Depends(get_db)
 ) -> User:
     """Valida el token JWT y retorna el usuario autenticado."""
@@ -34,24 +38,29 @@ def get_usuario_actual(
     )
     if not token:
         raise credenciales_exception
-        
+
     try:
         payload = decodificar_token_acceso(token)
         email: str = payload.get("sub")
         if email is None:
+            logger.warning("[TOKEN_INVALIDO] JWT sin campo 'sub'.")
             raise credenciales_exception
-    except ValueError:
+    except ValueError as exc:
+        logger.warning(f"[TOKEN_INVALIDO] Error al decodificar JWT: {exc}")
         raise credenciales_exception
 
     usuario = db.query(User).filter(User.email == email).first()
     if usuario is None:
+        logger.warning(f"[TOKEN_INVALIDO] Usuario del JWT no encontrado en DB: {email}")
         raise credenciales_exception
     if not usuario.es_activo:
+        logger.warning(f"[ACCESO_BLOQUEADO] Usuario inactivo intentó usar JWT: {email}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Usuario inactivo. Contacta a un administrador.",
         )
     return usuario
+
 
 def verificar_api_key(api_key: str = Security(api_key_header)) -> Optional[str]:
     """Verifica si la API Key proporcionada es válida."""
@@ -59,10 +68,13 @@ def verificar_api_key(api_key: str = Security(api_key_header)) -> Optional[str]:
         return None
     if api_key in settings.API_KEYS:
         return api_key
+    # Log parcial de la key (primeros 8 chars) sin exponer el valor completo
+    logger.warning(f"[API_KEY_INVALIDA] Intento con clave no autorizada: {api_key[:8]}...")
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail="API Key inválida o no autorizada."
     )
+
 
 def obtener_autenticacion_dual(
     token: str = Depends(oauth2_scheme),

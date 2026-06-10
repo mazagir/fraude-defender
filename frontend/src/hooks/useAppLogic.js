@@ -130,7 +130,7 @@ export default function useAppLogic() {
     setLoading(true); setError("");
     try {
       const body = new URLSearchParams({ username: email, password });
-      const res = await fetch(`${API_BASE}/auth/login`, { method: "POST", body, headers: { "Content-Type": "application/x-www-form-urlencoded" } });
+      const res = await fetch(`${API_BASE}/api/v1/auth/login`, { method: "POST", body, headers: { "Content-Type": "application/x-www-form-urlencoded" } });
       if (!res.ok) throw new Error("Credenciales inválidas");
       const data = await res.json();
       const receivedToken = data.access_token || data.token;
@@ -158,7 +158,7 @@ export default function useAppLogic() {
   const handleRegister = async (nombre, email, password) => {
     setLoading(true); setError("");
     try {
-      const res = await fetch(`${API_BASE}/auth/registro`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre, email, password }) });
+      const res = await fetch(`${API_BASE}/api/v1/auth/registro`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre, email, password }) });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         let msg = err.detail || "Error en el registro.";

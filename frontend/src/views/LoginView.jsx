@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
 
-import { API_BASE } from "../services/apiBase";
+import { API_BASE } from "../constants/riskConfig";
 
 export default function LoginView({ onLogin }) {
   const [isRegister, setIsRegister] = useState(false);
