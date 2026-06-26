@@ -66,10 +66,10 @@ class Settings:
     BACKEND_CORS_ORIGINS: list[str] = _split_csv(
         os.getenv(
             "BACKEND_CORS_ORIGINS",
-            "http://localhost:5173,http://localhost:5174,https://fraude-defender-1176.vercel.app",
+            "http://localhost:5173,http://localhost:5174,https://fraude-defender-1176.vercel.app,https://frontend-six-lime-31.vercel.app,https://*.vercel.app",
         )
     )
-    CORS_ALLOW_ORIGIN_REGEX: str | None = os.getenv("CORS_ALLOW_ORIGIN_REGEX") or None
+    CORS_ALLOW_ORIGIN_REGEX: str | None = os.getenv("CORS_ALLOW_ORIGIN_REGEX") or r"https://.*\.vercel\.app"
 
 
 settings = Settings()
