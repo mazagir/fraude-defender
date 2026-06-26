@@ -4,7 +4,7 @@ export const API_BASE =
   (typeof window !== 'undefined' &&
    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://localhost:8000'
-    : window.location.origin);
+    : 'https://fraude-defender-production.up.railway.app');
 
 export const riskColor = {
   critical: '#ff2a51',
