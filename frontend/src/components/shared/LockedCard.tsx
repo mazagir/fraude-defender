@@ -18,13 +18,13 @@ export default function LockedSection({ children, ctaText, benefitText, isLocked
       <div className="pointer-events-none select-none" style={{ filter: "blur(6px)", WebkitFilter: "blur(6px)" }}>
         {children}
       </div>
-      <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-[2px] rounded-3xl" />
+      <div className="absolute inset-0 bg-slate-950/80 rounded-3xl" />
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6"
+        className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 z-10"
       >
-        <div className="w-12 h-12 rounded-2xl bg-slate-900/80 border border-slate-700/50 flex items-center justify-center text-lg shadow-xl backdrop-blur-sm ring-4 ring-cyan-950">
+        <div className="w-12 h-12 rounded-2xl bg-slate-900/90 border border-slate-700/50 flex items-center justify-center text-lg shadow-xl ring-4 ring-cyan-950">
           <FaLock className="text-cyan-400" />
         </div>
         <p className="text-[11px] text-slate-300 font-bold text-center max-w-[240px] leading-relaxed">

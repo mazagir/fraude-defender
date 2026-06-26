@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { FaShieldAlt, FaGlobe, FaTrophy, FaLock, FaFire, FaCopy, FaCheck } from "react-icons/fa";
-import { useState, Suspense, lazy } from "react";
+import { useState, Suspense } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from "recharts";
 import RiskBadge from "../shared/RiskBadge";
 import LockedSection from "../shared/LockedCard";
@@ -9,7 +9,7 @@ import { getRiskLevel, riskColor } from "../../constants/riskConfig";
 import { LOCKED_SECTIONS } from "../../constants/lockedSectionConfig";
 import type { LockedSectionId } from "../../constants/lockedSectionConfig";
 import type { UserData } from "../../types";
-const WorldThreatMap = lazy(() => import("../WorldThreatMap"));
+import WorldThreatMap from "../WorldThreatMap";
 
 interface ScanHistoryItem {
   id: number;

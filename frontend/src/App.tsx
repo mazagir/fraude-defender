@@ -72,9 +72,9 @@ export default function App() {
         </header>
 
         <main className="p-5 md:p-8 flex-grow">
-          <AnimatePresence mode="wait">
-            <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} className="max-w-6xl mx-auto w-full h-full">
-              {activeTab === "home" && (
+          <div className="max-w-6xl mx-auto w-full h-full">
+            {activeTab === "home" && (
+              <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                     <div className="lg:col-span-3 space-y-6">
@@ -88,18 +88,24 @@ export default function App() {
                   </div>
                   <ThreatIntelPanel intel={intel} loading={threatIntelLoading} error={threatIntelError} />
                 </div>
-              )}
-              {activeTab === "dashboard" && (
+              </motion.div>
+            )}
+            {activeTab === "dashboard" && (
+              <motion.div key="dashboard" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
                 <DashboardView token={token} user={user} reports={reports} scanHistory={scanHistory} userReputation={gamification.reputation} userLevel={gamification.level} unlockedBadges={gamification.badges} setAuthMode={setAuthMode} streak={streak} mfaActive={mfaActive} mfaQrCode={mfaQrCode} mfaSecret={mfaSecret} mfaUri={mfaUri} showMfaSetup={showMfaSetup} setShowMfaSetup={setShowMfaSetup} mfaVerifyCode={mfaVerifyCode} setMfaVerifyCode={setMfaVerifyCode} setupMfa={setupMfa} enableMfa={enableMfa} disableMfa={disableMfa} verifyMfaLogin={verifyMfaLogin} mfaPartialToken={mfaPartialToken} />
-              )}
-              {activeTab === "community" && (
+              </motion.div>
+            )}
+            {activeTab === "community" && (
+              <motion.div key="community" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
                 <CommunityView reports={reports} selectedCountry={selectedCountry} setSelectedCountry={setSelectedCountry} latamThreats={latamThreats} onCreateReport={handleCreateReport} token={token} />
-              )}
-              {activeTab === "developer" && isDeveloperMode && (
+              </motion.div>
+            )}
+            {activeTab === "developer" && isDeveloperMode && (
+              <motion.div key="developer" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
                 <DeveloperSOCView reports={reports} simulatedLogs={simulatedLogs} onDelete={handleDeleteReport} selectedReport={selectedReport} setSelectedReport={setSelectedReport} onSimulateAttack={handleTriggerAttackSimulation} isSimulating={isSimulatingAttack} token={token} />
-              )}
-            </motion.div>
-          </AnimatePresence>
+              </motion.div>
+            )}
+          </div>
         </main>
       </div>
 
