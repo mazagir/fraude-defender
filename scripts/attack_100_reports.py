@@ -4,7 +4,7 @@ import random
 import requests
 from datetime import datetime
 
-API_BASE = os.getenv("API_BASE", "https://fraude-defender-api.onrender.com")
+API_BASE = os.getenv("API_BASE", "http://localhost:8000")
 TOKEN = os.getenv("FD_TOKEN", "")
 
 if not TOKEN:

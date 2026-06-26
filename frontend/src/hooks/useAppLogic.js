@@ -2,6 +2,19 @@ import { useState, useEffect, useCallback } from "react";
 import { API_BASE, GeminiFallbackSimulator } from "../constants/riskConfig";
 import useStreak from "./useStreak";
 
+function getReputationLevel(reputation) {
+  if (reputation >= 200) return "Guardián de la Comunidad";
+  if (reputation >= 120) return "Vigilante Digital";
+  return "Novato Alerta";
+}
+
+function normalizeGamification(value) {
+  return {
+    ...value,
+    level: getReputationLevel(value.reputation),
+  };
+}
+
 export default function useAppLogic() {
   // --- SESSION STATE ---
   const [token, setToken] = useState(() => localStorage.getItem("aegis_token") || "");
@@ -47,13 +60,19 @@ export default function useAppLogic() {
     ];
   });
 
-  const [gamification, setGamification] = useState(() => {
+  const [gamification, setGamificationState] = useState(() => {
     const reputation = parseInt(localStorage.getItem("aegis_reputation") || "75");
-    const level = localStorage.getItem("aegis_level") || "Novato Alerta";
     const cachedBadges = localStorage.getItem("aegis_badges");
     const badges = cachedBadges ? JSON.parse(cachedBadges) : ["escudo_inicial"];
-    return { reputation, level, badges };
+    return normalizeGamification({ reputation, badges });
   });
+
+  const setGamification = useCallback((nextValue) => {
+    setGamificationState((current) => {
+      const resolved = typeof nextValue === "function" ? nextValue(current) : nextValue;
+      return normalizeGamification(resolved);
+    });
+  }, []);
 
   // --- SOC DEVELOPER STATE ---
   const [simulatedLogs, setSimulatedLogs] = useState([
@@ -111,17 +130,20 @@ export default function useAppLogic() {
     } finally { setLoading(false); }
   }, [token, apiFetch]);
 
-  useEffect(() => { fetchReports(); const iv = setInterval(fetchReports, 45000); return () => clearInterval(iv); }, [fetchReports]);
+  useEffect(() => {
+    const initialFetch = window.setTimeout(fetchReports, 0);
+    const iv = setInterval(fetchReports, 45000);
+    return () => {
+      window.clearTimeout(initialFetch);
+      clearInterval(iv);
+    };
+  }, [fetchReports]);
   useEffect(() => { localStorage.setItem("aegis_scan_history", JSON.stringify(scanHistory)); }, [scanHistory]);
   
   useEffect(() => {
     localStorage.setItem("aegis_reputation", gamification.reputation.toString());
-    let newLevel = "Novato Alerta";
-    if (gamification.reputation >= 200) newLevel = "Guardián de la Comunidad";
-    else if (gamification.reputation >= 120) newLevel = "Vigilante Digital";
-    localStorage.setItem("aegis_level", newLevel);
-    setGamification(prev => (prev.level === newLevel ? prev : { ...prev, level: newLevel }));
-  }, [gamification.reputation]);
+    localStorage.setItem("aegis_level", gamification.level);
+  }, [gamification.level, gamification.reputation]);
 
   useEffect(() => { localStorage.setItem("aegis_badges", JSON.stringify(gamification.badges)); }, [gamification.badges]);
 

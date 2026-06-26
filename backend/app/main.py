@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 from sqlalchemy import text
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -64,9 +64,9 @@ def _check_production_safety() -> None:
         db_url = str(engine.url)
         if "sqlite" in db_url:
             logger.warning(
-                "⚠️  ADVERTENCIA DE PRODUCCIÓN: Se detectó SQLite como base de datos. "
-                "SQLite NO es adecuado para producción en Render (los datos se pierden en cada deploy). "
-                "Configura DATABASE_URL con una URL de PostgreSQL en las variables de entorno de Render."
+                "WARNING DE PRODUCCIÓN: Se detectó SQLite como base de datos de producción. "
+                "SQLite no es adecuado para producción ya que no persiste la información entre despliegues. "
+                "Configura DATABASE_URL o DB_PROVIDER con una URL de PostgreSQL activa (por ejemplo, Supabase o Neon)."
             )
 
 
@@ -121,12 +121,8 @@ app.add_middleware(SlowAPIMiddleware)
 # ─── CORS ─────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "https://fraude-defender-1176.vercel.app",
-    ],
-    allow_origin_regex=r"https://.*",
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origin_regex=settings.CORS_ALLOW_ORIGIN_REGEX,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

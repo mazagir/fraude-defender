@@ -8,11 +8,12 @@
 [![Status](https://img.shields.io/badge/Estado-Activo%20y%20Protegiendo-00e5b4?style=for-the-badge&logo=shield&logoColor=white)]()
 [![Backend](https://img.shields.io/badge/Backend-FastAPI-2563eb?style=for-the-badge&logo=fastapi&logoColor=white)]()
 [![Frontend](https://img.shields.io/badge/Frontend-React-61DAFB?style=for-the-badge&logo=react&logoColor=black)]()
+[![DB](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)]()
 [![Licencia](https://img.shields.io/badge/Licencia-MIT-purple?style=for-the-badge)]()
 
 **AegisShield** es tu Centro de Operaciones de Seguridad (SOC) definitivo. Una solución diseñada arquitectónicamente para la detección proactiva, correlación instantánea y mitigación en tiempo real de infraestructura maliciosa (IoCs) y esquemas de fraude financiero como extorsiones y "gota a gota".
 
-[🚀 Ver Demo en Vivo](https://fraude-defender-1176.vercel.app) | [📖 Documentación API](https://fraude-defender-api.onrender.com/docs) | [🐛 Reportar Bug](https://github.com/mazagir/fraude-defender/issues)
+[🚀 Ver Demo en Vivo](https://fraude-defender-1176.vercel.app) | [🐛 Reportar Bug](https://github.com/mazagir/fraude-defender/issues)
 
 <br/>
 
@@ -22,7 +23,7 @@
 
 <br />
 
-> **“Defendiendo el ciberespacio financiero, un indicador de compromiso a la vez.”**
+> **"Defendiendo el ciberespacio financiero, un indicador de compromiso a la vez."**
 
 ---
 
@@ -77,9 +78,10 @@ AegisShield está construido con las mejores herramientas de la industria para a
 
 | Capa | Tecnologías | Descripción |
 | :--- | :--- | :--- |
-| **Backend** | Python 3.13, FastAPI, SQLAlchemy, SQLite/PostgreSQL | Arquitectura asíncrona de altísimo rendimiento integrada con Gemini 1.5 Flash. |
+| **Backend** | Python 3.13, FastAPI, SQLAlchemy, PostgreSQL | Arquitectura asíncrona de altísimo rendimiento integrada con Gemini 1.5 Flash. |
 | **Frontend** | React 19, Vite, Tailwind CSS, Recharts, Framer Motion | Interfaz *Glassmorphism* reactiva con gamificación integrada y guardado local. |
-| **Infraestructura** | Vercel (Frontend), Render (API) | Despliegue CI/CD automático conectado a la rama principal. |
+| **Base de Datos** | Supabase PostgreSQL (Pooler) | PostgreSQL 17 serverless con soporte para Neon como alternativa. |
+| **Infraestructura** | Vercel (Frontend), Supabase (DB) | CI/CD automático al hacer push a `main`. |
 
 ---
 
@@ -92,39 +94,10 @@ AegisShield está construido con las mejores herramientas de la industria para a
 cd backend
 python -m venv venv
 venv\Scripts\activate      # En Windows
+# source venv/bin/activate  # En Linux/macOS
 pip install -r requirements.txt
-
-### ⚙️ Variables de entorno obligatorias
-Para desplegar en producción de manera segura, debes configurar las siguientes variables de entorno:
-
-| Variable | Tipo | Descripción | Obligatorio |
-| :--- | :--- | :--- | :--- |
-| `JWT_SECRET_KEY` | `string` | Secreto para firmar tokens JWT (mínimo 32 caracteres). | **Sí** |
-| `ENVIRONMENT` | `string` | Entorno de ejecución: `development`, `production`, `testing`. | No (por defecto: `development`) |
-| `DATABASE_URL` | `string` | URI de la base de datos (ej: `postgresql://...` para producción). | No (por defecto: SQLite local) |
-| `ALLOWED_API_KEYS` | `string` | Lista de API Keys autorizadas para B2B, separadas por comas. | No (por defecto: `aegis_dev_api_key_2026`) |
-| `GEMINI_API_KEY` | `string` | API Key de Google Gemini AI para el escáner inteligente. | No (fallback al motor heurístico) |
-
-> [!IMPORTANT]
-> **JWT_SECRET_KEY** es obligatoria. AegisShield fallará inmediatamente en el startup si no está configurada, previniendo vulnerabilidades por claves débiles por defecto en producción.
-
-### 🐘 Configuración de PostgreSQL en Render
-Para un despliegue persistente en producción con Render (ya que SQLite pierde los datos en cada reinicio del contenedor):
-1. Crea una base de datos en **Render PostgreSQL**.
-2. Copia la URL de conexión de la base de datos.
-3. En la configuración de tu Web Service en Render, añade la variable de entorno `DATABASE_URL` y pégale la URL.
-4. Añade `ENVIRONMENT=production` para habilitar el modo de producción. AegisShield ejecutará automáticamente las migraciones necesarias al arrancar.
-
-### 📸 Captura de Pantallas de Documentación
-Si necesitas regenerar o actualizar las imágenes de demostración del proyecto, levanta la aplicación localmente en `localhost:5173` y guarda las capturas en `docs/screenshots/` con los nombres estándar correspondientes:
-- `detector-estafas.png` (Home/Panel de Escáner)
-- `mapa-comunidad.png` (Mapa regional de calor LATAM)
-- `api-docs-header.png` (Swagger UI de documentación API)
-- `api-docs-endpoints.png` (Detalle de endpoints del SOC)
-
-# Iniciar servidor
+cp ../.env.template .env   # Copia la plantilla y edita las variables
 uvicorn app.main:app --reload
-
 ```
 
 ### 2️⃣ Levantar el Frontend (React + Vite)
@@ -134,6 +107,47 @@ cd frontend
 npm install
 npm run dev
 ```
+
+La app estará disponible en **http://localhost:5173** y el API en **http://localhost:8000/docs**.
+
+---
+
+## ⚙️ Variables de Entorno
+
+Copia `.env.template` como `.env` en la carpeta `backend/` y completa los valores:
+
+| Variable | Descripción | Obligatorio |
+| :--- | :--- | :--- |
+| `JWT_SECRET_KEY` | Secreto para firmar tokens JWT (mín. 32 chars). Genera con: `python -c "import secrets; print(secrets.token_hex(32))"` | **Sí** |
+| `DB_PROVIDER` | Proveedor activo: `sqlite` \| `supabase` \| `neon` \| `direct` | No (default: `direct`) |
+| `SUPABASE_DATABASE_URL` | URI de conexión al pooler de Supabase | Si `DB_PROVIDER=supabase` |
+| `NEON_DATABASE_URL` | URI de conexión a Neon PostgreSQL | Si `DB_PROVIDER=neon` |
+| `DATABASE_URL` | URI genérica (SQLite por defecto en local) | No |
+| `ALLOWED_API_KEYS` | API Keys B2B separadas por comas | No (default: `aegis_dev_api_key_2026`) |
+| `GEMINI_API_KEY` | API Key de Google Gemini AI | No (fallback heurístico) |
+| `ENVIRONMENT` | `development` \| `production` \| `testing` | No (default: `development`) |
+
+> [!IMPORTANT]
+> `JWT_SECRET_KEY` es obligatoria. El servidor no arrancará sin ella en producción.
+
+---
+
+## 🐘 Configuración de Base de Datos (Supabase)
+
+1. Crea un proyecto en **[supabase.com](https://supabase.com)**
+2. Ve a **Project Settings → Database → Connection Pooling**
+3. Copia la URI del pooler (Session mode, puerto 5432):
+   ```
+   postgresql://postgres.PROJECT_REF:PASSWORD@aws-X-REGION.pooler.supabase.com:5432/postgres
+   ```
+4. En tu `.env`:
+   ```env
+   DB_PROVIDER=supabase
+   SUPABASE_DATABASE_URL=<URI copiada>
+   ```
+5. Verifica con: `python tools/verify_db.py`
+
+> **Neon** también es compatible: cambia `DB_PROVIDER=neon` y define `NEON_DATABASE_URL`.
 
 ---
 

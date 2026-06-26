@@ -25,9 +25,10 @@ export default function DeveloperSOCView({
             </h3>
             <button
               onClick={onSimulateAttack}
+              disabled={isSimulating}
               className="text-[9px] font-bold uppercase tracking-wider bg-red-950/30 border border-red-500/30 text-red-400 px-2.5 py-1 rounded transition-colors cursor-pointer"
             >
-              Forzar Simulación
+              {isSimulating ? "Simulando..." : "Forzar Simulación"}
             </button>
           </div>
 

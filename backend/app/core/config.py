@@ -1,28 +1,45 @@
 import os
 import sys
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CONFIGURACIÓN CENTRALIZADA DE AEGISSHIELD
-# Todas las variables de entorno se validan aquí al arrancar la aplicación.
-# Si una variable obligatoria no está definida, la app FALLA DE INMEDIATO
-# con un mensaje claro — nunca en silencio con un fallback inseguro.
-# ─────────────────────────────────────────────────────────────────────────────
 
 def _require_env(name: str) -> str:
-    """Lee una variable de entorno obligatoria. Aborta si no está definida."""
     value = os.getenv(name)
     if not value or not value.strip():
         print(
-            f"\n[FATAL] Variable de entorno obligatoria '{name}' no está configurada.\n"
-            f"        Configura '{name}' en tu archivo .env o en las variables de entorno\n"
-            f"        del servidor antes de iniciar AegisShield.\n",
+            f"\n[FATAL] Required environment variable '{name}' is not configured.\n"
+            f"        Set '{name}' in your .env file or hosting provider before starting AegisShield.\n",
             file=sys.stderr,
         )
         sys.exit(1)
     return value.strip()
+
+
+def _split_csv(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def _env_bool(name: str, default: str = "false") -> bool:
+    return os.getenv(name, default).lower() in {"1", "true", "yes", "on"}
+
+
+def _load_api_keys(environment: str) -> list[str]:
+    configured_keys = os.getenv("ALLOWED_API_KEYS")
+    if configured_keys and configured_keys.strip():
+        return _split_csv(configured_keys)
+
+    if environment == "production":
+        print(
+            "\n[FATAL] Required environment variable 'ALLOWED_API_KEYS' is not configured in production.\n"
+            "        Define one or more B2B API keys separated by commas.\n",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    return ["aegis_dev_api_key_2026"]
 
 
 class Settings:
@@ -30,28 +47,29 @@ class Settings:
     VERSION: str = "2.0.0"
     API_V1_STR: str = "/api/v1"
 
-    # ── Seguridad JWT ──────────────────────────────────────────────────────
-    # OBLIGATORIO: Debe ser una cadena aleatoria segura de al menos 32 caracteres.
-    # Genera una con: python -c "import secrets; print(secrets.token_hex(32))"
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+
     SECRET_KEY: str = _require_env("JWT_SECRET_KEY")
     ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
-    # ── WebSocket ──────────────────────────────────────────────────────────
-    WS_AUTH_REQUIRED: bool = os.getenv("WS_AUTH_REQUIRED", "true").lower() in {"1", "true", "yes", "on"}
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./aegis_shield.db")
+    DB_PROVIDER: str = os.getenv("DB_PROVIDER", "direct").lower()
+    SUPABASE_DATABASE_URL: str | None = os.getenv("SUPABASE_DATABASE_URL")
+    NEON_DATABASE_URL: str | None = os.getenv("NEON_DATABASE_URL")
+    GEMINI_API_KEY: str | None = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
 
-    # ── API Keys B2B ───────────────────────────────────────────────────────
-    # En producción, configura ALLOWED_API_KEYS con claves reales separadas por coma.
-    # Ejemplo: ALLOWED_API_KEYS=key-empresa-a,key-empresa-b
-    API_KEYS: list = [
-        key.strip()
-        for key in os.getenv("ALLOWED_API_KEYS", "aegis_dev_api_key_2026").split(",")
-        if key.strip()
-    ]
+    API_KEYS: list[str] = _load_api_keys(ENVIRONMENT)
 
-    # ── Entorno ────────────────────────────────────────────────────────────
-    # Valores válidos: "development", "production", "testing"
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    WS_AUTH_REQUIRED: bool = _env_bool("WS_AUTH_REQUIRED", "true")
+
+    BACKEND_CORS_ORIGINS: list[str] = _split_csv(
+        os.getenv(
+            "BACKEND_CORS_ORIGINS",
+            "http://localhost:5173,http://localhost:5174,https://fraude-defender-1176.vercel.app",
+        )
+    )
+    CORS_ALLOW_ORIGIN_REGEX: str | None = os.getenv("CORS_ALLOW_ORIGIN_REGEX") or None
 
 
 settings = Settings()

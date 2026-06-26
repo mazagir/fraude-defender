@@ -8,8 +8,11 @@ import CriticalAlertModal from "./components/scanner/CriticalAlertModal";
 import DashboardView from "./components/profile/DashboardView";
 import CommunityView from "./components/community/CommunityView";
 import DeveloperSOCView from "./components/developer/DeveloperSOCView";
+import ThreatIntelPanel from "./components/threat/ThreatIntelPanel";
+import useThreatIntel from "./hooks/useThreatIntel";
 
 export default function App() {
+  const { intel, loading: threatIntelLoading, error: threatIntelError } = useThreatIntel(25);
   const {
     token, user, activeTab, setActiveTab, reports, scanResult, setScanResult, scanHistory,
     criticalAlertResult, setCriticalAlertResult, showGuestBanner, setShowGuestBanner,
@@ -65,7 +68,10 @@ export default function App() {
           <AnimatePresence mode="wait">
             <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} className="max-w-6xl mx-auto w-full h-full">
               {activeTab === "home" && (
-                <HomeView scanType={scanType} setScanType={setScanType} scanInput={scanInput} setScanInput={setScanInput} emailDetails={emailDetails} setEmailDetails={setEmailDetails} selectedQrCase={selectedQrCase} setSelectedQrCase={setSelectedQrCase} isScanning={isScanning} scanLogs={scanLogs} scanResult={scanResult} setScanResult={setScanResult} runQuickScan={runQuickScan} onRegisterPrompt={() => setAuthMode("register")} token={token} />
+                <div className="space-y-8">
+                  <HomeView scanType={scanType} setScanType={setScanType} scanInput={scanInput} setScanInput={setScanInput} emailDetails={emailDetails} setEmailDetails={setEmailDetails} selectedQrCase={selectedQrCase} setSelectedQrCase={setSelectedQrCase} isScanning={isScanning} scanLogs={scanLogs} scanResult={scanResult} setScanResult={setScanResult} runQuickScan={runQuickScan} onRegisterPrompt={() => setAuthMode("register")} token={token} />
+                  <ThreatIntelPanel intel={intel} loading={threatIntelLoading} error={threatIntelError} />
+                </div>
               )}
               {activeTab === "dashboard" && (
                 <DashboardView token={token} user={user} reports={reports} scanHistory={scanHistory} userReputation={gamification.reputation} userLevel={gamification.level} unlockedBadges={gamification.badges} setAuthMode={setAuthMode} streak={streak} />

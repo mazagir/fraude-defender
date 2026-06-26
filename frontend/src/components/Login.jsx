@@ -145,7 +145,7 @@ export function Login({ onLogin }) {
       <div className="p-6 bg-gray-900 rounded-xl border border-gray-800">
         <h2 className="text-lg font-bold mb-4">Login</h2>
         <div className="text-xs text-gray-400 mb-4">
-          Intenta autenticar contra rutas comunes del backend (Render).
+          Intenta autenticar contra rutas comunes del backend.
         </div>
         <button
           className="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-lg w-full"

@@ -1,13 +1,13 @@
-import os
 import json
 import httpx
 import re
-from typing import Dict, Any, List
+from typing import Dict, Any
+
+from app.core.config import settings
 
 class GeminiService:
     def __init__(self):
-        # Intentamos obtener la API key desde las variables de entorno
-        self.api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        self.api_key = settings.GEMINI_API_KEY
         self.model = "gemini-1.5-flash"
         self.url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
 

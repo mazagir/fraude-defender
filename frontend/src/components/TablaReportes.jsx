@@ -40,7 +40,6 @@ export default function TablaReportes({ reportes = [] }) {
       // Si el usuario necesita refrescar la lista, debe hacerlo desde el padre.
       // Aquí no hacemos fetch global para no romper el flujo actual.
       if (!res.ok) {
-        // eslint-disable-next-line no-console
         console.error("No se pudo eliminar el reporte", await res.text());
       }
     } finally {

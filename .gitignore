@@ -1,7 +1,15 @@
 venv/
 __pycache__/
 .env
+.env.local
+.env.*.local
 node_modules/
 dist/
 build/
 backend/*.db
+.pytest_cache/
+backend/.pytest_cache/
+backend/.venv/
+backend/venv/
+frontend/dist/
+frontend/node_modules/

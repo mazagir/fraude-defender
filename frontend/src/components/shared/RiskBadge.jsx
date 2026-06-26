@@ -1,18 +1,29 @@
 import { riskColor, riskBg } from '../../constants/riskConfig';
 
 export default function RiskBadge({ level }) {
-  const l = (level || 'bajo').toLowerCase();
-  const displayLabels = { critical: 'CRÍTICO', alto: 'ALTO', medio: 'MEDIO', bajo: 'BAJO' };
+  const aliases = {
+    low: 'bajo',
+    medium: 'medio',
+    high: 'alto',
+    critical: 'critical',
+  };
+  const rawLevel = (level || 'bajo').toLowerCase();
+  const normalizedLevel = aliases[rawLevel] || rawLevel;
+  const displayLabels = { critical: 'CRITICO', alto: 'ALTO', medio: 'MEDIO', bajo: 'BAJO' };
+
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[10px] font-bold border-white/5`}
-      style={{ color: riskColor[l] || riskColor.bajo, backgroundColor: riskBg[l] || riskBg.bajo }}
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[10px] font-bold border-white/5"
+      style={{
+        color: riskColor[normalizedLevel] || riskColor.bajo,
+        backgroundColor: riskBg[normalizedLevel] || riskBg.bajo,
+      }}
     >
       <span
         className="w-1.5 h-1.5 rounded-full animate-pulse"
-        style={{ backgroundColor: riskColor[l] || riskColor.bajo }}
+        style={{ backgroundColor: riskColor[normalizedLevel] || riskColor.bajo }}
       />
-      {displayLabels[l] || l.toUpperCase()}
+      {displayLabels[normalizedLevel] || normalizedLevel.toUpperCase()}
     </span>
   );
 }

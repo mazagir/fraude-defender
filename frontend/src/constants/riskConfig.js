@@ -4,7 +4,7 @@ export const API_BASE =
   (typeof window !== 'undefined' &&
    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://localhost:8000'
-    : 'https://fraude-defender-api.onrender.com');
+    : window.location.origin);
 
 export const riskColor = {
   critical: '#ff2a51',
@@ -32,8 +32,8 @@ export class GeminiFallbackSimulator {
     const clean = contenido.toLowerCase();
     let score = 15;
     let indicators = [];
-    let recommendations = [];
-    let explanation = '';
+    let recommendations;
+    let explanation;
 
     if (tipo === 'url') {
       if (clean.includes('.xyz') || clean.includes('.click') || clean.includes('.top')) {

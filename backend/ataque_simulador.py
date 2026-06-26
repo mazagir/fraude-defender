@@ -4,8 +4,8 @@ import time
 import random
 
 # URLs del Backend (FastAPI con prefijo v1)
-LOGIN_URL = "https://fraude-defender-api.onrender.com/api/v1/auth/login"  # Ajusta si tu ruta de login es diferente
-REPORTES_URL = "https://fraude-defender-api.onrender.com/api/v1/reportes"
+LOGIN_URL = "http://localhost:8000/api/v1/auth/login"  # Ajusta si tu ruta de login es diferente
+REPORTES_URL = "http://localhost:8000/api/v1/reportes"
 
 # Credenciales de analista para pruebas de estrés
 USER_DATA = {

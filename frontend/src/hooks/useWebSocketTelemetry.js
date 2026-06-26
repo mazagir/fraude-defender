@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const DEFAULT_API_BASE =
-  import.meta.env.VITE_API_URL || "https://fraude-defender-api.onrender.com";
+  import.meta.env.VITE_API_URL ||
+  (typeof window !== "undefined"
+    ? (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      ? "http://localhost:8000"
+      : window.location.origin)
+    : "");
 
 function getStoredToken() {
   return localStorage.getItem("aegis_token") || localStorage.getItem("fd_token") || "";
@@ -9,7 +14,8 @@ function getStoredToken() {
 
 function buildTelemetryUrl({ apiBase = DEFAULT_API_BASE, token, wsUrl }) {
   const base = wsUrl || apiBase;
-  const url = new URL(base);
+  if (!base) return "";
+  const url = new URL(base, typeof window !== "undefined" ? window.location.origin : "http://localhost:8000");
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
 
   if (!wsUrl) {
@@ -42,6 +48,7 @@ export function useWebSocketTelemetry({
   const socketRef = useRef(null);
   const bufferRef = useRef([]);
   const reconnectTimerRef = useRef(null);
+  const connectRef = useRef(null);
   const manuallyClosedRef = useRef(false);
   const activeToken = token ?? getStoredToken();
 
@@ -122,11 +129,15 @@ export function useWebSocketTelemetry({
         const delay = Math.min(1000 * 2 ** attempt + jitter, maxReconnectDelayMs);
 
         window.clearTimeout(reconnectTimerRef.current);
-        reconnectTimerRef.current = window.setTimeout(connect, delay);
+        reconnectTimerRef.current = window.setTimeout(() => connectRef.current?.(), delay);
         return nextAttempt;
       });
     };
   }, [activeToken, enabled, flushBuffer, maxReconnectDelayMs, telemetryUrl]);
+
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   useEffect(() => {
     const interval = window.setInterval(flushBuffer, flushIntervalMs);
@@ -134,8 +145,11 @@ export function useWebSocketTelemetry({
   }, [flushBuffer, flushIntervalMs]);
 
   useEffect(() => {
-    connect();
-    return disconnect;
+    const initialConnect = window.setTimeout(() => connectRef.current?.(), 0);
+    return () => {
+      window.clearTimeout(initialConnect);
+      disconnect();
+    };
   }, [connect, disconnect]);
 
   const metrics = useMemo(() => {
