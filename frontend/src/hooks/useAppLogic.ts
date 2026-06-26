@@ -56,6 +56,7 @@ export default function useAppLogic() {
   const [authMode, setAuthMode] = useState<string>("");
   const [criticalAlertResult, setCriticalAlertResult] = useState<ScanResult | null>(null);
   const [showGuestBanner, setShowGuestBanner] = useState<boolean>(false);
+  const [showReportSuccessModal, setShowReportSuccessModal] = useState<boolean>(false);
 
   // --- STREAK (custom hook) ---
   const { streak, updateStreak } = useStreak();
@@ -99,6 +100,7 @@ export default function useAppLogic() {
   const [mfaActive, setMfaActive] = useState<boolean>(false);
   const [mfaQrCode, setMfaQrCode] = useState<string>("");
   const [mfaSecret, setMfaSecret] = useState<string>("");
+  const [mfaUri, setMfaUri] = useState<string>("");
   const [showMfaSetup, setShowMfaSetup] = useState<boolean>(false);
   const [mfaVerifyCode, setMfaVerifyCode] = useState<string>("");
   const [mfaPartialToken, setMfaPartialToken] = useState<string>("");
@@ -154,6 +156,7 @@ export default function useAppLogic() {
       if (res.ok) {
         const data = await res.json();
         setMfaSecret(data.secret);
+        setMfaUri(data.uri || "");
         setMfaQrCode(`data:image/png;base64,${data.qr_b64}`);
         setShowMfaSetup(true);
       }
@@ -199,6 +202,37 @@ export default function useAppLogic() {
       }
     } catch { window.alert("Error al desactivar MFA"); }
   }, [token, API_BASE]);
+
+  const verifyMfaLogin = useCallback(async () => {
+    setLoading(true); setError("");
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/auth/mfa/verify-login?partial_token=${mfaPartialToken}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: mfaVerifyCode }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setError(err.detail || "Código inválido.");
+        return;
+      }
+      const data = await res.json();
+      const receivedToken = data.access_token || data.token;
+      localStorage.setItem("aegis_token", receivedToken);
+      setToken(receivedToken);
+      const serverUser = data.usuario;
+      const userData: UserData = serverUser
+        ? { email: serverUser.email, nombre: serverUser.nombre, rol: serverUser.rol }
+        : { email: "", nombre: "Analista", rol: "analista" };
+      localStorage.setItem("aegis_user", JSON.stringify(userData));
+      setUser(userData);
+      setShowMfaSetup(false);
+      setMfaPartialToken("");
+      setMfaVerifyCode("");
+      fetchReports();
+    } catch { setError("Error al verificar código MFA."); }
+    finally { setLoading(false); }
+  }, [API_BASE, mfaPartialToken, mfaVerifyCode]);
 
   const fetchReports = useCallback(async () => {
     setLoading(true); setError("");
@@ -298,13 +332,21 @@ export default function useAppLogic() {
   const handleLogin = async (email: string, password: string) => {
     setLoading(true); setError("");
     try {
+      if (!email.trim() || !password.trim()) { throw new Error("Correo y contraseña son requeridos."); }
       const body = new URLSearchParams({ username: email, password });
       const res = await fetch(`${API_BASE}/api/v1/auth/login`, { method: "POST", body, headers: { "Content-Type": "application/x-www-form-urlencoded" } });
-      if (!res.ok) throw new Error("Credenciales inválidas");
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        let msg = errBody.detail || "Credenciales inválidas.";
+        if (Array.isArray(msg)) msg = msg.map((e: { msg?: string }) => e.msg || JSON.stringify(e)).join(", ");
+        throw new Error(msg);
+      }
       const data = await res.json();
       if (data.mfa_required) {
         setMfaPartialToken(data.partial_token);
         setShowMfaSetup(true);
+        setAuthMode("");
+        setActiveTab("dashboard");
         setLoading(false);
         return;
       }
@@ -385,6 +427,7 @@ export default function useAppLogic() {
         reputation: prev.reputation + 30,
       }));
     }
+    if (!token) setShowReportSuccessModal(true);
   };
 
   const handleDeleteReport = async (id: number) => {
@@ -459,6 +502,7 @@ export default function useAppLogic() {
     authMode, setAuthMode,
     criticalAlertResult, setCriticalAlertResult,
     showGuestBanner, setShowGuestBanner,
+    showReportSuccessModal, setShowReportSuccessModal,
     streak, updateStreak,
     reports, setReports,
     loading, setLoading,
@@ -478,11 +522,11 @@ export default function useAppLogic() {
     selectedReport, setSelectedReport,
     selectedCountry, setSelectedCountry,
     latamThreats,
-    mfaActive, mfaQrCode, mfaSecret,
+    mfaActive, mfaQrCode, mfaSecret, mfaUri,
     showMfaSetup, setShowMfaSetup,
     mfaVerifyCode, setMfaVerifyCode,
     mfaPartialToken,
-    setupMfa, enableMfa, disableMfa, fetchMfaStatus,
+    setupMfa, enableMfa, disableMfa, verifyMfaLogin, fetchMfaStatus,
     handleLogin,
     handleGuestLogin,
     handleRegister,

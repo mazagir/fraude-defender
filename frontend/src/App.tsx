@@ -4,6 +4,7 @@ import useAppLogic from "./hooks/useAppLogic";
 import Sidebar from "./components/layout/Sidebar";
 import AuthModal from "./components/auth/AuthModal";
 import GuestBanner from "./components/auth/GuestBanner";
+import ReportSuccessModal from "./components/shared/ReportSuccessModal";
 import HomeView from "./components/scanner/HomeView";
 import CriticalAlertModal from "./components/scanner/CriticalAlertModal";
 import DashboardView from "./components/profile/DashboardView";
@@ -18,16 +19,17 @@ export default function App() {
   const {
     token, user, activeTab, setActiveTab, reports, scanResult, setScanResult, scanHistory,
     criticalAlertResult, setCriticalAlertResult, showGuestBanner, setShowGuestBanner,
-    authMode, setAuthMode, isDeveloperMode, setIsDeveloperMode, gamification, streak,
+    showReportSuccessModal, setShowReportSuccessModal, authMode, setAuthMode, isDeveloperMode, setIsDeveloperMode, gamification, streak,
     isSidebarOpen, setIsSidebarOpen, loading, error, isSimulatingAttack, scanType, setScanType,
     scanInput, setScanInput, emailDetails, setEmailDetails, selectedQrCase, setSelectedQrCase,
     isScanning, scanLogs, simulatedLogs, selectedReport, setSelectedReport, selectedCountry,
     setSelectedCountry, latamThreats, handleLogin, handleLogout, handleRegister,
     handleGuestLogin, handleCreateReport, handleDeleteReport, runQuickScan,
     handleTriggerAttackSimulation,
-    mfaActive, mfaQrCode, showMfaSetup, setShowMfaSetup,
+    mfaActive, mfaQrCode, mfaSecret, mfaUri, showMfaSetup, setShowMfaSetup,
     mfaVerifyCode, setMfaVerifyCode,
-    setupMfa, enableMfa, disableMfa, mfaPartialToken,
+    mfaPartialToken,
+    setupMfa, enableMfa, disableMfa, verifyMfaLogin, fetchMfaStatus,
   } = useAppLogic();
 
   return (
@@ -86,7 +88,7 @@ export default function App() {
                 </div>
               )}
               {activeTab === "dashboard" && (
-                <DashboardView token={token} user={user} reports={reports} scanHistory={scanHistory} userReputation={gamification.reputation} userLevel={gamification.level} unlockedBadges={gamification.badges} setAuthMode={setAuthMode} streak={streak} mfaActive={mfaActive} mfaQrCode={mfaQrCode} showMfaSetup={showMfaSetup} setShowMfaSetup={setShowMfaSetup} mfaVerifyCode={mfaVerifyCode} setMfaVerifyCode={setMfaVerifyCode} setupMfa={setupMfa} enableMfa={enableMfa} disableMfa={disableMfa} mfaPartialToken={mfaPartialToken} />
+                <DashboardView token={token} user={user} reports={reports} scanHistory={scanHistory} userReputation={gamification.reputation} userLevel={gamification.level} unlockedBadges={gamification.badges} setAuthMode={setAuthMode} streak={streak} mfaActive={mfaActive} mfaQrCode={mfaQrCode} mfaSecret={mfaSecret} mfaUri={mfaUri} showMfaSetup={showMfaSetup} setShowMfaSetup={setShowMfaSetup} mfaVerifyCode={mfaVerifyCode} setMfaVerifyCode={setMfaVerifyCode} setupMfa={setupMfa} enableMfa={enableMfa} disableMfa={disableMfa} verifyMfaLogin={verifyMfaLogin} mfaPartialToken={mfaPartialToken} />
               )}
               {activeTab === "community" && (
                 <CommunityView reports={reports} selectedCountry={selectedCountry} setSelectedCountry={setSelectedCountry} latamThreats={latamThreats} onCreateReport={handleCreateReport} token={token} />
@@ -114,6 +116,12 @@ export default function App() {
       <AnimatePresence>
         {criticalAlertResult && (
           <CriticalAlertModal result={criticalAlertResult} onClose={() => setCriticalAlertResult(null)} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showReportSuccessModal && (
+          <ReportSuccessModal onRegister={() => { setShowReportSuccessModal(false); setAuthMode("register"); }} onDismiss={() => setShowReportSuccessModal(false)} />
         )}
       </AnimatePresence>
     </div>

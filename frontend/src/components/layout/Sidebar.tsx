@@ -1,6 +1,6 @@
 import {
   FaShieldAlt, FaGlobe, FaUserShield, FaTerminal,
-  FaCode, FaPowerOff, FaUser, FaTimes,
+  FaCode, FaPowerOff, FaUser, FaTimes, FaLock,
 } from 'react-icons/fa';
 import type { UserData } from '../../types';
 
@@ -69,7 +69,8 @@ export default function Sidebar({
               }`}
             >
               <span className="text-sm">{item.icon}</span>
-              {item.label}
+              <span className="flex-1 text-left">{item.label}</span>
+              {!token && item.id !== 'home' && <FaLock className="text-slate-600 text-[9px]" />}
             </button>
           ))}
 
