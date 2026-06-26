@@ -58,6 +58,25 @@ class Token(BaseModel):
     token_type: str
     usuario: UsuarioResponse
 
+class MFASetupResponse(BaseModel):
+    secret: str
+    uri: str
+    qr_b64: str
+
+class MFAVerifyRequest(BaseModel):
+    code: str
+
+class MFAEnableRequest(BaseModel):
+    code: str
+
+class MFAResponse(BaseModel):
+    message: str
+    mfa_activo: bool
+
+class TokenMFARequired(BaseModel):
+    mfa_required: bool
+    partial_token: str
+
 class AnalysisRequest(BaseModel):
     tipo: str
     contenido: str

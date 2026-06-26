@@ -13,13 +13,23 @@ def verificar_password(plain_password: str, hashed_password: str) -> bool:
 def hashear_password(password: str) -> str:
     return pwd_context.hash(password)
 
-def crear_token(data: dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
+def crear_token(data: dict[str, Any], expires_delta: Optional[timedelta] = None, expires_minutes: Optional[int] = None) -> str:
     """Crea un JWT de acceso de vida corta firmado con el secreto de entorno."""
     to_encode = data.copy()
     now = datetime.now(timezone.utc)
-    expire = now + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    delta = expires_delta or (timedelta(minutes=expires_minutes) if expires_minutes else timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = now + delta
     to_encode.update({"exp": expire, "iat": now, "typ": "access"})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+def verificar_token(token: str) -> Optional[dict[str, Any]]:
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if not payload.get("sub"):
+            return None
+        return payload
+    except JWTError:
+        return None
 
 def decodificar_token_acceso(token: str) -> dict[str, Any]:
     """Decodifica y valida firma, algoritmo y expiracion del JWT."""

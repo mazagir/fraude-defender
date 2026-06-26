@@ -23,6 +23,8 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     es_activo = Column(Boolean, default=True)
     rol = Column(String, default="analista")  # "admin" o "analista"
+    mfa_secret = Column(String, nullable=True)  # TOTP secret encrypted
+    mfa_activo = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class ScanHistory(Base):

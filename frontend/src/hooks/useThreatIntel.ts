@@ -1,7 +1,29 @@
 import { useCallback, useEffect, useState } from "react";
 import { API_BASE } from "../constants/riskConfig";
+import type { ThreatEvent } from "../types";
 
-const fallbackIntel = {
+interface IntelKPI {
+  usuarios_protegidos: number;
+  incidentes_semanales: number;
+  iocs_activos: number;
+  paises_monitoreados: number;
+}
+
+interface IntelData {
+  kpis: IntelKPI;
+  countries: string[];
+  events: ThreatEvent[];
+  updated_at: string;
+}
+
+interface ThreatIntelHook {
+  intel: IntelData;
+  loading: boolean;
+  error: string;
+  refetch: () => void;
+}
+
+const fallbackIntel: IntelData = {
   kpis: {
     usuarios_protegidos: 1250,
     incidentes_semanales: 148,
@@ -13,33 +35,33 @@ const fallbackIntel = {
     {
       id: "fallback-1",
       timestamp: new Date().toISOString(),
-      severity: "CRITICAL",
-      category: "Montadeudas / Extorsion",
-      country: "Colombia",
-      risk_score: 92,
-      ioc: { type: "domain", value: "solucion-deudas-rapidas.click" },
-      description: "Cluster activo de cobro abusivo con amenazas por WhatsApp.",
-      indicators: ["TLD sospechoso", "Patron de extorsion"],
+      severidad: "CRITICAL",
+      tipo: "Montadeudas / Extorsion",
+      pais: "Colombia",
+      score: 92,
+      indicador: "solucion-deudas-rapidas.click",
+      origen: "domain",
+      descripcion: "Cluster activo de cobro abusivo con amenazas por WhatsApp.",
     },
     {
       id: "fallback-2",
       timestamp: new Date().toISOString(),
-      severity: "HIGH",
-      category: "Phishing financiero",
-      country: "Mexico",
-      risk_score: 74,
-      ioc: { type: "phone_number", value: "+525543219876" },
-      description: "Campana de suplantacion bancaria con solicitud de OTP.",
-      indicators: ["Suplantacion", "Urgencia artificial"],
+      severidad: "HIGH",
+      tipo: "Phishing financiero",
+      pais: "Mexico",
+      score: 74,
+      indicador: "+525543219876",
+      origen: "phone_number",
+      descripcion: "Campana de suplantacion bancaria con solicitud de OTP.",
     },
   ],
   updated_at: new Date().toISOString(),
 };
 
-export default function useThreatIntel(limit = 25) {
-  const [intel, setIntel] = useState(fallbackIntel);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+export default function useThreatIntel(limit: number = 25): ThreatIntelHook {
+  const [intel, setIntel] = useState<IntelData>(fallbackIntel);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
   const fetchThreatIntel = useCallback(async () => {
     setLoading(true);
@@ -55,7 +77,7 @@ export default function useThreatIntel(limit = 25) {
         events: Array.isArray(data.events) && data.events.length > 0 ? data.events : fallbackIntel.events,
       });
     } catch (err) {
-      setError(err.message || "No se pudo cargar inteligencia de amenazas.");
+      setError((err as Error).message || "No se pudo cargar inteligencia de amenazas.");
       setIntel(fallbackIntel);
     } finally {
       setLoading(false);

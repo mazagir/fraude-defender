@@ -1,6 +1,33 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { TelemetryEvent, TelemetryMetrics } from "../types";
 
-const DEFAULT_API_BASE =
+interface WebSocketOptions {
+  token?: string;
+  enabled?: boolean;
+  apiBase?: string;
+  wsUrl?: string;
+  maxEvents?: number;
+  flushIntervalMs?: number;
+  maxReconnectDelayMs?: number;
+}
+
+interface TelemetryMetricsAgg {
+  total: number;
+  bySeverity: Record<string, number>;
+  byType: Record<string, number>;
+}
+
+interface WebSocketTelemetryHook {
+  status: string;
+  events: TelemetryEvent[];
+  lastEvent: TelemetryEvent | null;
+  metrics: TelemetryMetricsAgg;
+  reconnectAttempt: number;
+  connect: () => void;
+  disconnect: () => void;
+}
+
+const DEFAULT_API_BASE: string =
   import.meta.env.VITE_API_URL ||
   (typeof window !== "undefined"
     ? (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
@@ -8,11 +35,11 @@ const DEFAULT_API_BASE =
       : "https://fraude-defender-production.up.railway.app")
     : "https://fraude-defender-production.up.railway.app");
 
-function getStoredToken() {
+function getStoredToken(): string {
   return localStorage.getItem("aegis_token") || localStorage.getItem("fd_token") || "";
 }
 
-function buildTelemetryUrl({ apiBase = DEFAULT_API_BASE, token, wsUrl }) {
+function buildTelemetryUrl({ apiBase = DEFAULT_API_BASE, token, wsUrl }: { apiBase?: string; token?: string; wsUrl?: string }): string {
   const base = wsUrl || apiBase;
   if (!base) return "";
   const url = new URL(base, typeof window !== "undefined" ? window.location.origin : "http://localhost:8000");
@@ -39,17 +66,17 @@ export function useWebSocketTelemetry({
   maxEvents = 250,
   flushIntervalMs = 500,
   maxReconnectDelayMs = 30000,
-} = {}) {
-  const [status, setStatus] = useState("idle");
-  const [events, setEvents] = useState([]);
-  const [lastEvent, setLastEvent] = useState(null);
-  const [reconnectAttempt, setReconnectAttempt] = useState(0);
+}: WebSocketOptions = {}): WebSocketTelemetryHook {
+  const [status, setStatus] = useState<string>("idle");
+  const [events, setEvents] = useState<TelemetryEvent[]>([]);
+  const [lastEvent, setLastEvent] = useState<TelemetryEvent | null>(null);
+  const [reconnectAttempt, setReconnectAttempt] = useState<number>(0);
 
-  const socketRef = useRef(null);
-  const bufferRef = useRef([]);
-  const reconnectTimerRef = useRef(null);
-  const connectRef = useRef(null);
-  const manuallyClosedRef = useRef(false);
+  const socketRef = useRef<WebSocket | null>(null);
+  const bufferRef = useRef<TelemetryEvent[]>([]);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const connectRef = useRef<(() => void) | null>(null);
+  const manuallyClosedRef = useRef<boolean>(false);
   const activeToken = token ?? getStoredToken();
 
   const telemetryUrl = useMemo(
@@ -69,7 +96,7 @@ export function useWebSocketTelemetry({
   const disconnect = useCallback(() => {
     manuallyClosedRef.current = true;
     window.clearTimeout(reconnectTimerRef.current);
-    reconnectTimerRef.current = null;
+    reconnectTimerRef.current = undefined;
 
     if (socketRef.current) {
       socketRef.current.close(1000, "client disconnect");
@@ -102,9 +129,10 @@ export function useWebSocketTelemetry({
         bufferRef.current.push({
           id: crypto.randomUUID(),
           timestamp: new Date().toISOString(),
-          event_type: "RAW_MESSAGE",
+          type: "RAW_MESSAGE",
           severity: "LOW",
-          message: String(message.data),
+          source: "websocket",
+          payload: { message: String(message.data) },
         });
       }
     };
@@ -152,12 +180,12 @@ export function useWebSocketTelemetry({
     };
   }, [connect, disconnect]);
 
-  const metrics = useMemo(() => {
-    return events.reduce(
+  const metrics = useMemo<TelemetryMetricsAgg>(() => {
+    return events.reduce<TelemetryMetricsAgg>(
       (acc, event) => {
         acc.total += 1;
         acc.bySeverity[event.severity] = (acc.bySeverity[event.severity] || 0) + 1;
-        acc.byType[event.event_type] = (acc.byType[event.event_type] || 0) + 1;
+        acc.byType[event.type] = (acc.byType[event.type] || 0) + 1;
         return acc;
       },
       { total: 0, bySeverity: {}, byType: {} }

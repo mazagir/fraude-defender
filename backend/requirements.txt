@@ -28,6 +28,8 @@ slowapi                   # Rate limiting para FastAPI basado en limits/limits
 
 # Cliente HTTP asíncrono (para llamadas a Gemini API)
 httpx
+pyotp
+qrcode[pil]
 
 # Testing
 pytest

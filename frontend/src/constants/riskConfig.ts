@@ -1,26 +1,27 @@
-// ─── RISK CONFIG & GLOBAL CONSTANTS ───
-export const API_BASE =
+import type { RiskLevel, ScanResult } from '../types';
+
+export const API_BASE: string =
   import.meta.env.VITE_API_URL ||
   (typeof window !== 'undefined' &&
    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://localhost:8000'
     : 'https://fraude-defender-production.up.railway.app');
 
-export const riskColor = {
+export const riskColor: Record<RiskLevel, string> = {
   critical: '#ff2a51',
   alto: '#ff4d6d',
   medio: '#ffb547',
   bajo: '#00e5b4',
 };
 
-export const riskBg = {
+export const riskBg: Record<RiskLevel, string> = {
   critical: 'rgba(255,42,81,0.12)',
   alto: 'rgba(255,77,109,0.12)',
   medio: 'rgba(255,181,71,0.12)',
   bajo: 'rgba(0,229,180,0.1)',
 };
 
-export function getRiskLevel(score) {
+export function getRiskLevel(score: number): RiskLevel {
   if (score >= 76) return 'critical';
   if (score >= 51) return 'alto';
   if (score >= 26) return 'medio';
@@ -28,7 +29,7 @@ export function getRiskLevel(score) {
 }
 
 export class GeminiFallbackSimulator {
-  generateMockResult(tipo, contenido) {
+  generateMockResult(tipo: string, contenido: string): ScanResult {
     const clean = contenido.toLowerCase();
     let score = 15;
     let indicators = [];

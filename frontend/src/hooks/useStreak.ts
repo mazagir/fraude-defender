@@ -1,11 +1,16 @@
 import { useState } from 'react';
 
-export default function useStreak() {
-  const [streak, setStreak] = useState(() =>
+interface StreakHook {
+  streak: number;
+  updateStreak: () => void;
+}
+
+export default function useStreak(): StreakHook {
+  const [streak, setStreak] = useState<number>(() =>
     parseInt(localStorage.getItem('aegis_streak') || '0')
   );
 
-  const updateStreak = () => {
+  const updateStreak = (): void => {
     const today = new Date().toDateString();
     const lastDate = localStorage.getItem('aegis_last_scan_date');
     if (lastDate === today) return;

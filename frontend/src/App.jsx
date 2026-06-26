@@ -83,7 +83,7 @@ export default function App() {
                 </div>
               )}
               {activeTab === "dashboard" && (
-                <DashboardView token={token} user={user} reports={reports} scanHistory={scanHistory} userReputation={gamification.reputation} userLevel={gamification.level} unlockedBadges={gamification.badges} setAuthMode={setAuthMode} streak={streak} />
+                <DashboardView token={token} user={user} reports={reports} scanHistory={scanHistory} userReputation={gamification.reputation} userLevel={gamification.level} unlockedBadges={gamification.badges} setAuthMode={setAuthMode} streak={streak} mfaActive={mfaActive} mfaQrCode={mfaQrCode} showMfaSetup={showMfaSetup} setShowMfaSetup={setShowMfaSetup} mfaVerifyCode={mfaVerifyCode} setMfaVerifyCode={setMfaVerifyCode} setupMfa={setupMfa} enableMfa={enableMfa} disableMfa={disableMfa} mfaPartialToken={mfaPartialToken} />
               )}
               {activeTab === "community" && (
                 <CommunityView reports={reports} selectedCountry={selectedCountry} setSelectedCountry={setSelectedCountry} latamThreats={latamThreats} onCreateReport={handleCreateReport} token={token} />

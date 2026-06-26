@@ -38,15 +38,21 @@ def registrar_usuario_admin(usuario_in: UsuarioAdminCreate, db: Session) -> User
     return registrar_usuario(usuario_in=usuario_in, db=db, rol=usuario_in.rol)
 
 
-def login_usuario(username: str, password: str, db: Session) -> dict:
+def login_usuario(username: str, password: str, db: Session, skip_password: bool = False) -> dict:
     usuario = db.query(User).filter(User.email == username).first()
-    if not usuario or not verificar_password(password, usuario.hashed_password):
-        # Log sin exponer la contraseña — solo el email intento
-        logger.warning(f"[LOGIN_FALLIDO] Credenciales inválidas para: {username}")
+    if not usuario:
+        logger.warning(f"[LOGIN_FALLIDO] Usuario no encontrado: {username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Correo o contrasena incorrectos.",
         )
+    if not skip_password:
+        if not verificar_password(password, usuario.hashed_password):
+            logger.warning(f"[LOGIN_FALLIDO] Credenciales inválidas para: {username}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Correo o contrasena incorrectos.",
+            )
     if not usuario.es_activo:
         logger.warning(f"[LOGIN_BLOQUEADO] Usuario inactivo intentó ingresar: {username}")
         raise HTTPException(
