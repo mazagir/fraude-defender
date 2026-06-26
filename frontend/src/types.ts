@@ -93,4 +93,24 @@ export interface LoginResponse {
   };
 }
 
+export interface MessageState {
+  tipo: 'ok' | 'error';
+  texto: string;
+}
+
+export interface SimulatedLog {
+  id: number;
+  time: string;
+  type: string;
+  text: string;
+}
+
+export interface ReportForm {
+  phone_number?: string;
+  bank_account?: string;
+  domain?: string;
+  description?: string;
+  risk_level?: string;
+}
+
 

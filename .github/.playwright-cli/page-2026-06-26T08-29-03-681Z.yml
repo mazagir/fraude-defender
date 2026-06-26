@@ -1,0 +1,129 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: 🛡️
+      - generic [ref=e8]:
+        - generic [ref=e9]: AgiShield AI
+        - generic [ref=e10]: FrauDefender
+    - navigation [ref=e11]:
+      - generic [ref=e12]: Navegación
+      - button "Detector de Estafas" [ref=e13] [cursor=pointer]:
+        - img [ref=e15]
+        - text: Detector de Estafas
+      - button "Mi Perfil Seguro" [ref=e17] [cursor=pointer]:
+        - img [ref=e19]
+        - text: Mi Perfil Seguro
+      - button "Comunidad y Mapa" [ref=e21] [cursor=pointer]:
+        - img [ref=e23]
+        - text: Comunidad y Mapa
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - img [ref=e28]
+          - text: Modo Developer
+        - checkbox [ref=e31]
+    - generic [ref=e200]:
+      - generic [ref=e201]:
+        - generic [ref=e202]: Te
+        - generic [ref=e203]:
+          - generic [ref=e204]: Test User
+          - generic [ref=e205]: Activo
+      - button "Cerrar Sesión" [ref=e207] [cursor=pointer]:
+        - img [ref=e208]
+        - text: Cerrar Sesión
+  - generic [ref=e37]:
+    - banner [ref=e38]:
+      - generic [ref=e40]:
+        - heading "🛡️ AgiShield AI SaaS Beta" [level=2] [ref=e41]:
+          - text: 🛡️ AgiShield AI
+          - generic [ref=e42]: SaaS Beta
+        - paragraph [ref=e43]: Ciberseguridad ciudadana contra estafas · LATAM
+      - generic [ref=e210]:
+        - generic [ref=e211]:
+          - generic [ref=e212]: Test User
+          - generic [ref=e213]: "Reputación: 75 XP"
+        - generic [ref=e214]: Te
+    - main [ref=e46]:
+      - generic [ref=e216]:
+        - generic [ref=e217]:
+          - generic [ref=e218]:
+            - generic [ref=e219]: Te
+            - generic [ref=e220]:
+              - heading "¡Hola, Test User!" [level=2] [ref=e221]
+              - generic [ref=e222]:
+                - generic [ref=e223]: Novato Alerta
+                - generic [ref=e224]: 75 Reputación XP
+          - generic [ref=e226]:
+            - generic [ref=e227]: Rango de Ciberdefensa
+            - generic [ref=e228]: 75 / 300 XP
+        - generic [ref=e230]:
+          - generic [ref=e231]:
+            - heading "Risk Score Personal" [level=3] [ref=e232]:
+              - img [ref=e233]
+              - text: Risk Score Personal
+            - generic [ref=e236]:
+              - img [ref=e237]
+              - generic [ref=e240]:
+                - generic [ref=e241]: 0%
+                - generic [ref=e242]: Estado
+            - generic [ref=e243]: "Nivel de Exposición: Seguro"
+          - generic [ref=e244]:
+            - heading "Amenazas en Observación" [level=3] [ref=e245]:
+              - img [ref=e246]
+              - text: Amenazas en Observación
+            - generic [ref=e248]:
+              - generic [ref=e249]:
+                - generic [ref=e250]: Críticas / Inmediatas
+                - generic [ref=e251]: "0"
+              - generic [ref=e252]:
+                - generic [ref=e253]: Riesgo Alto
+                - generic [ref=e254]: "0"
+              - generic [ref=e255]:
+                - generic [ref=e256]: En Observación
+                - generic [ref=e257]: "0"
+              - generic [ref=e258]:
+                - generic [ref=e259]: Total IoCs Registrados
+                - generic [ref=e260]: "0"
+            - generic [ref=e261]: "Última sincronización: Hace unos segundos"
+          - generic [ref=e262]:
+            - heading "Mis Logros e Insignias" [level=3] [ref=e263]:
+              - img [ref=e264]
+              - text: Mis Logros e Insignias
+            - generic [ref=e266]:
+              - generic [ref=e267]:
+                - generic [ref=e268]: 🛡️
+                - generic:
+                  - generic: Escudo Inicial
+                  - text: Realizaste tu primer escaneo contra estafas.
+              - generic [ref=e269]:
+                - generic [ref=e270]: 🔐
+                - img [ref=e272]
+                - generic:
+                  - generic: Héroe Registrado
+                  - text: 🔒 Bloqueada — sigue completando acciones
+              - generic [ref=e274]:
+                - generic [ref=e275]: 🕷️
+                - img [ref=e277]
+                - generic:
+                  - generic: Cazador de Phishing
+                  - text: 🔒 Bloqueada — sigue completando acciones
+              - generic [ref=e279]:
+                - generic [ref=e280]: 🤝
+                - img [ref=e282]
+                - generic:
+                  - generic: Primer Reporte
+                  - text: 🔒 Bloqueada — sigue completando acciones
+        - generic [ref=e284]:
+          - generic [ref=e285]:
+            - heading "Historial de Análisis Personal" [level=3] [ref=e286]
+            - generic [ref=e287]: Últimos escaneos
+          - table [ref=e289]:
+            - rowgroup [ref=e290]:
+              - row "Tipo Elemento Escaneado Puntuación Severidad Fecha" [ref=e291]:
+                - columnheader "Tipo" [ref=e292]
+                - columnheader "Elemento Escaneado" [ref=e293]
+                - columnheader "Puntuación" [ref=e294]
+                - columnheader "Severidad" [ref=e295]
+                - columnheader "Fecha" [ref=e296]
+            - rowgroup [ref=e297]:
+              - row "No has realizado escaneos aún." [ref=e298]:
+                - cell "No has realizado escaneos aún." [ref=e299]

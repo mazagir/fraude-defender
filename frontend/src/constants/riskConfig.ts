@@ -7,14 +7,14 @@ export const API_BASE: string =
     ? 'http://localhost:8000'
     : 'https://fraude-defender-production.up.railway.app');
 
-export const riskColor: Record<RiskLevel, string> = {
+export const riskColor: Record<string, string> = {
   critical: '#ff2a51',
   alto: '#ff4d6d',
   medio: '#ffb547',
   bajo: '#00e5b4',
 };
 
-export const riskBg: Record<RiskLevel, string> = {
+export const riskBg: Record<string, string> = {
   critical: 'rgba(255,42,81,0.12)',
   alto: 'rgba(255,77,109,0.12)',
   medio: 'rgba(255,181,71,0.12)',
