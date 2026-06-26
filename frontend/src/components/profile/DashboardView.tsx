@@ -3,8 +3,11 @@ import { FaShieldAlt, FaGlobe, FaTrophy, FaLock, FaFire, FaCopy, FaCheck } from 
 import { useState, Suspense, lazy } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from "recharts";
 import RiskBadge from "../shared/RiskBadge";
-import LockedCard from "../shared/LockedCard";
+import LockedSection from "../shared/LockedCard";
+import CyberRadarSkeleton from "../shared/CyberRadarSkeleton";
 import { getRiskLevel, riskColor } from "../../constants/riskConfig";
+import { LOCKED_SECTIONS } from "../../constants/lockedSectionConfig";
+import type { LockedSectionId } from "../../constants/lockedSectionConfig";
 import type { UserData } from "../../types";
 const WorldThreatMap = lazy(() => import("../WorldThreatMap"));
 
@@ -42,7 +45,7 @@ interface DashboardViewProps {
   mfaPartialToken: string;
 }
 
-const badgeDetails = {
+const badgeDetails: Record<string, { label: string; desc: string; icon: string }> = {
   escudo_inicial: { label: "Escudo Inicial", desc: "Realizaste tu primer escaneo contra estafas.", icon: "🛡️" },
   defensor_registrado: { label: "Héroe Registrado", desc: "Activaste tu cuenta de autodefensa.", icon: "🔐" },
   cazador_phishing: { label: "Cazador de Phishing", desc: "Detectaste una URL de alto riesgo.", icon: "🕷️" },
@@ -56,29 +59,6 @@ const LEADERBOARD = [
   { pais: "Perú", reports: 890, risk: "Medio" },
   { pais: "Chile", reports: 720, risk: "Medio" },
 ];
-
-function LockedSection({ children, onRegister, title }: { children: React.ReactNode; onRegister: () => void; title?: string }) {
-  return (
-    <div className="relative">
-      <div className="pointer-events-none select-none" style={{ filter: "blur(6px)", WebkitFilter: "blur(6px)" }}>
-        {children}
-      </div>
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/10 via-slate-950/40 to-slate-950/80 rounded-3xl" />
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4">
-        <div className="w-10 h-10 rounded-xl bg-slate-900/80 border border-slate-700/50 flex items-center justify-center text-sm shadow-xl backdrop-blur-sm">
-          <FaLock className="text-cyan-400" />
-        </div>
-        <p className="text-[10px] text-slate-500 font-mono text-center max-w-[180px]">
-          {title || "Contenido exclusivo para usuarios registrados"}
-        </p>
-        <button onClick={onRegister}
-          className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-cyan-500 hover:from-emerald-500 hover:to-cyan-400 text-slate-950 font-bold text-[9px] tracking-wider uppercase rounded-xl transition-all cursor-pointer shadow-lg shadow-emerald-500/10">
-          Registrarme Gratis
-        </button>
-      </div>
-    </div>
-  );
-}
 
 export default function DashboardView({
   token, user, reports, scanHistory,
@@ -120,6 +100,11 @@ export default function DashboardView({
   const chartData = Object.entries(typeCounts).map(([type, count]) => ({ type, count }));
 
   const isGuest = !token;
+  const locked = (id: LockedSectionId) => ({
+    ...LOCKED_SECTIONS[id],
+    isLocked: isGuest,
+    onCtaClick: () => setAuthMode("register"),
+  });
 
   const RiskScoreMeter = (
     <div className="flex flex-col items-center justify-center flex-grow w-full">
@@ -168,7 +153,7 @@ export default function DashboardView({
   const BadgesGrid = (
     <div className="grid grid-cols-4 gap-3 py-2 flex-grow items-center w-full">
       {Object.keys(badgeDetails).map((bKey) => {
-        const b = badgeDetails[bKey as keyof typeof badgeDetails];
+        const b = badgeDetails[bKey];
         const unlocked = unlockedBadges.includes(bKey);
         return (
           <div key={bKey} className={`flex flex-col items-center justify-center p-2.5 rounded-xl border relative group cursor-help overflow-hidden ${unlocked ? "bg-slate-900/40 border-cyan-500/20" : "bg-[#05070c] border-slate-800/60"}`}>
@@ -222,9 +207,15 @@ export default function DashboardView({
       <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
         <FaGlobe className="text-emerald-400" /> Mapa Mundial de Amenazas
       </h3>
-      <Suspense fallback={<div className="h-[300px] bg-[#05070c] rounded-2xl flex items-center justify-center text-xs text-slate-500">Cargando mapa...</div>}>
-        <WorldThreatMap />
-      </Suspense>
+      <div className="relative">
+        {isGuest ? (
+          <CyberRadarSkeleton onCtaClick={() => setAuthMode("register")} />
+        ) : (
+          <Suspense fallback={<div className="h-[300px] bg-[#05070c] rounded-2xl flex items-center justify-center text-xs text-slate-500">Cargando mapa...</div>}>
+            <WorldThreatMap />
+          </Suspense>
+        )}
+      </div>
     </div>
   );
 
@@ -310,50 +301,32 @@ export default function DashboardView({
           <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
             <FaShieldAlt className="text-blue-500" /> Risk Score Personal
           </h3>
-          {isGuest ? <LockedSection onRegister={() => setAuthMode("register")} title="Risk Score Personal">{RiskScoreMeter}</LockedSection> : RiskScoreMeter}
+          <LockedSection {...locked("riskScore")}>{RiskScoreMeter}</LockedSection>
         </div>
 
         <div className="bg-[#070911]/60 border border-slate-800/80 rounded-3xl p-5 flex flex-col justify-between h-[280px]">
           <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
             <FaGlobe className="text-cyan-400" /> Amenazas en Observación
           </h3>
-          {isGuest ? <LockedSection onRegister={() => setAuthMode("register")} title="Amenazas Globales">{ThreatStats}</LockedSection> : ThreatStats}
+          <LockedSection {...locked("amenazas")}>{ThreatStats}</LockedSection>
         </div>
 
         <div className="bg-[#070911]/60 border border-slate-800/80 rounded-3xl p-5 flex flex-col justify-between h-[280px]">
           <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
             <FaTrophy className="text-yellow-500 animate-pulse" /> Mis Logros e Insignias
           </h3>
-          {isGuest ? <LockedSection onRegister={() => setAuthMode("register")} title="Insignias y Logros">{BadgesGrid}</LockedSection> : (
-            <>
-              {BadgesGrid}
-              <button onClick={() => setAuthMode("register")}
-                className="w-full py-2 bg-gradient-to-r from-blue-600/20 to-cyan-500/20 hover:from-blue-600/30 hover:to-cyan-500/30 border border-blue-500/30 text-cyan-400 rounded-xl font-bold text-[10px] tracking-wide uppercase transition-colors cursor-pointer">
-                🔓 Regístrate para desbloquear insignias
-              </button>
-            </>
-          )}
+          <LockedSection {...locked("insignias")}>{BadgesGrid}</LockedSection>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {isGuest ? (
-          <>
-            <LockedSection onRegister={() => setAuthMode("register")} title="Tendencias">{TrendChartSection}</LockedSection>
-            <LockedSection onRegister={() => setAuthMode("register")} title="Escaneos">{TypeChartSection}</LockedSection>
-          </>
-        ) : (
-          <>{TrendChartSection}{TypeChartSection}</>
-        )}
+        <LockedSection {...locked("trends")}>{TrendChartSection}</LockedSection>
+        <LockedSection {...locked("trends")}>{TypeChartSection}</LockedSection>
       </div>
 
-      {isGuest ? (
-        <LockedSection onRegister={() => setAuthMode("register")} title="Mapa Mundial">{WorldMapSection}</LockedSection>
-      ) : WorldMapSection}
+      {WorldMapSection}
 
-      {isGuest ? (
-        <LockedSection onRegister={() => setAuthMode("register")} title="Leaderboard">{LeaderboardSection}</LockedSection>
-      ) : LeaderboardSection}
+      <LockedSection {...locked("leaderboard")}>{LeaderboardSection}</LockedSection>
 
       {token && (
         <div className="bg-[#070911]/60 border border-slate-800/80 rounded-3xl p-6">
@@ -466,62 +439,24 @@ export default function DashboardView({
           <span className="text-[10px] text-slate-500 font-mono">Últimos escaneos</span>
         </div>
 
-        {isGuest ? (
-          <LockedSection onRegister={() => setAuthMode("register")} title="Historial de Escaneos">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-900 text-[10px] text-slate-500 uppercase tracking-widest font-mono">
-                  <th className="py-2">Tipo</th>
-                  <th className="py-2">Elemento Escaneado</th>
-                  <th className="py-2">Puntuación</th>
-                  <th className="py-2">Severidad</th>
-                  <th className="py-2 text-right">Fecha</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-900 text-xs">
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-500 font-mono text-xs">Regístrate para ver tu historial completo</td>
-                </tr>
-              </tbody>
-            </table>
-          </LockedSection>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-900 text-[10px] text-slate-500 uppercase tracking-widest font-mono">
-                  <th className="py-2">Tipo</th>
-                  <th className="py-2">Elemento Escaneado</th>
-                  <th className="py-2">Puntuación</th>
-                  <th className="py-2">Severidad</th>
-                  <th className="py-2 text-right">Fecha</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-900 text-xs">
-                {scanHistory.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-900/10 transition-colors">
-                    <td className="py-3 font-semibold text-cyan-400 capitalize">{item.type}</td>
-                    <td className="py-3 text-slate-300 max-w-[200px] truncate" title={item.query}>{item.query}</td>
-                    <td className="py-3 font-mono font-bold" style={{ color: riskColor[item.level.toLowerCase()] || riskColor.bajo }}>
-                      {item.score}%
-                    </td>
-                    <td className="py-3">
-                      <RiskBadge level={item.level} />
-                    </td>
-                    <td className="py-3 text-right text-slate-500 font-mono">{item.date}</td>
-                  </tr>
-                ))}
-                {scanHistory.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="py-10 text-center text-slate-500 font-mono text-xs">
-                      No has realizado escaneos aún.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <LockedSection {...locked("historial")}>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-900 text-[10px] text-slate-500 uppercase tracking-widest font-mono">
+                <th className="py-2">Tipo</th>
+                <th className="py-2">Elemento Escaneado</th>
+                <th className="py-2">Puntuación</th>
+                <th className="py-2">Severidad</th>
+                <th className="py-2 text-right">Fecha</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-900 text-xs">
+              <tr>
+                <td colSpan={5} className="py-12 text-center text-slate-500 font-mono text-xs">Regístrate para ver tu historial completo</td>
+              </tr>
+            </tbody>
+          </table>
+        </LockedSection>
       </div>
     </div>
   );
