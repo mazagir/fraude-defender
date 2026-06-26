@@ -9,10 +9,5 @@
       "source": "/(.*)",
       "destination": "/"
     }
-  ],
-  "experimentalServices": {
-    "web": {
-      "routePrefix": "/"
-    }
-  }
+  ]
 }
