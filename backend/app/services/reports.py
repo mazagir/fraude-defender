@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
@@ -6,6 +7,7 @@ from typing import List
 from app.models.db import FraudReport
 from app.models.schemas import FraudReportCreate
 from app.services.risk_engine import analizar_riesgo
+from app.services.event_bus import event_bus, build_event
 
 # Contador de telemetría de contramedidas en memoria
 # Nota: Este contador es per-proceso. En un deploy multi-worker (e.g. Gunicorn),
@@ -53,6 +55,17 @@ def crear_reporte(reporte_in: FraudReportCreate, db: Session) -> FraudReport:
     db.add(nuevo_reporte)
     db.commit()
     db.refresh(nuevo_reporte)
+
+    ioc_value = reporte_in.domain or reporte_in.phone_number or reporte_in.bank_account or reporte_in.description[:40]
+    event_bus.publish_sync("telemetry", build_event(
+        event_type="FRAUD_CLUSTER",
+        severity=risk_level,
+        message=f"Nuevo IoC reportado: {reporte_in.description[:80]}",
+        source="ioc-ingestor",
+        ioc={"type": "report", "value": ioc_value},
+        risk_score=score,
+    ))
+
     return nuevo_reporte
 
 

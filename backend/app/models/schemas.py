@@ -50,3 +50,27 @@ class AnalysisRequest(BaseModel):
     tipo: str
     contenido: str
 
+class ScanHistoryCreate(BaseModel):
+    scan_type: str
+    content: str
+    score: int
+    level: str
+    explanation: Optional[str] = None
+    recommendations: Optional[str] = None
+    indicators: Optional[str] = None
+
+class ScanHistoryResponse(BaseModel):
+    id: int
+    user_id: Optional[int] = None
+    scan_type: str
+    content: str
+    score: int
+    level: str
+    explanation: Optional[str] = None
+    recommendations: Optional[str] = None
+    indicators: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+

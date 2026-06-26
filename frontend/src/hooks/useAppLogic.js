@@ -54,10 +54,7 @@ export default function useAppLogic() {
   // --- SCAN HISTORY & GAMIFICATION ---
   const [scanHistory, setScanHistory] = useState(() => {
     const cached = localStorage.getItem("aegis_scan_history");
-    return cached ? JSON.parse(cached) : [
-      { id: 1, type: "url", query: "verificar-nequi-pago.click", score: 85, level: "CRITICAL", date: "Hace 2 horas" },
-      { id: 2, type: "whatsapp", query: "Hola ganaste un bono de compra de $500 USD...", score: 65, level: "HIGH", date: "Ayer" },
-    ];
+    return cached ? JSON.parse(cached) : [];
   });
 
   const [gamification, setGamificationState] = useState(() => {
@@ -148,6 +145,50 @@ export default function useAppLogic() {
   useEffect(() => { localStorage.setItem("aegis_badges", JSON.stringify(gamification.badges)); }, [gamification.badges]);
 
   // --- AUTH HANDLERS ---
+  // --- SCAN HISTORY PERSISTENCE ---
+  const fetchScanHistory = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await apiFetch(`${API_BASE}/api/v1/scan-history`);
+      if (res.ok) {
+        const data = await res.json();
+        const mapped = data.map(s => ({
+          id: s.id,
+          type: s.scan_type,
+          query: s.content.length > 50 ? s.content.slice(0, 47) + "..." : s.content,
+          score: s.score,
+          level: s.level,
+          date: s.created_at ? new Date(s.created_at).toLocaleDateString("es-ES", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Desconocido",
+        }));
+        setScanHistory(mapped);
+        localStorage.setItem("aegis_scan_history", JSON.stringify(mapped));
+      }
+    } catch { /* silencio — guests usan localStorage */ }
+  }, [token, apiFetch]);
+
+  const saveScanToBackend = useCallback(async (scanType, content, result) => {
+    if (!token) return;
+    try {
+      await apiFetch(`${API_BASE}/api/v1/scan-history`, {
+        method: "POST",
+        body: JSON.stringify({
+          scan_type: scanType,
+          content: content,
+          score: result.score,
+          level: result.level,
+          explanation: result.explanation || "",
+          recommendations: result.recommendations ? JSON.stringify(result.recommendations) : null,
+          indicators: result.indicators ? JSON.stringify(result.indicators) : null,
+        }),
+      });
+    } catch { /* fallback a localStorage */ }
+  }, [token, apiFetch]);
+
+  // Fetch scan history from backend when user logs in
+  useEffect(() => {
+    if (token) fetchScanHistory();
+  }, [token, fetchScanHistory]);
+
   const handleLogin = async (email, password) => {
     setLoading(true); setError("");
     try {
@@ -260,6 +301,7 @@ export default function useAppLogic() {
       setScanResult(data);
       const item = { id: Date.now(), type: scanType, query: queryValue.length > 50 ? queryValue.slice(0, 47) + "..." : queryValue, score: data.score, level: data.level, date: "Ahora mismo" };
       setScanHistory(prev => [item, ...prev.slice(0, 15)]);
+      saveScanToBackend(scanType, queryValue, data);
       setGamification(prev => {
         const nextBadges = (data.score >= 50 && !prev.badges.includes("cazador_phishing")) ? [...prev.badges, "cazador_phishing"] : prev.badges;
         return {
@@ -275,6 +317,7 @@ export default function useAppLogic() {
       setScanResult(data);
       const item = { id: Date.now(), type: scanType, query: queryValue.length > 50 ? queryValue.slice(0, 47) + "..." : queryValue, score: data.score, level: data.level, date: "Ahora mismo" };
       setScanHistory(prev => [item, ...prev.slice(0, 15)]);
+      saveScanToBackend(scanType, queryValue, data);
       setGamification(prev => ({
         ...prev,
         reputation: prev.reputation + 5,
@@ -317,6 +360,7 @@ export default function useAppLogic() {
     scanLogs, setScanLogs,
     scanResult, setScanResult,
     scanHistory, setScanHistory,
+    fetchScanHistory, saveScanToBackend,
     gamification, setGamification,
     simulatedLogs, setSimulatedLogs,
     selectedReport, setSelectedReport,

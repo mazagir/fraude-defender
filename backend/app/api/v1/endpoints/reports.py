@@ -5,6 +5,7 @@ from app.api.deps import get_db, obtener_autenticacion_dual
 from app.models.db import User
 from app.models.schemas import FraudReportCreate, FraudReportResponse, AnalysisRequest
 from app.services.gemini_service import GeminiService
+from app.services.event_bus import event_bus, build_event
 from app.services.reports import (
     listar_reportes as service_listar,
     crear_reporte as service_crear,
@@ -107,6 +108,16 @@ async def analizar_sospecha(request: Request, req_body: AnalysisRequest):
     """
     service = GeminiService()
     resultado = await service.analizar_sospecha(tipo=req_body.tipo, contenido=req_body.contenido)
+
+    await event_bus.publish("telemetry", build_event(
+        event_type="IOC_MATCH",
+        severity=resultado.get("level", "LOW"),
+        message=f"Análisis {req_body.tipo}: score={resultado.get('score', 0)}",
+        source="risk-engine",
+        ioc={"type": req_body.tipo, "value": req_body.contenido[:40]},
+        risk_score=resultado.get("score", 0),
+    ))
+
     return resultado
 
 

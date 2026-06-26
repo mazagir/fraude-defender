@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey
 from sqlalchemy.sql import func
 from app.core.database import Base
 
@@ -23,4 +23,17 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     es_activo = Column(Boolean, default=True)
     rol = Column(String, default="analista")  # "admin" o "analista"
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class ScanHistory(Base):
+    __tablename__ = "scan_history"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    scan_type = Column(String, nullable=False)
+    content = Column(Text, nullable=False)
+    score = Column(Integer, nullable=False)
+    level = Column(String, nullable=False)
+    explanation = Column(Text, nullable=True)
+    recommendations = Column(Text, nullable=True)
+    indicators = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
