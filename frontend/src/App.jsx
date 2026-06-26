@@ -24,7 +24,10 @@ export default function App() {
     isScanning, scanLogs, simulatedLogs, selectedReport, setSelectedReport, selectedCountry,
     setSelectedCountry, latamThreats, handleLogin, handleLogout, handleRegister,
     handleGuestLogin, handleCreateReport, handleDeleteReport, runQuickScan,
-    handleTriggerAttackSimulation
+    handleTriggerAttackSimulation,
+    mfaActive, mfaQrCode, showMfaSetup, setShowMfaSetup,
+    mfaVerifyCode, setMfaVerifyCode,
+    setupMfa, enableMfa, disableMfa, mfaPartialToken,
   } = useAppLogic();
 
   return (
