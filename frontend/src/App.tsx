@@ -75,16 +75,18 @@ export default function App() {
           <AnimatePresence mode="wait">
             <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} className="max-w-6xl mx-auto w-full h-full">
               {activeTab === "home" && (
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                  <div className="lg:col-span-3 space-y-6">
-                    <HomeView scanType={scanType} setScanType={setScanType} scanInput={scanInput} setScanInput={setScanInput} emailDetails={emailDetails} setEmailDetails={setEmailDetails} selectedQrCase={selectedQrCase} setSelectedQrCase={setSelectedQrCase} isScanning={isScanning} scanLogs={scanLogs} scanResult={scanResult} setScanResult={setScanResult} runQuickScan={runQuickScan} onRegisterPrompt={() => setAuthMode("register")} token={token} />
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                    <div className="lg:col-span-3 space-y-6">
+                      <HomeView scanType={scanType} setScanType={setScanType} scanInput={scanInput} setScanInput={setScanInput} emailDetails={emailDetails} setEmailDetails={setEmailDetails} selectedQrCase={selectedQrCase} setSelectedQrCase={setSelectedQrCase} isScanning={isScanning} scanLogs={scanLogs} scanResult={scanResult} setScanResult={setScanResult} runQuickScan={runQuickScan} onRegisterPrompt={() => setAuthMode("register")} token={token} />
+                    </div>
+                    <div className="lg:col-span-2 space-y-6">
+                      <Suspense fallback={<div className="h-[320px] bg-[#070911] border border-slate-800/80 rounded-2xl flex items-center justify-center text-xs text-slate-500">Cargando mapa...</div>}>
+                        <WorldThreatMap />
+                      </Suspense>
+                    </div>
                   </div>
-                  <div className="lg:col-span-2 space-y-6">
-                    <Suspense fallback={<div className="h-[320px] bg-[#070911] border border-slate-800/80 rounded-2xl flex items-center justify-center text-xs text-slate-500">Cargando mapa...</div>}>
-                      <WorldThreatMap />
-                    </Suspense>
-                    <ThreatIntelPanel intel={intel} loading={threatIntelLoading} error={threatIntelError} />
-                  </div>
+                  <ThreatIntelPanel intel={intel} loading={threatIntelLoading} error={threatIntelError} />
                 </div>
               )}
               {activeTab === "dashboard" && (

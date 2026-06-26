@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FaLink, FaEnvelope, FaWhatsapp, FaQrcode, FaBrain, FaTrophy,
+  FaLink, FaEnvelope, FaWhatsapp, FaQrcode, FaBrain, FaTrophy, FaSearch,
 } from "react-icons/fa";
 import RiskBadge from "../shared/RiskBadge";
 import UrgencyCTA from "./UrgencyCTA";
@@ -25,6 +25,22 @@ interface HomeViewProps {
   token: string | null;
 }
 
+const GLASS = "bg-[#070911]/60 border border-slate-800/80 backdrop-blur-md shadow-xl shadow-black/20";
+
+const actions = [
+  { id: "url", label: "Analizar URL", icon: <FaLink />, placeholder: "Ej. http://soporte-nequibanca-alerta.xyz" },
+  { id: "message", label: "Analizar SMS / Texto", icon: <FaEnvelope />, placeholder: "Pega el SMS sospechoso de paquetería o trabajo aquí..." },
+  { id: "whatsapp", label: "Analizar WhatsApp", icon: <FaWhatsapp />, placeholder: "Pega el texto de extorsión o reclutamiento gota a gota..." },
+  { id: "email", label: "Analizar Correo", icon: <FaEnvelope />, placeholder: "Detalles del correo electrónico" },
+  { id: "qr", label: "Escanear QR", icon: <FaQrcode />, placeholder: "Sube o selecciona un caso de QR sospechoso" },
+];
+
+const qrCases = [
+  { value: "QR Menú de restaurante que redirige a 'restaurant-pago-movil.top'", label: "QR Menú de restaurante físico sospechoso" },
+  { value: "QR Pegado en cajero automático que redirige a 'bancoconsola-verificacion.xyz/otp'", label: "QR Pegado en cajero o ventanilla bancaria" },
+  { value: "QR recibido por correo para reclamar un bono de compra de $150 USD en supermercado", label: "QR de Bono de supermercado falso" },
+];
+
 export default function HomeView({
   scanType, setScanType, scanInput, setScanInput,
   emailDetails, setEmailDetails,
@@ -32,100 +48,91 @@ export default function HomeView({
   isScanning, scanLogs, scanResult, setScanResult,
   runQuickScan, onRegisterPrompt, token,
 }: HomeViewProps) {
-  const actions = [
-    { id: "url", label: "Analizar URL", icon: <FaLink />, placeholder: "Ej. http://soporte-nequibanca-alerta.xyz" },
-    { id: "message", label: "Analizar SMS / Texto", icon: <FaEnvelope />, placeholder: "Pega el SMS sospechoso de paquetería o trabajo aquí..." },
-    { id: "whatsapp", label: "Analizar WhatsApp", icon: <FaWhatsapp />, placeholder: "Pega el texto de extorsión o reclutamiento gota a gota..." },
-    { id: "email", label: "Analizar Correo", icon: <FaEnvelope />, placeholder: "Detalles del correo electrónico" },
-    { id: "qr", label: "Escanear QR", icon: <FaQrcode />, placeholder: "Sube o selecciona un caso de QR sospechoso" },
-  ];
-
-  const qrCases = [
-    { value: "QR Menú de restaurante que redirige a 'restaurant-pago-movil.top'", label: "QR Menú de restaurante físico sospechoso" },
-    { value: "QR Pegado en cajero automático que redirige a 'bancoconsola-verificacion.xyz/otp'", label: "QR Pegado en cajero o ventanilla bancaria" },
-    { value: "QR recibido por correo para reclamar un bono de compra de $150 USD en supermercado", label: "QR de Bono de supermercado falso" },
-  ];
-
   const activeAction = actions.find((a) => a.id === scanType)!;
 
   return (
-    <div className="space-y-8 font-sans">
-      {/* Dynamic Header Pitch */}
-      <div className="text-center max-w-2xl mx-auto space-y-4">
-        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">
-          Protege tus cuentas de <br />
+    <div className="space-y-6 font-sans">
+      {/* HERO */}
+      <div className="text-center max-w-2xl mx-auto space-y-3">
+        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight">
+          Protege tus cuentas de{" "}
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 drop-shadow-md">
             Estafas y Phishing con IA
           </span>
         </h1>
-        <p className="text-slate-400 text-sm md:text-base font-light">
+        <p className="text-slate-400 text-sm md:text-base font-light leading-relaxed">
           Analiza gratis enlaces bancarios falsos, extorsiones de WhatsApp, montadeudas y correos sospechosos en segundos con nuestra IA optimizada para fraudes reales en LATAM.
         </p>
       </div>
 
-      {/* Quick Actions Grid Selector */}
+      {/* ACTION BUTTONS */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 max-w-4xl mx-auto">
         {actions.map((action) => (
           <button
             key={action.id}
             onClick={() => { setScanType(action.id); setScanResult(null); setScanInput(""); }}
-            className={`p-4 rounded-2xl border flex flex-col items-center justify-center gap-3 text-center transition-all cursor-pointer select-none ${
+            className={`p-4 rounded-2xl border flex flex-col items-center justify-center gap-3 text-center transition-all duration-300 cursor-pointer select-none ${
               scanType === action.id
-                ? "bg-gradient-to-b from-blue-950/40 to-cyan-950/20 border-cyan-400/50 text-cyan-300 shadow-md shadow-blue-500/5"
-                : "bg-[#070911]/60 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700/50 hover:bg-[#070911]/80"
+                ? "bg-gradient-to-b from-blue-950/50 to-cyan-950/30 border-cyan-400/60 text-cyan-300 shadow-md shadow-cyan-500/10 backdrop-blur-md"
+                : "bg-[#070911]/40 border-slate-800/60 text-slate-400 hover:text-slate-200 hover:border-slate-700/60 hover:bg-[#070911]/70 hover:backdrop-blur-md hover:shadow-lg hover:shadow-black/30 hover:-translate-y-0.5"
             }`}
           >
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${
-              scanType === action.id ? "bg-cyan-500/10 text-cyan-300 animate-pulse" : "bg-slate-900 text-slate-400"
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg transition-all duration-300 ${
+              scanType === action.id
+                ? "bg-cyan-500/15 text-cyan-300 shadow-sm shadow-cyan-400/20"
+                : "bg-slate-900/80 text-slate-400 group-hover:bg-slate-800"
             }`}>
               {action.icon}
             </div>
-            <span className="text-[11px] font-bold tracking-wide">{action.label}</span>
+            <span className="text-[11px] font-bold tracking-wide leading-tight">{action.label}</span>
           </button>
         ))}
       </div>
 
-      {/* Main Glassmorphic Input Widget */}
-      <div className="max-w-3xl mx-auto bg-[#070911]/60 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-md relative overflow-hidden shadow-xl">
+      {/* INPUT WIDGET */}
+      <div className={`max-w-3xl mx-auto ${GLASS} rounded-3xl p-6 relative overflow-hidden`}>
         <div className="absolute top-0 right-0 w-36 h-36 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-            <span className="text-cyan-400 text-sm">{activeAction.icon}</span>
+        <div className="space-y-4 relative z-10">
+          <div className="flex items-center gap-2.5 border-b border-slate-800 pb-3">
+            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-sm text-cyan-400">
+              {activeAction.icon}
+            </div>
             <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest">{activeAction.label}</h3>
           </div>
 
           {scanType === "email" ? (
             <div className="space-y-3 font-sans">
               <div>
-                <label className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block mb-1">Remitente / Email del Emisor</label>
+                <label className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block mb-1.5">Remitente / Email del Emisor</label>
                 <input
                   type="text"
                   placeholder="Ej: alertaseguridad@bancolombia-bloqueo.com"
                   value={emailDetails.sender}
                   onChange={(e) => setEmailDetails({ ...emailDetails, sender: e.target.value })}
-                  className="w-full bg-[#05070c] border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-blue-500/50 transition-colors"
+                  className="w-full bg-[#05070c] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-cyan-500/40 focus:shadow-[0_0_12px_rgba(6,182,212,0.08)] transition-all"
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block mb-1">Asunto del Correo</label>
+                  <label className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block mb-1.5">Asunto del Correo</label>
                   <input
                     type="text"
                     placeholder="Ej: SUSPENSIÓN INMEDIATA DE CUENTA"
                     value={emailDetails.subject}
                     onChange={(e) => setEmailDetails({ ...emailDetails, subject: e.target.value })}
-                    className="w-full bg-[#05070c] border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-blue-500/50 transition-colors"
+                    className="w-full bg-[#05070c] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-cyan-500/40 focus:shadow-[0_0_12px_rgba(6,182,212,0.08)] transition-all"
                   />
                 </div>
                 <div>
-                  <label className="text-[9px] text-slate-500 uppercase tracking-wider block mb-1 font-bold">Cuerpo / Texto del Correo</label>
+                  <label className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block mb-1.5">Cuerpo / Texto del Correo</label>
                   <input
                     type="text"
                     placeholder="Ej: Hemos detectado actividad sospechosa..."
                     value={emailDetails.body}
                     onChange={(e) => setEmailDetails({ ...emailDetails, body: e.target.value })}
-                    className="w-full bg-[#05070c] border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-blue-500/50 transition-colors"
+                    className="w-full bg-[#05070c] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-cyan-500/40 focus:shadow-[0_0_12px_rgba(6,182,212,0.08)] transition-all"
                   />
                 </div>
               </div>
@@ -136,33 +143,38 @@ export default function HomeView({
               <select
                 value={selectedQrCase}
                 onChange={(e) => setSelectedQrCase(e.target.value)}
-                className="w-full bg-[#05070c] border border-slate-850 rounded-xl px-4 py-3 text-xs text-slate-300 outline-none focus:border-cyan-500/50 transition-colors"
+                className="w-full bg-[#05070c] border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-300 outline-none focus:border-cyan-500/40 transition-all"
               >
                 <option value="">-- Selecciona una plantilla de código QR para escanear --</option>
                 {qrCases.map((c, i) => (
                   <option key={i} value={c.value}>{c.label}</option>
                 ))}
               </select>
-              <div className="border-2 border-dashed border-slate-800 rounded-2xl py-8 flex flex-col items-center justify-center text-slate-500 text-center cursor-pointer hover:border-cyan-500/30 transition-all">
+              <div className="border-2 border-dashed border-slate-700/80 rounded-2xl py-8 flex flex-col items-center justify-center text-slate-500 text-center cursor-pointer hover:border-cyan-500/30 transition-all hover:bg-cyan-500/5">
                 <FaQrcode className="text-4xl mb-2 text-slate-600" />
                 <span className="text-xs">O sube una captura de pantalla del código QR para decodificarlo</span>
               </div>
             </div>
           ) : (
-            <textarea
-              rows={4}
-              placeholder={activeAction.placeholder}
-              value={scanInput}
-              onChange={(e) => setScanInput(e.target.value)}
-              className="w-full bg-[#05070c] border border-slate-850 rounded-2xl px-5 py-4 text-xs text-slate-200 outline-none focus:border-cyan-500/30 transition-all font-sans"
-            />
+            <div className="relative">
+              <textarea
+                rows={3}
+                placeholder={activeAction.placeholder}
+                value={scanInput}
+                onChange={(e) => setScanInput(e.target.value)}
+                className="w-full bg-[#05070c] border border-slate-700/80 rounded-2xl px-5 py-4 text-xs text-slate-200 outline-none focus:border-cyan-500/50 focus:shadow-[0_0_20px_rgba(6,182,212,0.1)] transition-all font-sans placeholder:text-slate-600 placeholder:text-center leading-relaxed resize-none"
+              />
+              <div className="absolute right-3 bottom-3 text-[9px] text-slate-600 font-mono pointer-events-none">
+                {scanInput.length} caracteres
+              </div>
+            </div>
           )}
 
           <div className="flex flex-col items-end gap-2 pt-2">
             <button
               onClick={runQuickScan}
               disabled={isScanning}
-              className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-slate-950 font-extrabold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer shadow-lg shadow-blue-500/10 flex items-center gap-2"
+              className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-slate-950 font-extrabold text-xs tracking-wider uppercase transition-all duration-300 cursor-pointer shadow-lg shadow-blue-500/15 hover:shadow-blue-500/25 flex items-center gap-2 active:scale-[0.98]"
             >
               {isScanning ? (
                 <>
@@ -171,23 +183,22 @@ export default function HomeView({
                 </>
               ) : (
                 <>
-                  <FaBrain className="text-slate-950" /> Analizar con AgiShield AI
+                  <FaSearch className="text-slate-950" /> Analizar con AgiShield AI
                 </>
               )}
             </button>
-            {/* 🔴 CTA de urgencia */}
             <UrgencyCTA />
           </div>
         </div>
 
-        {/* Dynamic Scanning Log overlay */}
+        {/* SCANNING OVERLAY */}
         <AnimatePresence>
           {isScanning && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-[#070911]/95 z-25 flex flex-col items-center justify-center p-6 text-center select-none"
+              className="absolute inset-0 bg-[#070911]/95 z-25 flex flex-col items-center justify-center p-6 text-center select-none rounded-3xl"
             >
               <div className="w-16 h-16 rounded-full bg-cyan-500/5 flex items-center justify-center mb-6 relative">
                 <span className="w-10 h-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
@@ -210,7 +221,7 @@ export default function HomeView({
         </AnimatePresence>
       </div>
 
-      {/* --- ANALYSIS REPORT RESULT --- */}
+      {/* SCAN RESULT */}
       <AnimatePresence>
         {scanResult && (
           <motion.div
@@ -219,10 +230,9 @@ export default function HomeView({
             exit={{ opacity: 0 }}
             className="max-w-3xl mx-auto"
           >
-            <div className="bg-[#070911] border border-slate-800/80 rounded-3xl p-6 space-y-6 relative overflow-hidden shadow-xl">
+            <div className={`${GLASS} rounded-3xl p-6 space-y-6 relative overflow-hidden`}>
               <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none" />
 
-              {/* Header result */}
               <div className="flex justify-between items-center border-b border-slate-800 pb-3">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
                   <FaBrain className="text-cyan-400" /> Evaluación de Riesgo de la IA
@@ -231,7 +241,6 @@ export default function HomeView({
               </div>
 
               <div className="flex flex-col md:flex-row items-center gap-8">
-                {/* Score Progress Radial Gauge */}
                 <div className="relative w-32 h-32 flex items-center justify-center flex-shrink-0">
                   <svg className="w-full h-full transform -rotate-90">
                     <circle cx="64" cy="64" r="54" stroke="rgba(255,255,255,0.03)" strokeWidth="8" fill="transparent" />
@@ -254,7 +263,6 @@ export default function HomeView({
                   </div>
                 </div>
 
-                {/* Explanation block */}
                 <div className="flex-1 space-y-3 text-center md:text-left">
                   <h4 className="text-sm font-extrabold text-slate-200">¿Qué significa este resultado?</h4>
                   <p className="text-xs text-slate-400 leading-relaxed italic">
@@ -263,7 +271,6 @@ export default function HomeView({
                 </div>
               </div>
 
-              {/* Indicators and Actions lists */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-900">
                 <div className="space-y-3">
                   <h5 className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Indicadores Sospechosos</h5>
@@ -293,7 +300,6 @@ export default function HomeView({
                 </div>
               </div>
 
-              {/* GROWTH HOOK: Persuasive Registration Banner */}
               {!token && (
                 <div className="bg-gradient-to-r from-blue-950/40 to-slate-900 border border-blue-500/20 rounded-2xl p-5 mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
                   <div className="space-y-1 text-center md:text-left">
@@ -306,7 +312,7 @@ export default function HomeView({
                   </div>
                   <button
                     onClick={onRegisterPrompt}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-slate-950 font-bold text-xs tracking-wide cursor-pointer transition-all shrink-0 shadow-md shadow-blue-500/10"
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-slate-950 font-bold text-xs tracking-wide cursor-pointer transition-all shrink-0 shadow-md shadow-blue-500/10 active:scale-[0.98]"
                   >
                     Registrarme Gratis
                   </button>
