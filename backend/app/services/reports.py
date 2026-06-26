@@ -17,9 +17,19 @@ contador_contramedidas = {"ejecuciones_totales": 0}
 
 
 # ─── SERVICIO: OBTENER TODOS LOS REPORTES ───────────────────────────────────
-def listar_reportes(db: Session) -> List[FraudReport]:
-    """Obtiene todos los reportes ordenados del más reciente al más antiguo."""
-    return db.query(FraudReport).order_by(FraudReport.created_at.desc()).all()
+def listar_reportes(db: Session, page: int = 1, page_size: int = 50) -> dict:
+    """Obtiene reportes paginados ordenados del más reciente al más antiguo."""
+    query = db.query(FraudReport).order_by(FraudReport.created_at.desc())
+    total = query.count()
+    pages = max(1, (total + page_size - 1) // page_size)
+    items = query.offset((page - 1) * page_size).limit(page_size).all()
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "pages": pages,
+    }
 
 
 

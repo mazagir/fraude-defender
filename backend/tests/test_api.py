@@ -115,8 +115,9 @@ def run_tests():
     r = client.get("/api/v1/reportes", headers=headers)
     assert r.status_code == 200
     listado = r.json()
-    assert len(listado) >= 1
-    assert listado[0]["id"] == reporte_id
+    items = listado if isinstance(listado, list) else listado.get("items", [])
+    assert len(items) >= 1
+    assert items[0]["id"] == reporte_id
     print("[OK] Listado de reportes correcto.")
     
     # 9. Probar API Key (X-API-KEY) - Acceso dual B2B
@@ -157,7 +158,9 @@ def run_tests():
     print("[WAIT] Validando compatibilidad retroactiva de rutas antiguas (GET /reportes) ...")
     r = client.get("/reportes", headers=headers)
     assert r.status_code == 200
-    assert len(r.json()) >= 1
+    data = r.json()
+    items = data if isinstance(data, list) else data.get("items", [])
+    assert len(items) >= 1
     print("[OK] Ruta legacy GET /reportes operativa.")
     
     # 14. Eliminar el reporte creado

@@ -104,11 +104,11 @@ export default function useAppLogic() {
   const fetchReports = useCallback(async () => {
     setLoading(true); setError("");
     try {
-      const url = token ? `${API_BASE}/api/v1/reportes` : `${API_BASE}/api/v1/reportes/publico/listar`;
+      const url = token ? `${API_BASE}/api/v1/reportes?page=1&page_size=100` : `${API_BASE}/api/v1/reportes/publico/listar?page=1&page_size=100`;
       const res = await apiFetch(url);
       if (res.ok) {
         const data = await res.json();
-        const backendReports = Array.isArray(data) ? data : [];
+        const backendReports = Array.isArray(data) ? data : (data.items || []);
         setReports(prev => {
           const localOnly = prev.filter(r => r.id >= 100 && !backendReports.some(br =>
             (br.phone_number === r.phone_number || br.telefono_sospechoso === r.telefono_sospechoso) &&
@@ -149,10 +149,11 @@ export default function useAppLogic() {
   const fetchScanHistory = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await apiFetch(`${API_BASE}/api/v1/scan-history`);
+      const res = await apiFetch(`${API_BASE}/api/v1/scan-history?page=1&page_size=50`);
       if (res.ok) {
         const data = await res.json();
-        const mapped = data.map(s => ({
+        const items = Array.isArray(data) ? data : (data.items || []);
+        const mapped = items.map(s => ({
           id: s.id,
           type: s.scan_type,
           query: s.content.length > 50 ? s.content.slice(0, 47) + "..." : s.content,

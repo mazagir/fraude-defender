@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.api.deps import get_db, obtener_autenticacion_dual
 from app.models.db import User
-from app.models.schemas import FraudReportCreate, FraudReportResponse, AnalysisRequest
+from app.models.schemas import FraudReportCreate, FraudReportResponse, AnalysisRequest, PaginatedResponse
 from app.services.gemini_service import GeminiService
 from app.services.event_bus import event_bus, build_event
 from app.services.reports import (
@@ -18,37 +18,43 @@ from app.main import limiter
 router = APIRouter()
 
 
-@router.get("", response_model=List[FraudReportResponse], status_code=status.HTTP_200_OK)
+@router.get("", status_code=status.HTTP_200_OK)
 def listar_reportes(
+    page: int = Query(default=1, ge=1, le=500),
+    page_size: int = Query(default=50, ge=1, le=200),
     db: Session = Depends(get_db), 
     _: User = Depends(obtener_autenticacion_dual)
 ):
     """
-    Lista todos los reportes de fraude registrados en orden cronológico descendente.
+    Lista paginada de reportes de fraude en orden cronológico descendente.
     Soporta autenticación por token JWT o API Key de integración (X-API-KEY).
     """
-    return service_listar(db)
+    return service_listar(db, page=page, page_size=page_size)
 
 @router.post("", response_model=FraudReportResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("30/minute")
 def crear_reporte(
+    request: Request,
     reporte_in: FraudReportCreate, 
     db: Session = Depends(get_db)
 ):
     """
     Registra un nuevo indicador de compromiso (IoC) y calcula el riesgo automáticamente.
-    Requiere que al menos un campo de indicador (teléfono, cuenta bancaria, dominio) esté presente.
-    Soporta autenticación dual.
+    Rate limit: 30/min.
     """
     return service_crear(reporte_in, db)
 
 @router.delete("/{reporte_id}", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit("30/minute")
 def eliminar_reporte(
+    request: Request,
     reporte_id: int, 
     db: Session = Depends(get_db), 
     _: User = Depends(obtener_autenticacion_dual)
 ):
     """
     Elimina un reporte de fraude por su ID de base de datos.
+    Rate limit: 30/min para prevenir abuso.
     Soporta autenticación dual.
     """
     service_eliminar(reporte_id, db)
@@ -68,24 +74,28 @@ def obtener_telemetria_defensa():
     """
     return service_obtener_telemetria()
 @router.post("/publico", response_model=FraudReportResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("10/minute")
 def crear_reporte_publico(
+    request: Request,
     reporte_in: FraudReportCreate,
     db: Session = Depends(get_db)
 ):
     """
-    Endpoint público para que ciudadanos reporten fraudes sin autenticación.
+    Endpoint público para reportar fraudes sin autenticación.
+    Rate limit: 10/min por IP.
     """
     return service_crear(reporte_in, db)
 
-@router.get("/publico/listar", response_model=List[FraudReportResponse], status_code=status.HTTP_200_OK)
+@router.get("/publico/listar", status_code=status.HTTP_200_OK)
 def listar_reportes_publicos(
+    page: int = Query(default=1, ge=1, le=500),
+    page_size: int = Query(default=50, ge=1, le=200),
     db: Session = Depends(get_db)
 ):
     """
-    Endpoint público para visualizar reportes.
-    No requiere autenticación.
+    Lista pública paginada de reportes. No requiere autenticación.
     """
-    return service_listar(db)
+    return service_listar(db, page=page, page_size=page_size)
 
 
 @router.post("/simular-ataques", status_code=status.HTTP_201_CREATED)

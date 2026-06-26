@@ -7,14 +7,22 @@ from app.models.schemas import ScanHistoryCreate
 
 logger = logging.getLogger("aegisshield.scan_history")
 
-def listar_historial(user_id: int, db: Session, limit: int = 50) -> List[ScanHistory]:
-    return (
+def listar_historial(user_id: int, db: Session, page: int = 1, page_size: int = 50) -> dict:
+    query = (
         db.query(ScanHistory)
         .filter(ScanHistory.user_id == user_id)
         .order_by(ScanHistory.created_at.desc())
-        .limit(limit)
-        .all()
     )
+    total = query.count()
+    pages = max(1, (total + page_size - 1) // page_size)
+    items = query.offset((page - 1) * page_size).limit(page_size).all()
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "pages": pages,
+    }
 
 def guardar_scan(user_id: int, scan_in: ScanHistoryCreate, db: Session) -> ScanHistory:
     registro = ScanHistory(

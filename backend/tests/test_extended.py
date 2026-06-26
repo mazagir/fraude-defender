@@ -170,7 +170,11 @@ class TestReportsValidation:
         """El endpoint público de listado no requiere auth."""
         resp = client.get("/api/v1/reportes/publico/listar")
         assert resp.status_code == 200
-        assert isinstance(resp.json(), list)
+        data = resp.json()
+        assert isinstance(data, dict)
+        assert "items" in data
+        assert "total" in data
+        assert isinstance(data["items"], list)
 
     def test_eliminar_reporte_inexistente_retorna_404(self):
         """Eliminar reporte con ID que no existe debe retornar 404."""

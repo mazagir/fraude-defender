@@ -38,4 +38,6 @@
 ## 🚀 Próximos Pasos (Post-Lanzamiento)
 - [ ] Implementar autenticación multifactor (MFA) para cuentas con rol de administrador.
 - [ ] Configurar alertas por correo electrónico/Slack en caso de ataques simulados o ráfagas de falsos IoCs.
-- [ ] Migrar la telemetría WebSockets a una arquitectura pub/sub en producción con Redis.
+- [ ] Migrar el frontend de JavaScript a TypeScript.
+- [ ] Agregar extensión de navegador Chrome para escaneo en tiempo real.
+- [ ] Leaderboard semanal por país para gamificación social.

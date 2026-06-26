@@ -36,8 +36,12 @@
     *   *Analizar WhatsApp*: Mitigación de extorsiones y montadeudas.
     *   *Analizar Correo*: Verificación de remitentes y cuerpos sospechosos.
     *   *Escanear QR*: Decodificación de códigos físicos alterados (Quishing).
-*   🏆 **Gamificación y Retención (Mi Perfil Seguro)**: Sistema de recompensas XP, reputación, niveles de usuario (como "Guardián de la Comunidad") e insignias digitales desbloqueables en 3D/cyberpunk.
-*   🗺️ **Mapa de Amenazas de Latinoamérica**: Telemetría interactiva en tiempo real y alertas comunitarias localizadas en **Colombia, México, Perú, Chile y Argentina**.
+*   🏆 **Gamificación y Retención (Mi Perfil Seguro)**: Sistema de recompensas XP, reputación, niveles de usuario (como "Guardián de la Comunidad") e insignias digitales desbloqueables.
+*   📜 **Historial Persistente de Escaneos**: Cada análisis queda guardado en tu perfil (Supabase). Accedé desde el dashboard en cualquier momento aunque cierres sesión.
+*   🌐 **Telemetría WebSocket en Vivo**: Reportes y escaneos se reflejan al instante en el Threat Intel Panel y SOC Command Center mediante un event bus asíncrono (sin polling, sin Redis).
+*   🗺️ **Mapa de Amenazas de Latinoamérica**: Telemetría interactiva y alertas comunitarias localizadas en **Colombia, México, Perú, Chile y Argentina**.
+*   🔐 **Rate Limiting Granular y Seguridad por Capas**: 7 niveles de rate limiting (5/min registro, 10/min login, 20/min IA, 30/min reportes, 200/min global) + headers de seguridad HTTP + dual auth (JWT + API Key).
+*   📄 **Paginación en Todos los Endpoints**: Listados de reportes e historial con paginación server-side para escalar a miles de registros sin degradación.
 *   🖥️ **Modo Desarrollador Aislado (SOC Command Center)**: Consola de telemetría, simulación de ataques SQLi/DDoS y base de datos cruda de IoCs oculta del flujo de usuario estándar.
 
 ---
@@ -72,16 +76,40 @@
 
 ---
 
+## 🧠 Arquitectura en Tiempo Real
+
+```
+Usuario (Frontend React)
+  │
+  ├─ 🔍 POST /api/v1/reportes/analizar → Gemini AI / Heurístico local
+  │   └─ 📡 EventBus (pub/sub asíncrono) → WebSocket clients en vivo
+  │       └─ 🖥️ Threat Intel Panel se actualiza solo
+  │
+  ├─ 📝 POST /api/v1/reportes → Risk Engine (score 0-100)
+  │   └─ 📡 EventBus → SOC Command Center + Mapa LATAM
+  │
+  ├─ 👤 POST /api/v1/auth/login → JWT + API Key (dual auth)
+  │
+  └─ 📜 GET /api/v1/scan-history → Historial persistente (paginado)
+      └─ Dashboard → XP, badges, gamificación
+```
+
+**EventBus**: Pub/sub en memoria con `asyncio.Queue`. Sin Redis, sin polling, 0 dependencias externas. Escalable a Redis pub/swapping `event_bus.py` cuando el proyecto crezca.
+
+---
+
 ## 🛠 Stack Tecnológico de Vanguardia
 
 AegisShield está construido con las mejores herramientas de la industria para asegurar latencia ultra-baja y escalabilidad masiva:
 
 | Capa | Tecnologías | Descripción |
 | :--- | :--- | :--- |
-| **Backend** | Python 3.13, FastAPI, SQLAlchemy, PostgreSQL | Arquitectura asíncrona de altísimo rendimiento integrada con Gemini 1.5 Flash. |
-| **Frontend** | React 19, Vite, Tailwind CSS, Recharts, Framer Motion | Interfaz *Glassmorphism* reactiva con gamificación integrada y guardado local. |
-| **Base de Datos** | Supabase PostgreSQL (Pooler) | PostgreSQL 17 serverless con soporte para Neon como alternativa. |
-| **Infraestructura** | Vercel (Frontend), Supabase (DB) | CI/CD automático al hacer push a `main`. |
+| **Backend** | Python 3.13, FastAPI, SQLAlchemy, PostgreSQL | Arquitectura asíncrona con event bus, rate limiting y motor heurístico. |
+| **Frontend** | React 19, Vite, Tailwind CSS, Recharts, Framer Motion | Interfaz *Glassmorphism* con WebSocket, gamificación e historial persistente. |
+| **Base de Datos** | Supabase PostgreSQL (Pooler) | PostgreSQL 17 serverless. 3 proveedores: SQLite, Supabase, Neon. |
+| **Tiempo Real** | WebSocket + EventBus asyncio.Queue | Pub/sub in-memory sin Redis. Eventos en <1s a todos los clientes. |
+| **Infraestructura** | Railway (Backend), Vercel (Frontend), Supabase (DB) | CI/CD automático al hacer push a `main`. Docker + Railway. |
+| **Seguridad** | JWT + API Key, rate limiting, Pydantic, bcrypt | 7 niveles de rate limit, headers HTTP estrictos, validación de fuerza bruta. |
 
 ---
 
