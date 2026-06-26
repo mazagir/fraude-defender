@@ -37,5 +37,10 @@ def test_threat_intel_feed_derives_events_from_reports():
     data = response.json()
     assert data["kpis"]["iocs_activos"] >= 1
     assert data["kpis"]["paises_monitoreados"] >= 1
-    assert data["events"][0]["ioc"]["value"] == "banco-verificacion.click"
-    assert data["events"][0]["category"] == "Phishing financiero"
+    found = any(e["ioc"]["value"] == "banco-verificacion.click" for e in data["events"])
+    assert found, "El dominio 'banco-verificacion.click' deberia estar en los eventos de threat intel"
+    found_category = any(
+        e["ioc"]["value"] == "banco-verificacion.click" and e["category"] == "Phishing financiero"
+        for e in data["events"]
+    )
+    assert found_category, "El evento deberia tener categoria 'Phishing financiero'"

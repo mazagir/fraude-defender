@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { API_BASE, GeminiFallbackSimulator } from "../constants/riskConfig";
 import useStreak from "./useStreak";
 
@@ -186,9 +186,11 @@ export default function useAppLogic() {
   }, [token, apiFetch]);
 
   // Fetch scan history from backend when user logs in
+  const latestFetch = useRef(fetchScanHistory);
+  useEffect(() => { latestFetch.current = fetchScanHistory; });
   useEffect(() => {
-    if (token) fetchScanHistory();
-  }, [token, fetchScanHistory]);
+    if (token) latestFetch.current();
+  }, [token]);
 
   const handleLogin = async (email, password) => {
     setLoading(true); setError("");
