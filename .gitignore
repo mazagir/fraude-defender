@@ -16,3 +16,5 @@ frontend/node_modules/
 
 .vercel
 .env*
+frontend/test-results/
+frontend/playwright-report/

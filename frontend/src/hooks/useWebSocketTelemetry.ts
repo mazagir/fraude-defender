@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { API_BASE } from "../config/apiBase";
 import type { TelemetryEvent, TelemetryMetrics } from "../types";
 
 interface WebSocketOptions {
@@ -27,13 +28,7 @@ interface WebSocketTelemetryHook {
   disconnect: () => void;
 }
 
-const DEFAULT_API_BASE: string =
-  import.meta.env.VITE_API_URL ||
-  (typeof window !== "undefined"
-    ? (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-      ? "http://localhost:8000"
-      : "https://fraude-defender-production.up.railway.app")
-    : "https://fraude-defender-production.up.railway.app");
+const DEFAULT_API_BASE: string = API_BASE;
 
 function getStoredToken(): string {
   return localStorage.getItem("aegis_token") || localStorage.getItem("fd_token") || "";

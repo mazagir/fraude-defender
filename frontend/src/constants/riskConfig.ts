@@ -1,11 +1,6 @@
 import type { RiskLevel, ScanResult } from '../types';
 
-export const API_BASE: string =
-  import.meta.env.VITE_API_URL ||
-  (typeof window !== 'undefined' &&
-   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:8000'
-    : 'https://fraude-defender-production.up.railway.app');
+export { API_BASE, resolveApiBase } from '../config/apiBase';
 
 export const riskColor: Record<string, string> = {
   critical: '#ff2a51',

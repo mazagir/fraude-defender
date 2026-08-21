@@ -21,9 +21,25 @@ CREATE TABLE IF NOT EXISTS public.fraud_reports (
 CREATE TABLE IF NOT EXISTS public.users (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR NOT NULL,
-    email VARCHAR NOT NULL,
+    email VARCHAR NOT NULL UNIQUE,
     hashed_password VARCHAR NOT NULL,
-    es_activo BOOLEAN,
+    es_activo BOOLEAN DEFAULT true,
+    rol VARCHAR DEFAULT 'analista',
+    mfa_secret VARCHAR,
+    mfa_activo BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.scan_history (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES public.users(id),
+    scan_type VARCHAR NOT NULL,
+    content TEXT NOT NULL,
+    score INTEGER NOT NULL,
+    level VARCHAR NOT NULL,
+    explanation TEXT,
+    recommendations TEXT,
+    indicators TEXT,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 

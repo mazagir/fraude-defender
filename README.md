@@ -109,9 +109,9 @@ AgiShield AI está construido con las mejores herramientas de la industria para 
 | :--- | :--- | :--- |
 | **Backend** | Python 3.13, FastAPI, SQLAlchemy, PostgreSQL | Arquitectura asíncrona con event bus, rate limiting, motor heurístico y MFA TOTP. |
 | **Frontend** | React 19, TypeScript (strict), Vite, Tailwind CSS, Recharts, Framer Motion | Interfaz *Glassmorphism* con tipos estáticos, WebSocket, gamificación y MFA UI. |
-| **Base de Datos** | PostgreSQL (Railway) | PostgreSQL 17. 3 proveedores alternativos: SQLite, Supabase, Neon. |
+| **Base de Datos** | PostgreSQL (Supabase) | PostgreSQL 17 en la nube. Alternativas: SQLite (local), Neon, direct. |
 | **Tiempo Real** | WebSocket + EventBus asyncio.Queue | Pub/sub in-memory sin Redis. Eventos en <1s a todos los clientes. |
-| **Infraestructura** | Railway (Backend), Vercel (Frontend) | CI/CD automático al hacer push a `main`. Docker + Railway. |
+| **Infraestructura** | Render (Backend), Vercel (Frontend) | Backend always-on en Render + DB en Supabase. Frontend estático en Vercel. |
 | **Seguridad** | JWT + API Key, MFA TOTP, rate limiting, Pydantic, bcrypt | 7 niveles de rate limit, 2FA con pyotp, headers HTTP estrictos. |
 
 ---
@@ -127,7 +127,7 @@ python -m venv venv
 venv\Scripts\activate      # En Windows
 # source venv/bin/activate  # En Linux/macOS
 pip install -r requirements.txt
-cp ../.env.template .env   # Copia la plantilla y edita las variables
+cp .env.template .env   # Copia la plantilla y edita las variables
 uvicorn app.main:app --reload
 ```
 
@@ -140,6 +140,22 @@ npm run dev
 ```
 
 La app estará disponible en **http://localhost:5173** y el API en **http://localhost:8000/docs**.
+
+### 🐳 Docker (backend + frontend con Supabase)
+Desde la raíz del proyecto:
+```bash
+docker compose up --build
+```
+El backend usa `backend/.env` (Supabase). El frontend recibe `VITE_API_URL=http://localhost:8000`.
+
+### ☁️ Desplegar Backend en Render
+1. Conecta el repo en [render.com](https://render.com) y usa el Blueprint `render.yaml`.
+2. Configura las variables secretas: `JWT_SECRET_KEY`, `SUPABASE_DATABASE_URL`, `ALLOWED_API_KEYS`, `BACKEND_CORS_ORIGINS`.
+3. El servicio quedará en `https://agishield-api.onrender.com/health`.
+
+### ▲ Desplegar Frontend en Vercel
+1. Root directory: `frontend`
+2. Variable de build: `VITE_API_URL=https://agishield-api.onrender.com`
 
 ### 3️⃣ Verificar Tipos TypeScript (Opcional)
 ```bash
@@ -164,7 +180,14 @@ Copia `.env.template` como `.env` en la carpeta `backend/` y completa los valore
 | `ALLOWED_API_KEYS` | API Keys B2B separadas por comas | No (default: `aegis_dev_api_key_2026`) |
 | `GEMINI_API_KEY` | API Key de Google Gemini AI | No (fallback heurístico) |
 | `ENVIRONMENT` | `development` \| `production` \| `testing` | No (default: `development`) |
+| `BACKEND_CORS_ORIGINS` | Orígenes permitidos (URL de Vercel) | Recomendado en producción |
 | `MFA_ENABLED` | Habilitar autenticación de dos factores (2FA/TOTP) | No (default: `true`) |
+
+### Frontend (Vercel / local)
+
+| Variable | Descripción | Obligatorio |
+| :--- | :--- | :--- |
+| `VITE_API_URL` | URL del backend Render (ej. `https://agishield-api.onrender.com`) | Sí en producción |
 
 > [!IMPORTANT]
 > `JWT_SECRET_KEY` es obligatoria. El servidor no arrancará sin ella en producción.
