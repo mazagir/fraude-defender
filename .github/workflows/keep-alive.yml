@@ -1,0 +1,40 @@
+# Keep-Alive: evita que Render (free tier) duerma el servicio y mantiene
+# activa Supabase con tráfico periódico a un endpoint respaldado por la BD.
+#
+# - Render free: spin-down tras 15 min sin peticiones -> ping cada 10 min.
+# - Supabase free: pausa tras 7 días de inactividad -> la query a /reportes
+#   cuenta como actividad contra PostgreSQL.
+# - Ejecución manual disponible en la pestaña Actions ("Run workflow").
+
+name: Keep Alive (Render + Supabase)
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping /health (Render)
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" --retry 2 --max-time 30 \
+            https://agishield-api.onrender.com/health)
+          echo "/health => $code"
+          test "$code" = "200"
+
+      - name: Ping endpoint con BD (Supabase)
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" --retry 2 --max-time 60 \
+            "https://agishield-api.onrender.com/api/v1/reportes/publico/listar?page=1&page_size=1")
+          echo "/reportes/publico/listar => $code"
+          test "$code" = "200"
+
+      - name: Ping threat-intel (telemetría)
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" --retry 2 --max-time 30 \
+            "https://agishield-api.onrender.com/api/v1/threat-intel?limit=1")
+          echo "/threat-intel => $code"
+          test "$code" = "200"
