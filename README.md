@@ -12,7 +12,7 @@
 
 **AgiShield AI** es tu Centro de Operaciones de Seguridad (SOC) ciudadano. Una solución para la detección proactiva, correlación y mitigación en tiempo real de infraestructura maliciosa (IoCs) y esquemas de fraude financiero como extorsiones, phishing y "gota a gota" en LATAM.
 
-[🚀 Ver Demo en Vivo](https://fraude-defender-1176.vercel.app) | [🐛 Reportar Bug](https://github.com/mazagir/fraude-defender/issues)
+[🚀 Ver Demo en Vivo](https://frontend-mazagirs-projects.vercel.app) | [🐛 Reportar Bug](https://github.com/mazagir/fraude-defender/issues)
 
 </div>
 
@@ -179,6 +179,7 @@ Copia `.env.template` como `.env` en la carpeta `backend/` y completa los valore
 | `DATABASE_URL` | URI genérica (SQLite por defecto en local) | No |
 | `ALLOWED_API_KEYS` | API Keys B2B separadas por comas | No (default: `aegis_dev_api_key_2026`) |
 | `GEMINI_API_KEY` | API Key de Google Gemini AI | No (fallback heurístico) |
+| `TWILIO_AUTH_TOKEN` | Auth Token de Twilio para validar la firma del webhook de WhatsApp (`/api/v1/webhooks/whatsapp`) | No (webhook sin validación si se omite) |
 | `ENVIRONMENT` | `development` \| `production` \| `testing` | No (default: `development`) |
 | `BACKEND_CORS_ORIGINS` | Orígenes permitidos (URL de Vercel) | Recomendado en producción |
 | `MFA_ENABLED` | Habilitar autenticación de dos factores (2FA/TOTP) | No (default: `true`) |
@@ -188,6 +189,8 @@ Copia `.env.template` como `.env` en la carpeta `backend/` y completa los valore
 | Variable | Descripción | Obligatorio |
 | :--- | :--- | :--- |
 | `VITE_API_URL` | URL del backend Render (ej. `https://agishield-api.onrender.com`) | Sí en producción |
+| `VITE_POSTHOG_KEY` | Project API Key de PostHog para analítica de producto | No (sin key = sin tracking) |
+| `VITE_POSTHOG_HOST` | Host de ingesta de PostHog (default: `https://us.i.posthog.com`) | No |
 
 > [!IMPORTANT]
 > `JWT_SECRET_KEY` es obligatoria. El servidor no arrancará sin ella en producción.
@@ -210,6 +213,18 @@ Copia `.env.template` como `.env` en la carpeta `backend/` y completa los valore
 5. Verifica con: `python tools/verify_db.py`
 
 > **Neon** también es compatible: cambia `DB_PROVIDER=neon` y define `NEON_DATABASE_URL`.
+
+---
+
+## 📋 Changelog
+
+### v2.1 — Engagement & Datos Reales
+
+*   📲 **Botón "Compartir resultado"**: tras cada escaneo puedes compartir el veredicto de la IA vía Web Share API nativa (WhatsApp, Telegram, etc.) con fallback automático a copiar al portapapeles en navegadores de escritorio.
+*   🗺️ **Mapa LATAM con datos reales**: el mapa de amenazas comunitarias ahora se alimenta del endpoint `/api/v1/threat-intel` (incidentes reportados por la comunidad, actualizado cada 2 minutos) en lugar de datos fijos. Los valores por defecto se mantienen como fallback si la API no responde.
+*   📊 **Analítica de producto opcional (PostHog)**: si defines `VITE_POSTHOG_KEY`, se activa tracking de eventos clave (`scan_completed`, `result_shared`, `user_registered`, `user_logged_in`, `report_created`) con autocaptura. Sin key, la app funciona igual y no se carga ningún script de terceros (import dinámico, bundle intacto).
+*   🤖 **Bot de WhatsApp vía Twilio**: nuevo endpoint público `POST /api/v1/webhooks/whatsapp` que responde TwiML XML analizando cualquier texto sospechoso que envíe el usuario al número Twilio (motor Gemini + fallback heurístico). Valida firma `X-Twilio-Signature` si configuras `TWILIO_AUTH_TOKEN`. Incluye 6 tests nuevos (`backend/tests/test_webhooks.py`) — suite completa: **41 passed**.
+*   📄 **Guía de uso**: `docs/Guia-Uso-AegisShield.pdf` — manual de usuario para jurado/usuarios finales.
 
 ---
 
