@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FaLink, FaEnvelope, FaWhatsapp, FaQrcode, FaBrain, FaTrophy, FaSearch,
+  FaLink, FaEnvelope, FaWhatsapp, FaQrcode, FaBrain, FaTrophy, FaSearch, FaShareAlt,
 } from "react-icons/fa";
 import RiskBadge from "../shared/RiskBadge";
 import UrgencyCTA from "./UrgencyCTA";
+import { trackEvent } from "../../services/analytics";
 import { riskColor } from "../../constants/riskConfig";
 import type { ScanResult } from "../../types";
 
@@ -49,6 +51,30 @@ export default function HomeView({
   runQuickScan, onRegisterPrompt, token,
 }: HomeViewProps) {
   const activeAction = actions.find((a) => a.id === scanType)!;
+  const [shareStatus, setShareStatus] = useState<"idle" | "copied">("idle");
+
+  const handleShareResult = async () => {
+    if (!scanResult) return;
+    trackEvent("result_shared", { level: scanResult.level, score: scanResult.score, scan_type: scanType });
+    const text = [
+      "🛡️ AgiShield AI — Resultado del análisis",
+      "",
+      `Riesgo: ${scanResult.level} (${scanResult.score}%)`,
+      `"${scanResult.explanation}"`,
+      "",
+      "Verifica tus enlaces y mensajes sospechosos gratis:",
+      window.location.origin,
+    ].join("\n");
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "AgiShield AI", text });
+      } else {
+        await navigator.clipboard.writeText(text);
+        setShareStatus("copied");
+        window.setTimeout(() => setShareStatus("idle"), 2500);
+      }
+    } catch { /* el usuario canceló o el navegador bloqueó el acceso */ }
+  };
 
   return (
     <div className="space-y-6 font-sans">
@@ -233,11 +259,25 @@ export default function HomeView({
             <div className={`${GLASS} rounded-3xl p-6 space-y-6 relative overflow-hidden`}>
               <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none" />
 
-              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-3 gap-3">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
                   <FaBrain className="text-cyan-400" /> Evaluación de Riesgo de la IA
                 </h3>
-                <RiskBadge level={scanResult.level} />
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={handleShareResult}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wide uppercase transition-all cursor-pointer border active:scale-[0.97] ${
+                      shareStatus === "copied"
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                        : "bg-slate-800/40 border-slate-700/60 text-slate-300 hover:text-cyan-300 hover:border-cyan-500/40 hover:bg-cyan-500/5"
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      {shareStatus === "copied" ? "✓ ¡Copiado!" : (<><FaShareAlt /> Compartir</>)}
+                    </span>
+                  </button>
+                  <RiskBadge level={scanResult.level} />
+                </div>
               </div>
 
               <div className="flex flex-col md:flex-row items-center gap-8">

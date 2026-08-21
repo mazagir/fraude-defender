@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { API_BASE, GeminiFallbackSimulator } from "../constants/riskConfig";
+import { trackEvent } from "../services/analytics";
 import useStreak from "./useStreak";
 import type { UserData, ScanResult, GamificationState, FraudReport } from "../types";
 
@@ -114,13 +115,54 @@ export default function useAppLogic() {
   const [selectedReport, setSelectedReport] = useState<Record<string, unknown> | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string>("Colombia");
 
-  const latamThreats: Record<string, { attacks: number; threatType: string; risk: string }> = {
+  const DEFAULT_LATAM_THREATS: Record<string, { attacks: number; threatType: string; risk: string }> = {
     Colombia: { attacks: 1244, threatType: "Gota a Gota / SMS Phishing Bancario (Nequi)", risk: "Alto" },
     México: { attacks: 2108, threatType: "Montadeudas / WhatsApp Extorsión", risk: "Crítico" },
     Perú: { attacks: 890, threatType: "Suplantación de Identidad / QR Menús Falsos", risk: "Medio" },
     Chile: { attacks: 720, threatType: "Phishing de Paquetería / Correos falsos", risk: "Medio" },
     Argentina: { attacks: 1450, threatType: "Suplantación de Billeteras Virtuales", risk: "Alto" },
   };
+  const [latamThreats, setLatamThreats] = useState<Record<string, { attacks: number; threatType: string; risk: string }>>(DEFAULT_LATAM_THREATS);
+
+  useEffect(() => {
+    const COUNTRY_ALIASES: Record<string, string> = { Mexico: "México", Peru: "Perú" };
+    let cancelled = false;
+    const loadRealThreats = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/threat-intel?limit=100`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const events: Array<{ country?: string; category?: string; risk_score?: number }> = Array.isArray(data.events) ? data.events : [];
+        if (cancelled || events.length === 0) return;
+        const agg = new Map<string, { count: number; categories: Record<string, number>; maxScore: number }>();
+        events.forEach((ev) => {
+          const rawCountry = String(ev.country || "").trim();
+          if (!rawCountry || rawCountry === "LATAM") return;
+          const country = COUNTRY_ALIASES[rawCountry] || rawCountry;
+          const entry = agg.get(country) || { count: 0, categories: {}, maxScore: 0 };
+          entry.count += 1;
+          const category = String(ev.category || "Fraude digital");
+          entry.categories[category] = (entry.categories[category] || 0) + 1;
+          entry.maxScore = Math.max(entry.maxScore, Number(ev.risk_score) || 0);
+          agg.set(country, entry);
+        });
+        if (cancelled || agg.size === 0) return;
+        setLatamThreats((prev) => {
+          const next = { ...prev };
+          agg.forEach((entry, country) => {
+            const base = prev[country] || { threatType: "Fraude digital", risk: "Medio" };
+            const topCategory = Object.entries(entry.categories).sort((a, b) => b[1] - a[1])[0]?.[0] || base.threatType;
+            const risk = entry.maxScore >= 76 ? "Crítico" : entry.maxScore >= 51 ? "Alto" : "Medio";
+            next[country] = { threatType: topCategory, attacks: entry.count, risk };
+          });
+          return next;
+        });
+      } catch { /* mantiene datos por defecto si la API no responde */ }
+    };
+    loadRealThreats();
+    const iv = setInterval(loadRealThreats, 120000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, []);
 
   // --- API ---
   const apiFetch = useCallback(async (url: string, options: RequestInit = {}): Promise<Response> => {
@@ -360,6 +402,7 @@ export default function useAppLogic() {
       localStorage.setItem("aegis_user", JSON.stringify(userData));
       setUser(userData);
       setAuthMode(""); setShowGuestBanner(false); setActiveTab("dashboard");
+      trackEvent("user_logged_in", { method: "password" });
       fetchReports();
     } catch (e) { setError((e as Error).message || "Error al iniciar sesión."); }
     finally { setLoading(false); }
@@ -383,6 +426,7 @@ export default function useAppLogic() {
         if (typeof msg === "string" && msg.toLowerCase().includes("string_too_short")) msg = "La contraseña debe tener al menos 12 caracteres.";
         throw new Error(msg);
       }
+      trackEvent("user_registered");
       await handleLogin(email, password);
       setGamification((prev: GamificationState & { level: string }) => {
         if (!prev.badges.includes("defensor_registrado")) {
@@ -410,6 +454,7 @@ export default function useAppLogic() {
       const url = token ? `${API_BASE}/api/v1/reportes` : `${API_BASE}/api/v1/reportes/publico`;
       const res = await apiFetch(url, { method: "POST", body: JSON.stringify(formPayload) });
       if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.detail || "Error al enviar el reporte."); }
+      trackEvent("report_created", { authenticated: Boolean(token), risk_level: String(formPayload.risk_level || "N/A") });
       setGamification((prev: GamificationState & { level: string }) => {
         const nextBadges = prev.badges.includes("primer_reporte") ? prev.badges : [...prev.badges, "primer_reporte"];
         return {
@@ -454,6 +499,7 @@ export default function useAppLogic() {
       if (!res.ok) throw new Error("API falló");
       const data: ScanResult = await res.json();
       setScanResult(data);
+      trackEvent("scan_completed", { scan_type: scanType, level: data.level, score: data.score, source: "api" });
       const item: ScanHistoryItem = { id: Date.now(), type: scanType, query: queryValue.length > 50 ? queryValue.slice(0, 47) + "..." : queryValue, score: data.score, level: data.level, date: "Ahora mismo" };
       setScanHistory(prev => [item, ...prev.slice(0, 15)]);
       saveScanToBackend(scanType, queryValue, data);
@@ -470,6 +516,7 @@ export default function useAppLogic() {
     } catch {
       const data = new GeminiFallbackSimulator().generateMockResult(scanType, queryValue);
       setScanResult(data);
+      trackEvent("scan_completed", { scan_type: scanType, level: data.level, score: data.score, source: "fallback" });
       const item: ScanHistoryItem = { id: Date.now(), type: scanType, query: queryValue.length > 50 ? queryValue.slice(0, 47) + "..." : queryValue, score: data.score, level: data.level, date: "Ahora mismo" };
       setScanHistory(prev => [item, ...prev.slice(0, 15)]);
       saveScanToBackend(scanType, queryValue, data);

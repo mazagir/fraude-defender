@@ -24,5 +24,7 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
       - key: CORS_ALLOW_ORIGIN_REGEX
         value: https://.*\.vercel\.app
