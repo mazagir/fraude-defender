@@ -1,5 +1,6 @@
 import React, { Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Analytics } from "@vercel/analytics/react";
 import useAppLogic from "./hooks/useAppLogic";
 import Sidebar from "./components/layout/Sidebar";
 import AuthModal from "./components/auth/AuthModal";
@@ -132,6 +133,8 @@ export default function App() {
           <ReportSuccessModal onRegister={() => { setShowReportSuccessModal(false); setAuthMode("register"); }} onDismiss={() => setShowReportSuccessModal(false)} />
         )}
       </AnimatePresence>
+
+      <Analytics />
     </div>
   );
 }
