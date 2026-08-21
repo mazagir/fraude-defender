@@ -4,6 +4,7 @@ services:
   # ---------------------------------------------------------
   - type: web
     name: agishield-backend
+    plan: free
     env: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt
@@ -23,6 +24,7 @@ services:
   # ---------------------------------------------------------
   - type: web
     name: agishield-frontend
+    plan: free
     env: static
     rootDir: frontend
     buildCommand: npm install && npm run build
