@@ -1,0 +1,35 @@
+services:
+  # ---------------------------------------------------------
+  # BACKEND (FastAPI - Python)
+  # ---------------------------------------------------------
+  - type: web
+    name: agishield-backend
+    env: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: ENVIRONMENT
+        value: production
+      - key: DB_PROVIDER
+        value: sqlite  # Cambiar a 'supabase' o 'neon' en prod y añadir DATABASE_URL
+      - key: JWT_SECRET_KEY
+        generateValue: true
+
+  # ---------------------------------------------------------
+  # FRONTEND (React + Vite - Static Site)
+  # ---------------------------------------------------------
+  - type: web
+    name: agishield-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: agishield-backend
+          property: url
