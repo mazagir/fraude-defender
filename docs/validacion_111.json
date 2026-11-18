@@ -1,0 +1,486 @@
+{
+  "fecha_corte": "2026-11-05T23:38:48.252214+00:00",
+  "dominios": {
+    "filas": [
+      {
+        "contenido": "https://bancolombia.verificar-cuenta.today/login",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "es_real": false,
+        "score": 80,
+        "confianza": 10,
+        "marca_imita": "Bancolombia"
+      },
+      {
+        "contenido": "https://bancolombia-seguro.xyz/login",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "es_real": false,
+        "score": 80,
+        "confianza": 10,
+        "marca_imita": "Bancolombia"
+      },
+      {
+        "contenido": "https://nequi-app.top/verificar",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "es_real": false,
+        "score": 80,
+        "confianza": 10,
+        "marca_imita": "Nequi"
+      },
+      {
+        "contenido": "https://nequi.login-seguro.click/",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "es_real": false,
+        "score": 80,
+        "confianza": 10,
+        "marca_imita": "Nequi"
+      },
+      {
+        "contenido": "https://daviplata-online.info/pago",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "es_real": false,
+        "score": 80,
+        "confianza": 10,
+        "marca_imita": "Daviplata"
+      },
+      {
+        "contenido": "https://bbvacolombia.site/otp",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "es_real": null,
+        "score": 40,
+        "confianza": 50,
+        "marca_imita": null
+      },
+      {
+        "contenido": "https://banorte-seguro.online/acceso",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "es_real": false,
+        "score": 80,
+        "confianza": 10,
+        "marca_imita": "Banorte"
+      },
+      {
+        "contenido": "https://santander-alerta.xyz/",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "es_real": false,
+        "score": 80,
+        "confianza": 10,
+        "marca_imita": "Santander México"
+      },
+      {
+        "contenido": "https://banamex-verifica.top/login",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "es_real": false,
+        "score": 80,
+        "confianza": 10,
+        "marca_imita": "Banamex"
+      },
+      {
+        "contenido": "https://mercadopago-ofertas.click/",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "es_real": false,
+        "score": 80,
+        "confianza": 10,
+        "marca_imita": "MercadoPago"
+      },
+      {
+        "contenido": "https://galicia-account.work/",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "es_real": false,
+        "score": 80,
+        "confianza": 10,
+        "marca_imita": "Galicia"
+      },
+      {
+        "contenido": "https://bancochile-seguro.live/",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "es_real": false,
+        "score": 80,
+        "confianza": 10,
+        "marca_imita": "Banco de Chile"
+      },
+      {
+        "contenido": "https://bancoestado-alerta.info/",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "es_real": false,
+        "score": 80,
+        "confianza": 10,
+        "marca_imita": "Banco Estado"
+      },
+      {
+        "contenido": "https://nubank-brasil.xyz/",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "es_real": null,
+        "score": 40,
+        "confianza": 50,
+        "marca_imita": null
+      },
+      {
+        "contenido": "https://itau-seguro.top/",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "es_real": false,
+        "score": 80,
+        "confianza": 10,
+        "marca_imita": "Itaú Brasil"
+      },
+      {
+        "contenido": "https://www.bancolombia.com/personas",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "es_real": true,
+        "score": 5,
+        "confianza": 97,
+        "marca_imita": null
+      },
+      {
+        "contenido": "https://www.nequi.com.co/",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "es_real": true,
+        "score": 5,
+        "confianza": 97,
+        "marca_imita": null
+      },
+      {
+        "contenido": "https://www.daviplata.com/",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "es_real": true,
+        "score": 5,
+        "confianza": 97,
+        "marca_imita": null
+      },
+      {
+        "contenido": "https://www.bbva.com.co/",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "es_real": true,
+        "score": 5,
+        "confianza": 97,
+        "marca_imita": null
+      },
+      {
+        "contenido": "https://www.banorte.com/",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "es_real": true,
+        "score": 5,
+        "confianza": 97,
+        "marca_imita": null
+      },
+      {
+        "contenido": "https://www.santander.com.mx/",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "es_real": true,
+        "score": 5,
+        "confianza": 97,
+        "marca_imita": null
+      },
+      {
+        "contenido": "https://www.banamex.com/",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "es_real": true,
+        "score": 5,
+        "confianza": 97,
+        "marca_imita": null
+      },
+      {
+        "contenido": "https://www.mercadopago.com.mx/",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "es_real": true,
+        "score": 5,
+        "confianza": 97,
+        "marca_imita": null
+      },
+      {
+        "contenido": "https://www.galicia.com.ar/",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "es_real": true,
+        "score": 5,
+        "confianza": 97,
+        "marca_imita": null
+      },
+      {
+        "contenido": "https://www.bancochile.cl/",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "es_real": true,
+        "score": 5,
+        "confianza": 97,
+        "marca_imita": null
+      },
+      {
+        "contenido": "https://www.bancoestado.cl/",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "es_real": true,
+        "score": 5,
+        "confianza": 97,
+        "marca_imita": null
+      },
+      {
+        "contenido": "https://www.nubank.com.br/",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "es_real": null,
+        "score": 0,
+        "confianza": 50,
+        "marca_imita": null
+      },
+      {
+        "contenido": "https://www.itau.com.br/",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "es_real": true,
+        "score": 5,
+        "confianza": 97,
+        "marca_imita": null
+      },
+      {
+        "contenido": "https://www.google.com/",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "es_real": null,
+        "score": 0,
+        "confianza": 50,
+        "marca_imita": null
+      },
+      {
+        "contenido": "https://github.com/",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "es_real": null,
+        "score": 0,
+        "confianza": 50,
+        "marca_imita": null
+      }
+    ],
+    "metricas": {
+      "tp": 15,
+      "tn": 15,
+      "fp": 0,
+      "fn": 0,
+      "n": 30,
+      "precision": 1.0,
+      "recall": 1.0,
+      "tasa_falsos_positivos": 0.0,
+      "tasa_falsos_negativos": 0.0,
+      "exactitud": 1.0,
+      "f1": 1.0
+    }
+  },
+  "mensajes": {
+    "filas": [
+      {
+        "texto": "Su cuenta fue bloqueada. Comparta el codigo OTP que acaba de recibir para verificar su identidad.",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "score": 50,
+        "nivel": "MEDIUM",
+        "indicadores": [
+          "Solicitud de códigos de verificación o credenciales (OTP/clave)"
+        ]
+      },
+      {
+        "texto": "Usted tiene una deuda pendiente. Pague hoy o iniciaremos cobro juridico por interes moratorio.",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "score": 60,
+        "nivel": "HIGH",
+        "indicadores": [
+          "Patrón de extorsión o cobro gota a gota/montadeudas (cobro, deuda)"
+        ]
+      },
+      {
+        "texto": "Gano un premio de 5 millones. Envie sus credenciales y codigo de verificacion al portal.",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "score": 80,
+        "nivel": "CRITICAL",
+        "indicadores": [
+          "Esquema falso de ganancias rápidas o tareas",
+          "Solicitud de códigos de verificación o credenciales (OTP/clave)"
+        ]
+      },
+      {
+        "texto": "Somos soporte tecnico de su banco. Instale esta APK para eliminar un troyano de su telefono.",
+        "etiqueta": 1,
+        "prediccion": 0,
+        "score": 15,
+        "nivel": "LOW",
+        "indicadores": []
+      },
+      {
+        "texto": "Lo tenemos ubicado. Si no paga la extorsion publicaremos sus fotos y llamaremos a su familia.",
+        "etiqueta": 1,
+        "prediccion": 0,
+        "score": 15,
+        "nivel": "LOW",
+        "indicadores": []
+      },
+      {
+        "texto": "Estimado cliente, detectamos suplantacion de identidad. Ingrese al portal y confirme su clave.",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "score": 50,
+        "nivel": "MEDIUM",
+        "indicadores": [
+          "Solicitud de códigos de verificación o credenciales (OTP/clave)"
+        ]
+      },
+      {
+        "texto": "Su paquete esta retenido. Pague la multa en este enlace para evitar el remate de la mercancia.",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "score": 70,
+        "nivel": "HIGH",
+        "indicadores": [
+          "Presión de tiempo / Urgencia artificial",
+          "Solicitud de códigos de verificación o credenciales (OTP/clave)"
+        ]
+      },
+      {
+        "texto": "Oferta de credito inmediato: solo pague un anticipo y le desembolsamos el dinero hoy mismo.",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "score": 35,
+        "nivel": "MEDIUM",
+        "indicadores": [
+          "Presión de tiempo / Urgencia artificial"
+        ]
+      },
+      {
+        "texto": "Hola, soy su sobrino. Estoy en problemas y necesito que me transfiera dinero urgente, no le diga a nadie.",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "score": 35,
+        "nivel": "MEDIUM",
+        "indicadores": [
+          "Presión de tiempo / Urgencia artificial"
+        ]
+      },
+      {
+        "texto": "Descargue el archivo adjunto con la factura; es un ejecutable que debe abrir para ver su deuda.",
+        "etiqueta": 1,
+        "prediccion": 1,
+        "score": 60,
+        "nivel": "HIGH",
+        "indicadores": [
+          "Patrón de extorsión o cobro gota a gota/montadeudas (deuda)"
+        ]
+      },
+      {
+        "texto": "Hola, confirmo la reunion de manana a las 9:00 en la sala de juntas.",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "score": 15,
+        "nivel": "LOW",
+        "indicadores": []
+      },
+      {
+        "texto": "Gracias por su compra. Su pedido fue enviado y llegara en tres dias habiles.",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "score": 15,
+        "nivel": "LOW",
+        "indicadores": []
+      },
+      {
+        "texto": "Buenas tardes, adjunto el acta de la reunion para su revision.",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "score": 15,
+        "nivel": "LOW",
+        "indicadores": []
+      },
+      {
+        "texto": "Su cita medica quedo agendada para el viernes a las 10:00.",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "score": 15,
+        "nivel": "LOW",
+        "indicadores": []
+      },
+      {
+        "texto": "Felicitaciones por el cumpleanos de su hijo, nos vemos en la celebracion.",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "score": 15,
+        "nivel": "LOW",
+        "indicadores": []
+      },
+      {
+        "texto": "Le recordamos que la biblioteca cierra a las 6:00 p.m. hoy.",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "score": 15,
+        "nivel": "LOW",
+        "indicadores": []
+      },
+      {
+        "texto": "El informe mensual de ventas ya esta disponible en el repositorio interno.",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "score": 15,
+        "nivel": "LOW",
+        "indicadores": []
+      },
+      {
+        "texto": "Su solicitud de vacaciones fue aprobada por el area de talento humano.",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "score": 15,
+        "nivel": "LOW",
+        "indicadores": []
+      },
+      {
+        "texto": "El clima para manana sera soleado con una temperatura maxima de 30 grados.",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "score": 15,
+        "nivel": "LOW",
+        "indicadores": []
+      },
+      {
+        "texto": "Adjunto encontrara la presentacion del proyecto para la reunion del martes.",
+        "etiqueta": 0,
+        "prediccion": 0,
+        "score": 15,
+        "nivel": "LOW",
+        "indicadores": []
+      }
+    ],
+    "metricas": {
+      "tp": 8,
+      "tn": 10,
+      "fp": 0,
+      "fn": 2,
+      "n": 20,
+      "precision": 1.0,
+      "recall": 0.8,
+      "tasa_falsos_positivos": 0.0,
+      "tasa_falsos_negativos": 0.2,
+      "exactitud": 0.9,
+      "f1": 0.8889
+    }
+  },
+  "condiciones": "Ejecución local sin llamadas de red, sobre un conjunto etiquetado por los autores. El veredicto de dominio se considera positivo si es_real=False o score>=30. El mensaje se considera positivo si el score heurístico>=30 (umbral de posible_fraude). No se consultó la API de Gemini ni la base de producción."
+}

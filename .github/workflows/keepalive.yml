@@ -1,0 +1,31 @@
+name: Keep-Alive (Anti-Dormancia)
+
+# Mantiene el backend de Render despierto para evitar el cold-start de la
+# primera visita (plan free de Render duerme el router tras ~15 min inactivo).
+# Hace ping al /health cada 10 minutos.
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # cada 10 minutos
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    name: Ping back-end /health
+    runs-on: ubuntu-latest
+    steps:
+      - name: Despertar backend AgielShield
+        run: |
+          # Intenta varias veces con reintentos por si Render tarda en despertar
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" \
+              --max-time 90 \
+              https://agishield-api.onrender.com/health)
+            echo "Intento $i -> HTTP $code"
+            if [ "$code" = "200" ] || [ "$code" = "204" ]; then
+              echo "Backend despierto OK"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Advertencia: backend no respondió 200, pero el endpoint podría estar activo."
+          exit 0

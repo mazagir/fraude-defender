@@ -1,0 +1,112 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test -- --run
+
+      - name: Build
+        run: npm run build
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      ENVIRONMENT: testing
+      JWT_SECRET_KEY: test-secret-key-for-ci-please-rotate-in-prod-32chars
+      ALLOWED_API_KEYS: aegis_test_api_key_2026
+      DATABASE_URL: sqlite:///./ci_agielshield.db
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Verify imports
+        run: python -m compileall app
+
+      - name: Test
+        run: python -m pytest
+
+  deploy:
+    name: Deploy
+    needs: [frontend, backend]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Deploy Frontend (Vercel)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "VERCEL_TOKEN no configurado; se omite el deploy de Vercel"
+            exit 0
+          fi
+          # El proyecto Vercel ya tiene rootDirectory=frontend: ejecutar desde la
+          # raíz del repo para que no intente desplegar frontend/frontend.
+          npx vercel --prod --yes --token "$VERCEL_TOKEN" \
+            --scope "$VERCEL_ORG_ID" --project "$VERCEL_PROJECT_ID"
+
+      - name: Deploy Backend (Render)
+        env:
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          if [ -z "$RENDER_SERVICE_ID" ] || [ -z "$RENDER_API_KEY" ]; then
+            echo "Faltan secretos de Render; no se puede disparar el deploy"
+            exit 1
+          fi
+          status=$(curl -s -o /tmp/render_deploy.json -w "%{http_code}" -X POST \
+            "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": "do_not_clear"}')
+          echo "Render deploy HTTP $status"
+          test "$status" -ge 200 -a "$status" -lt 300

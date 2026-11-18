@@ -1,0 +1,124 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: 🛡️
+      - generic [ref=e8]:
+        - generic [ref=e9]: AgiShield AI
+        - generic [ref=e10]: FrauDefender
+    - navigation [ref=e11]:
+      - generic [ref=e12]: Navegación
+      - button "Detector de Estafas" [ref=e13] [cursor=pointer]:
+        - img [ref=e15]
+        - text: Detector de Estafas
+      - button "Mi Perfil Seguro" [ref=e17] [cursor=pointer]:
+        - img [ref=e19]
+        - text: Mi Perfil Seguro
+      - button "Comunidad y Mapa" [ref=e21] [cursor=pointer]:
+        - img [ref=e23]
+        - text: Comunidad y Mapa
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - img [ref=e28]
+          - text: Modo Developer
+        - checkbox [ref=e31]
+    - button "Ingresar" [ref=e34] [cursor=pointer]:
+      - img [ref=e35]
+      - text: Ingresar
+  - generic [ref=e37]:
+    - banner [ref=e38]:
+      - generic [ref=e40]:
+        - heading "🛡️ AgiShield AI SaaS Beta" [level=2] [ref=e41]:
+          - text: 🛡️ AgiShield AI
+          - generic [ref=e42]: SaaS Beta
+        - paragraph [ref=e43]: Ciberseguridad ciudadana contra estafas · LATAM
+      - button "Acceder / Registrarse" [ref=e45] [cursor=pointer]
+    - main [ref=e46]:
+      - generic [ref=e48]:
+        - generic [ref=e50]:
+          - generic [ref=e51]:
+            - heading "Protege tus cuentas de Estafas y Phishing con IA" [level=1] [ref=e52]:
+              - text: Protege tus cuentas de
+              - text: Estafas y Phishing con IA
+            - paragraph [ref=e53]: Analiza gratis enlaces bancarios falsos, extorsiones de WhatsApp, montadeudas y correos sospechosos en segundos con nuestra IA optimizada para fraudes reales en LATAM.
+          - generic [ref=e54]:
+            - button "Analizar URL" [ref=e55] [cursor=pointer]:
+              - img [ref=e57]
+              - generic [ref=e59]: Analizar URL
+            - button "Analizar SMS / Texto" [ref=e60] [cursor=pointer]:
+              - img [ref=e62]
+              - generic [ref=e64]: Analizar SMS / Texto
+            - button "Analizar WhatsApp" [ref=e65] [cursor=pointer]:
+              - img [ref=e67]
+              - generic [ref=e69]: Analizar WhatsApp
+            - button "Analizar Correo" [ref=e70] [cursor=pointer]:
+              - img [ref=e72]
+              - generic [ref=e74]: Analizar Correo
+            - button "Escanear QR" [ref=e75] [cursor=pointer]:
+              - img [ref=e77]
+              - generic [ref=e79]: Escanear QR
+          - generic [ref=e81]:
+            - generic [ref=e82]:
+              - img [ref=e84]
+              - heading "Analizar URL" [level=3] [ref=e86]
+            - textbox "Ej. http://soporte-nequibanca-alerta.xyz" [ref=e87]
+            - generic [ref=e88]:
+              - button "Analizar con AgiShield AI" [ref=e89] [cursor=pointer]:
+                - img [ref=e90]
+                - text: Analizar con AgiShield AI
+              - generic [ref=e92]:
+                - generic [ref=e94]: "37"
+                - text: amenazas críticas detectadas hoy en LATAM
+        - generic [ref=e95]:
+          - generic [ref=e96]: Cargando mapa...
+          - generic [ref=e97]:
+            - generic [ref=e98]:
+              - generic [ref=e99]:
+                - generic [ref=e100]:
+                  - generic [ref=e101]: Usuarios protegidos
+                  - img [ref=e103]
+                - generic [ref=e105]: "1.250"
+                - generic [ref=e106]:
+                  - img [ref=e107]
+                  - generic [ref=e109]: 12% vs semana ant.
+              - generic [ref=e110]:
+                - generic [ref=e111]:
+                  - generic [ref=e112]: Incidentes semanales
+                  - img [ref=e114]
+                - generic [ref=e116]: "148"
+                - generic [ref=e117]:
+                  - img [ref=e118]
+                  - generic [ref=e120]: 5% vs semana ant.
+              - generic [ref=e121]:
+                - generic [ref=e122]:
+                  - generic [ref=e123]: IoCs activos
+                  - img [ref=e125]
+                - generic [ref=e127]: "392"
+                - generic [ref=e128]:
+                  - img [ref=e129]
+                  - generic [ref=e131]: 8% vs semana ant.
+              - generic [ref=e132]:
+                - generic [ref=e133]:
+                  - generic [ref=e134]: Paises monitoreados
+                  - img [ref=e136]
+                - generic [ref=e138]: "6"
+            - generic [ref=e139]:
+              - generic [ref=e140]:
+                - generic [ref=e141]:
+                  - heading "Threat Intelligence Feed" [level=2] [ref=e142]
+                  - paragraph [ref=e143]: Eventos derivados de reportes comunitarios y motor heuristico
+                - generic [ref=e144]: SYNC
+              - generic [ref=e145]:
+                - generic [ref=e146]:
+                  - generic [ref=e147]: CRITICO
+                  - generic [ref=e149]: Montadeudas / Extorsion
+                  - generic:
+                    - generic: solucion-deudas-rapidas.click
+                    - generic: Colombia · Score 92
+                  - time [ref=e150]: 26/6, 03:26 a. m.
+                - generic [ref=e151]:
+                  - generic [ref=e152]: ALTO
+                  - generic [ref=e154]: Phishing financiero
+                  - generic:
+                    - generic: "+525543219876"
+                    - generic: Mexico · Score 74
+                  - time [ref=e155]: 26/6, 03:26 a. m.

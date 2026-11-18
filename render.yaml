@@ -1,0 +1,46 @@
+# Render Blueprint — Backend FastAPI + Supabase
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: agishield-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DB_PROVIDER
+        value: supabase
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: SUPABASE_DATABASE_URL
+        sync: false
+      - key: ALLOWED_API_KEYS
+        sync: false
+      - key: BACKEND_CORS_ORIGINS
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: CORS_ALLOW_ORIGIN_REGEX
+        value: https://.*\.vercel\.app
+      - key: EMAILS_FROM
+        sync: false
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASSWORD
+        sync: false
+      - key: ALLOWED_EMAIL_DOMAINS
+        sync: false
+      - key: ADMIN_USER
+        value: admin
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
