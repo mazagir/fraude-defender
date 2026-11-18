@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 14mm 12mm; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Calibri, Arial, sans-serif; color:#1e293b; margin:0; font-size:10.5pt; line-height:1.45; }
+  h1 { font-size:20pt; margin:0; color:#0f172a; }
+  .hero { background:linear-gradient(135deg,#0f172a,#1d4ed8); color:#fff; padding:18px 22px; border-radius:10px; }
+  .hero p { margin:4px 0 0; opacity:.92; }
+  .badge { display:inline-block; background:#22c55e; color:#052e16; font-weight:700; font-size:8.5pt; padding:3px 10px; border-radius:999px; letter-spacing:.5px; }
+  h2 { font-size:13pt; color:#1d4ed8; border-bottom:2px solid #dbeafe; padding-bottom:3px; margin:18px 0 8px; }
+  table { width:100%; border-collapse:collapse; margin:6px 0; font-size:9.5pt; }
+  th { background:#1d4ed8; color:#fff; text-align:left; padding:5px 8px; }
+  td { border:1px solid #cbd5e1; padding:5px 8px; vertical-align:top; }
+  tr:nth-child(even) td { background:#f8fafc; }
+  code { background:#eff6ff; color:#1e40af; padding:1px 5px; border-radius:4px; font-family:Consolas,monospace; font-size:9pt; }
+  ol li, ul li { margin-bottom:3px; }
+  .nuevo { background:#ecfdf5; border:1px solid #6ee7b7; border-left:4px solid #10b981; border-radius:6px; padding:8px 12px; margin:8px 0; font-size:9.5pt; }
+  .nuevo b { color:#047857; }
+  .cols { display:flex; gap:10px; } .col { flex:1; border:1px solid #cbd5e1; border-radius:8px; padding:8px 12px; }
+  .col h3 { font-size:10.5pt; margin:2px 0 6px; color:#0f172a; }
+  footer { margin-top:16px; padding-top:6px; border-top:1px solid #cbd5e1; color:#64748b; font-size:8.5pt; text-align:center; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>🛡 AgielShield</h1>
+  <p>Plataforma de Inteligencia contra Fraudes — Guía de Uso y Despliegue<br>
+  <span class="badge">v2.1 · PRODUCCIÓN ACTIVA</span></p>
+</div>
+
+<h2>1 · Enlaces de acceso (producción)</h2>
+<table>
+<tr><th>Recurso</th><th>URL</th><th>Descripción</th></tr>
+<tr><td>🌐 Aplicación Web</td><td><code>https://frontend-mazagirs-projects.vercel.app</code></td><td>Frontend React en Vercel. Acceso público.</td></tr>
+<tr><td>⚙ API Backend</td><td><code>https://agishield-api.onrender.com</code></td><td>FastAPI en Render (plan free).</td></tr>
+<tr><td>📚 Documentación Swagger</td><td><code>https://agishield-api.onrender.com/docs</code></td><td>OpenAPI interactiva para probar todos los endpoints.</td></tr>
+<tr><td>❤ Health Check</td><td><code>https://agishield-api.onrender.com/health</code></td><td>Estado del servicio y entorno.</td></tr>
+<tr><td>🐙 Repositorio GitHub</td><td><code>https://github.com/mazagir/fraude-defender</code></td><td>Código fuente + Actions (CI y Keep-Alive).</td></tr>
+<tr><td>💬 Webhook WhatsApp (Twilio)</td><td><code>/api/v1/webhooks/whatsapp</code></td><td>Bot conversacional TwiML. Respuesta XML firmada.</td></tr>
+</table>
+
+<h2>2 · Inicio rápido: registrarse e iniciar sesión</h2>
+<p><b>Crear cuenta:</b></p>
+<ol>
+<li>Abre la app web y pulsa «Registrarse» / «Comenzar».</li>
+<li>Completa: Nombre, Correo electrónico válido y Contraseña segura.</li>
+<li>Pulsa <i>Crear cuenta</i>. Recibirás respuesta inmediata del servidor (201). Si algo fallara durante el renderizado, la app muestra una pantalla de recuperación con botón «Recargar aplicación» en vez de quedarse en blanco.</li>
+</ol>
+<p><b>Iniciar sesión:</b></p>
+<ol>
+<li>Introduce tu correo y contraseña.</li>
+<li>Si tienes MFA activado, se pedirá el código TOTP de 6 dígitos de tu app autenticadora.</li>
+<li>La sesión queda guardada en el navegador (<code>aegis_token</code>) — no necesitas volver a entrar.</li>
+</ol>
+<p>⚠ Límites anti-abuso: registro 5/min · login 10/min · análisis IA 20/min por IP.</p>
+
+<h2>3 · Detector de estafas (Home)</h2>
+<table>
+<tr><th>Canal</th><th>Qué analizar</th><th>Ejemplo de uso</th></tr>
+<tr><td>🔗 URL</td><td>Enlaces sospechosos de phishing bancario.</td><td><code>http://banco-nequi-seguro.xyz/login</code></td></tr>
+<tr><td>💬 SMS</td><td>Falsos empleos, paquetería, bancos.</td><td>Pega el texto completo del mensaje.</td></tr>
+<tr><td>🟢 WhatsApp</td><td>Extorsiones y «montadeudas».</td><td>Copia el chat completo.</td></tr>
+<tr><td>📧 Correo</td><td>Phishing laboral o bancario.</td><td>Incluye asunto y cuerpo.</td></tr>
+<tr><td>🔳 QR</td><td>Contenido de códigos QR dudosos.</td><td>Decodifica y pega la URL/texto.</td></tr>
+</table>
+<p>El resultado incluye puntuación de riesgo (0–100), nivel (CRITICAL/HIGH/MEDIUM/LOW), explicación empática generada por IA (Gemini) o heurística local, indicadores detectados y acciones recomendadas.</p>
+
+<div class="nuevo"><b>NUEVO v2.1 — Compartir resultados:</b> junto al veredicto aparece el botón <b>Compartir</b>: usa el menú nativo del sistema (Web Share API) o copia el resumen al portapapeles con un clic.</div>
+
+<h2>4 · Bot de WhatsApp (v2.1)</h2>
+<p>Consulta el motor sin abrir la app: envía el mensaje sospechoso por WhatsApp y recibe el análisis al instante.</p>
+<table>
+<tr><th>Comando / Entrada</th><th>Respuesta</th></tr>
+<tr><td><code>hola</code> · saludo vacío</td><td>Bienvenida con instrucciones del bot.</td></tr>
+<tr><td><code>ayuda</code></td><td>Lista de comandos disponibles.</td></tr>
+<tr><td>Mensaje con enlace/texto sospechoso</td><td>Análisis de riesgo: nivel, puntuación y recomendaciones.</td></tr>
+<tr><td>Mensaje &gt; 1000 caracteres</td><td>Sugerencia de acortar el texto para mejor análisis.</td></tr>
+</table>
+<p>🔒 Cada petición valida la firma criptográfica <code>X-Twilio-Signature</code> cuando <code>TWILIO_AUTH_TOKEN</code> está configurado. Rate limit: 60 mensajes/min.</p>
+
+<h2>5 · Funcionalidades principales</h2>
+<table>
+<tr><th>Módulo</th><th>Descripción</th></tr>
+<tr><td>🗺 Mapa LATAM</td><td>Ahora con <b>datos reales en vivo</b>: agrega los IoCs de la comunidad por país (Colombia, México, Perú, Chile y Argentina) vía <code>/threat-intel</code>, con volumen, categoría dominante y nivel de riesgo. Actualiza cada 2 minutos.</td></tr>
+<tr><td>🏆 Gamificación</td><td>XP, reputación, niveles («Guardián de la Comunidad») e insignias según tus reportes y escaneos.</td></tr>
+<tr><td>📋 Reportar IoC</td><td>Publica números, cuentas o dominios fraudulentos (endpoint público paginado). Los listados públicos aplican <b>enmascarado de datos personales</b>.</td></tr>
+<tr><td>🔐 MFA (2FA)</td><td>Perfil → Activar MFA: escanea el QR con Google Authenticator/Authy y confirma con un código TOTP.</td></tr>
+<tr><td>🖥 Modo SOC</td><td>Telemetría WebSocket en tiempo real, simulación de ataques SQLi/DDoS y BD cruda de IoCs.</td></tr>
+<tr><td>🔑 API B2B</td><td>Integra el motor en tu producto con header <code>X-API-Key</code>.</td></tr>
+<tr><td>📈 Analítica de producto</td><td>Opcional vía PostHog (<code>VITE_POSTHOG_KEY</code>): escaneos completados, registros, logins y compartidos. Sin key configurada, no se carga ninguna librería externa.</td></tr>
+</table>
+
+<div class="nuevo"><b>Privacidad (minimización de datos):</b> en los endpoints públicos los teléfonos y cuentas se entregan enmascarados (<code>+573***67</code>, <code>Nequi 30***67</code>). Los usuarios autenticados ven el IoC completo. Los dominios nunca se ocultan por ser indicadores de bloqueo público.</div>
+
+<h2>6 · Arquitectura del despliegue</h2>
+<div class="cols">
+<div class="col"><h3>Frontend → Vercel</h3>React 19 + Vite + Tailwind 4.<br>Auto-deploy desde main.<br>Variables: <code>VITE_API_URL</code>, <code>VITE_POSTHOG_KEY</code> (opcional).</div>
+<div class="col"><h3>Backend → Render</h3>FastAPI + Docker (free, Oregon).<br>Servicio: <code>agishield-api</code>.<br>Healthcheck: <code>/health</code>.<br>Rate limit global 200 req/min.<br>Webhook Twilio opt-in.</div>
+<div class="col"><h3>Datos → Supabase</h3>PostgreSQL 17 (pooler, sa-east-1).<br>Tablas: <code>users</code>, <code>fraud_reports</code>, <code>scan_history</code>.<br>Migración automática al arrancar.</div>
+</div>
+<p><b>🤖 Bot Keep-Alive (GitHub Actions):</b> cada 10 minutos consulta <code>/health</code>, el listado público y <code>/threat-intel</code> para que ni Render ni Supabase entren en pausa por inactividad.</p>
+
+<h2>7 · Solución de problemas</h2>
+<table>
+<tr><th>Síntoma</th><th>Solución</th></tr>
+<tr><td>No llega código MFA</td><td>MFA usa TOTP offline. Verifica que la hora del teléfono esté sincronizada.</td></tr>
+<tr><td>Workflow Keep-Alive deshabilitado</td><td>GitHub pausa cron tras 60 días sin commits: Actions → re-habilitar manualmente.</td></tr>
+<tr><td>El bot no responde en WhatsApp</td><td>Verifica que te uniste al sandbox de Twilio y que el webhook apunte a <code>/api/v1/webhooks/whatsapp</code>.</td></tr>
+<tr><td>Pantalla de recuperación tras un error</td><td>Pulsa «Recargar aplicación». Si persiste, borra caché (Ctrl+F5); tus datos no se pierden.</td></tr>
+</table>
+
+<h2>8 · Stack tecnológico</h2>
+<table>
+<tr><th>Capa</th><th>Tecnologías</th></tr>
+<tr><td>Backend</td><td>Python 3.13 · FastAPI · SQLAlchemy · JWT (python-jose) · bcrypt · slowapi · httpx (Gemini)</td></tr>
+<tr><td>Frontend</td><td>React 19 · Vite · Tailwind CSS 4 · Leaflet · Recharts · Framer Motion · PostHog (opcional) · Vitest · Playwright</td></tr>
+<tr><td>Infraestructura</td><td>Vercel (frontend) · Render Docker (backend) · Supabase PostgreSQL 17 · GitHub Actions (CI + keep-alive)</td></tr>
+<tr><td>Seguridad</td><td>JWT HS256 · MFA TOTP · rate limiting granular · headers OWASP · firma webhooks Twilio · <b>enmascarado PII en endpoints públicos</b> · secrets solo en variables de entorno</td></tr>
+<tr><td>Calidad</td><td>46 pruebas backend (pytest) + 8 frontend (vitest) · suite E2E Playwright</td></tr>
+</table>
+
+<footer>AgielShield v2.1 — Desplegado en Vercel + Render + Supabase · Generado el 21/08/2026</footer>
+</body>
+</html>
