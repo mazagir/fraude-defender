@@ -71,6 +71,12 @@ npm run demo -- --lan          # abre desde el celular por la red local
 
 5. Escribe esa URL en el celular.
 
+Si la IP detectada pertenece a una VPN o WSL, fuerza la IP del Wi‑Fi:
+
+```bash
+npm run demo -- --lan --ip=192.168.1.7
+```
+
 Si no conecta, revisa el **Firewall de Windows** y permite el tráfico entrante para **Python** y **Node.js**. Si tu red tiene “Aislamiento de cliente/AP” activado, desactívalo o usa el despliegue público: <https://frontend-mazagirs-projects.vercel.app>.
 
 ## 3. Recorrido guiado

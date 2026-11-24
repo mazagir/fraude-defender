@@ -107,7 +107,7 @@ Detén todo con `Ctrl+C`. Más detalles en [docs/DEMO.md](docs/DEMO.md).
 npm run demo -- --lan
 ```
 
-El script mostrará una URL tipo `http://192.168.1.42:5173` para abrir en el teléfono. Si no conecta, permite Python y Node.js en el Firewall de Windows o usa el despliegue público de Vercel.
+El script mostrará una URL tipo `http://192.168.1.42:5173` para abrir en el teléfono. Si detecta una IP de VPN/WSL, fuerza la del Wi‑Fi con `npm run demo -- --lan --ip=192.168.1.42`. Si no conecta, permite Python y Node.js en el Firewall de Windows o usa el despliegue público de Vercel.
 
 ### Opción 3 — Instalación manual
 

@@ -8,6 +8,7 @@
  *   npm run demo -- --seed-only
  *   npm run demo -- --force-seed
  *   npm run demo -- --lan
+ *   npm run demo -- --lan --ip=192.168.1.7
  *
  * No usa ni imprime secretos. Genera una clave JWT efímera solo para la sesión.
  */
@@ -31,15 +32,29 @@ const SKIP_INSTALL = args.has("--no-install");
 const LAN = args.has("--lan");
 
 function detectLanIp() {
-  for (const interfaces of Object.values(os.networkInterfaces())) {
+  const candidates = [];
+  for (const [name, interfaces] of Object.entries(os.networkInterfaces())) {
     for (const item of interfaces ?? []) {
-      if (item.family === "IPv4" && !item.internal) return item.address;
+      if (item.family !== "IPv4" || item.internal) continue;
+      const [a, b] = item.address.split(".").map(Number);
+      let score = 10;
+      if (a === 192 && b === 168) score = 100;
+      else if (a === 10) score = 90;
+      else if (a === 172 && b >= 16 && b <= 31) score = 80;
+      else if (a === 169 && b === 254) score = 0;
+
+      const label = name.toLowerCase();
+      if (label.includes("wi-fi") || label.includes("wireless") || label.includes("wlan")) score += 50;
+      if (label.includes("vpn") || label.includes("wsl") || label.includes("hyper") || label.includes("bluetooth")) score -= 80;
+      candidates.push({ address: item.address, score });
     }
   }
-  return null;
+  candidates.sort((x, y) => y.score - x.score);
+  return candidates[0]?.score > 0 ? candidates[0].address : null;
 }
 
-const LAN_IP = LAN ? detectLanIp() : null;
+const forcedIp = [...args].find((arg) => arg.startsWith("--ip="))?.split("=")[1]?.trim();
+const LAN_IP = LAN ? forcedIp || detectLanIp() : null;
 if (LAN && !LAN_IP) {
   fail("No se encontró una IP LAN. Revisa que estés conectado a una red local.");
 }
@@ -95,8 +110,11 @@ function venvPython() {
 }
 
 function npmCommand() {
-  return process.platform === "win32" ? "npm.cmd" : "npm";
+  return "npm";
 }
+
+// En Windows, Node requiere ejecutar `npm` a través del shell.
+const npmShell = process.platform === "win32" ? { shell: true } : {};
 
 function start(cmd, cmdArgs, options = {}) {
   const child = spawn(cmd, cmdArgs, {
@@ -254,7 +272,7 @@ async function main() {
 
   if (!SKIP_INSTALL && !existsSync(join(frontendDir, "node_modules"))) {
     log("Instalando dependencias del frontend...");
-    if (run(npmCommand(), ["ci"], { cwd: frontendDir }) !== 0) {
+    if (run(npmCommand(), ["ci"], { cwd: frontendDir, ...npmShell }) !== 0) {
       fail("No se pudieron instalar las dependencias del frontend.");
     }
   }
@@ -274,6 +292,7 @@ async function main() {
     start(npmCommand(), ["run", "dev", "--", "--host", BIND_HOST, "--port", "5173"], {
       cwd: frontendDir,
       env: frontendEnv,
+      ...npmShell,
     });
     await waitForHttp(FRONTEND_URL, "Frontend");
   }
