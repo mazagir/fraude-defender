@@ -101,6 +101,14 @@ Ese comando hace todo automáticamente:
 
 Detén todo con `Ctrl+C`. Más detalles en [docs/DEMO.md](docs/DEMO.md).
 
+**Abrirlo desde el celular:** `localhost` en el móvil apunta al móvil, no a tu PC. Con el celular y la PC en la misma Wi‑Fi, ejecuta:
+
+```bash
+npm run demo -- --lan
+```
+
+El script mostrará una URL tipo `http://192.168.1.42:5173` para abrir en el teléfono. Si no conecta, permite Python y Node.js en el Firewall de Windows o usa el despliegue público de Vercel.
+
 ### Opción 3 — Instalación manual
 
 #### Requisitos

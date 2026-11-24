@@ -7,12 +7,14 @@
  *   npm run demo -- --no-open
  *   npm run demo -- --seed-only
  *   npm run demo -- --force-seed
+ *   npm run demo -- --lan
  *
  * No usa ni imprime secretos. Genera una clave JWT efímera solo para la sesión.
  */
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import net from "node:net";
+import os from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -26,9 +28,28 @@ const NO_OPEN = args.has("--no-open");
 const SEED_ONLY = args.has("--seed-only");
 const FORCE_SEED = args.has("--force-seed");
 const SKIP_INSTALL = args.has("--no-install");
+const LAN = args.has("--lan");
 
+function detectLanIp() {
+  for (const interfaces of Object.values(os.networkInterfaces())) {
+    for (const item of interfaces ?? []) {
+      if (item.family === "IPv4" && !item.internal) return item.address;
+    }
+  }
+  return null;
+}
+
+const LAN_IP = LAN ? detectLanIp() : null;
+if (LAN && !LAN_IP) {
+  fail("No se encontró una IP LAN. Revisa que estés conectado a una red local.");
+}
+
+const BIND_HOST = LAN ? "0.0.0.0" : "127.0.0.1";
+const PUBLIC_HOST = LAN ? LAN_IP : "localhost";
 const BACKEND_URL = "http://127.0.0.1:8000";
 const FRONTEND_URL = "http://localhost:5173";
+const FRONTEND_LAN_URL = `http://${PUBLIC_HOST}:5173`;
+const API_URL_FOR_FRONTEND = LAN ? `http://${LAN_IP}:8000` : BACKEND_URL;
 const children = [];
 let shuttingDown = false;
 
@@ -195,7 +216,11 @@ async function main() {
     ENVIRONMENT: "development",
     DB_PROVIDER: "sqlite",
     JWT_SECRET_KEY: jwtSecret,
-    BACKEND_CORS_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173",
+    BACKEND_CORS_ORIGINS: [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      ...(LAN ? [`http://${LAN_IP}:5173`] : []),
+    ].join(","),
   };
 
   const seedArgs = [join(backendDir, "tools", "seed_demo.py")];
@@ -211,13 +236,16 @@ async function main() {
   }
 
   if (await portOpen(8000)) {
+    if (LAN) {
+      fail("El puerto 8000 ya está ocupado. Detén la demo anterior (Ctrl+C) antes de usar --lan.");
+    }
     if (!(await httpOk(`${BACKEND_URL}/health`))) {
       fail("El puerto 8000 está ocupado por otro proceso que no es AgielShield.");
     }
     log("Reutilizando backend existente en el puerto 8000.");
   } else {
-    log("Arrancando API FastAPI en http://127.0.0.1:8000 ...");
-    start(py, ["-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000"], {
+    log(`Arrancando API FastAPI en http://${BIND_HOST}:8000 ...`);
+    start(py, ["-m", "uvicorn", "app.main:app", "--host", BIND_HOST, "--port", "8000"], {
       cwd: backendDir,
       env: backendEnv,
     });
@@ -233,25 +261,32 @@ async function main() {
 
   const frontendEnv = {
     ...process.env,
-    VITE_API_URL: BACKEND_URL,
+    VITE_API_URL: API_URL_FOR_FRONTEND,
   };
 
   if (await portOpen(5173)) {
+    if (LAN) {
+      fail("El puerto 5173 ya está ocupado. Detén la demo anterior (Ctrl+C) antes de usar --lan.");
+    }
     log("Reutilizando frontend existente en el puerto 5173.");
   } else {
-    log("Arrancando frontend Vite en http://localhost:5173 ...");
-    start(npmCommand(), ["run", "dev", "--", "--host", "127.0.0.1", "--port", "5173"], {
+    log(`Arrancando frontend Vite en http://${BIND_HOST}:5173 ...`);
+    start(npmCommand(), ["run", "dev", "--", "--host", BIND_HOST, "--port", "5173"], {
       cwd: frontendDir,
       env: frontendEnv,
     });
     await waitForHttp(FRONTEND_URL, "Frontend");
   }
 
-  log("Demo lista 👉 http://localhost:5173");
-  log("API docs 👉 http://localhost:8000/docs");
+  log(`Demo lista 👉 ${FRONTEND_LAN_URL}`);
+  log(`API docs 👉 http://${PUBLIC_HOST}:8000/docs`);
+  if (LAN) {
+    log(`IP LAN detectada: ${LAN_IP} — abre ${FRONTEND_LAN_URL} desde el celular en la misma Wi‑Fi.`);
+    log("Si no conecta, permite Python y Node.js en el Firewall de Windows.");
+  }
   log("Pulsa Ctrl+C para detener todos los procesos.");
 
-  if (!NO_OPEN) openBrowser(FRONTEND_URL);
+  if (!NO_OPEN) openBrowser(FRONTEND_LAN_URL);
 }
 
 process.on("SIGINT", () => shutdown(0));

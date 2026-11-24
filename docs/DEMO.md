@@ -48,7 +48,30 @@ npm run demo -- --no-open      # no abre el navegador
 npm run demo -- --seed-only    # solo siembra datos
 npm run demo -- --force-seed   # inserta datos aunque ya existan
 npm run demo -- --no-install   # omite instalación de dependencias
+npm run demo -- --lan          # abre desde el celular por la red local
 ```
+
+### Abrir desde el celular
+
+`localhost` en el celular apunta al propio celular, no a tu computadora. Para ver la demo local desde el móvil:
+
+1. Detén cualquier demo que ya esté corriendo (`Ctrl+C`).
+2. Conecta el celular y la PC a la **misma Wi‑Fi**.
+3. Ejecuta:
+
+   ```bash
+   npm run demo -- --lan
+   ```
+
+4. El script detectará la IP LAN de tu PC, por ejemplo `192.168.1.42`, y mostrará:
+
+   ```text
+   Demo lista 👉 http://192.168.1.42:5173
+   ```
+
+5. Escribe esa URL en el celular.
+
+Si no conecta, revisa el **Firewall de Windows** y permite el tráfico entrante para **Python** y **Node.js**. Si tu red tiene “Aislamiento de cliente/AP” activado, desactívalo o usa el despliegue público: <https://frontend-mazagirs-projects.vercel.app>.
 
 ## 3. Recorrido guiado
 
