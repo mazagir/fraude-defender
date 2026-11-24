@@ -433,7 +433,7 @@ export default function DashboardView({
           </div>
           <div>
             <h2 className="text-xl font-extrabold text-slate-200">
-              {token ? `¡Hola, ${user?.nombre}!` : "Invitado"}
+              {token ? `¡Hola, ${user?.nombre || user?.email?.split("@")[0] || "Guardián"}!` : "Invitado"}
             </h2>
             <div className="flex gap-2 items-center justify-center md:justify-start mt-1 flex-wrap">
               <span className="px-2.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-cyan-400 text-[10px] font-bold">
