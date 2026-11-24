@@ -93,6 +93,8 @@ export interface GamificationState {
   reputation: number;
   badges: string[];
   level?: string;
+  streak?: number;
+  last_scan_date?: string;
 }
 
 export interface LoginResponse {

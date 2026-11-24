@@ -23,6 +23,18 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
+# Preferir psycopg3 cuando esté disponible: es portable en Windows y evita
+# depender del DLL nativo de psycopg2 (que falla en algunos entornos).
+try:
+    import psycopg  # noqa: F401
+
+    _PSYCOPG3_DISPONIBLE = True
+except ImportError:
+    _PSYCOPG3_DISPONIBLE = False
+
+if _PSYCOPG3_DISPONIBLE and DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+
 connect_args = {}
 if DATABASE_URL.startswith("sqlite"):
     connect_args["check_same_thread"] = False

@@ -1,9 +1,11 @@
-import type PostHog from "posthog-js";
+interface AnalyticsClient {
+  capture: (event: string, properties?: Record<string, unknown>) => void;
+}
 
 const POSTHOG_KEY = (import.meta.env.VITE_POSTHOG_KEY as string | undefined)?.trim() || "";
 const POSTHOG_HOST = (import.meta.env.VITE_POSTHOG_HOST as string | undefined)?.trim() || "https://us.i.posthog.com";
 
-let client: PostHog | null = null;
+let client: AnalyticsClient | null = null;
 let loading = false;
 
 export const isAnalyticsEnabled = (): boolean => Boolean(POSTHOG_KEY);

@@ -59,7 +59,7 @@ export default function WorldThreatMap(): React.ReactElement {
     let cancelled = false;
     const fetchThreats = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/v1/threat-intel?limit=200`);
+        const res = await fetch(`${API_BASE}/api/v1/threat-intel?limit=100`);
         if (!res.ok) return;
         const data = await res.json();
         if (cancelled) return;

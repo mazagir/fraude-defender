@@ -129,9 +129,17 @@ function buildScamTypes(events: ThreatIntelData["events"]): LiveScamType[] {
 
 const severityConfig: Record<string, { bg: string; text: string; border: string; dot: string }> = {
   critical: { bg: "bg-red-500/10", text: "text-red-400", border: "border-red-500/20", dot: "bg-red-500" },
+  critico: { bg: "bg-red-500/10", text: "text-red-400", border: "border-red-500/20", dot: "bg-red-500" },
   high: { bg: "bg-orange-500/10", text: "text-orange-400", border: "border-orange-500/20", dot: "bg-orange-400" },
+  alto: { bg: "bg-orange-500/10", text: "text-orange-400", border: "border-orange-500/20", dot: "bg-orange-400" },
   medium: { bg: "bg-yellow-500/10", text: "text-yellow-400", border: "border-yellow-500/20", dot: "bg-yellow-400" },
+  medio: { bg: "bg-yellow-500/10", text: "text-yellow-400", border: "border-yellow-500/20", dot: "bg-yellow-400" },
+  low: { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/20", dot: "bg-emerald-400" },
+  bajo: { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/20", dot: "bg-emerald-400" },
 };
+
+const getSeverityConfig = (severity: string) =>
+  severityConfig[String(severity || "").toLowerCase()] || severityConfig.medium;
 
 export default function DashboardView({
   token, user, reports, scanHistory,
@@ -699,16 +707,18 @@ export default function DashboardView({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.3 }}
-                  className={`flex items-start gap-3 p-3 rounded-2xl border ${severityConfig[alert.severity].bg} ${severityConfig[alert.severity].border}`}
+                  className={`flex items-start gap-3 p-3 rounded-2xl border ${getSeverityConfig(alert.severity).bg} ${getSeverityConfig(alert.severity).border}`}
                 >
                   <div className="flex flex-col items-center gap-1 pt-0.5">
-                    <div className={`w-2 h-2 rounded-full ${severityConfig[alert.severity].dot} animate-pulse`} />
+                    <div className={`w-2 h-2 rounded-full ${getSeverityConfig(alert.severity).dot} animate-pulse`} />
                     <div className="w-px h-full bg-slate-800" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded font-mono ${severityConfig[alert.severity].bg} ${severityConfig[alert.severity].text}`}>
-                        {alert.severity === "critical" ? "CRÍTICO" : "ALTO"}
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded font-mono ${getSeverityConfig(alert.severity).bg} ${getSeverityConfig(alert.severity).text}`}>
+                        {["critical", "critico"].includes(String(alert.severity).toLowerCase()) ? "CRÍTICO"
+                          : ["low", "bajo"].includes(String(alert.severity).toLowerCase()) ? "BAJO"
+                          : ["medium", "medio"].includes(String(alert.severity).toLowerCase()) ? "MEDIO" : "ALTO"}
                       </span>
                       <span className="text-[9px] text-slate-500 font-mono">{alert.city}, {alert.region}</span>
                     </div>

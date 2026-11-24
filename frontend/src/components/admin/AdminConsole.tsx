@@ -79,7 +79,7 @@ export default function AdminConsole({ token, adminEmail, onLogout }: AdminProps
         setLoading(false);
         return;
       }
-      if (tab !== "dashboard" && tab !== "system") {
+      if (tab !== "dashboard") {
         const r = await fetch(`${url}?page=${page}&page_size=15${search ? `&search=${search}` : ""}`, { headers });
         if (r.ok) setData(await r.json());
       }
@@ -284,7 +284,7 @@ function UsersTable({ data, onToggle, onDelete }: { data: PaginatedData; onToggl
       </thead>
       <tbody>
         {data.items.map((u) => (
-          <tr key={u.id} className="border-b border-slate-900 hover:bg-slate-900/30 transition-colors">
+          <tr key={String(u.id)} className="border-b border-slate-900 hover:bg-slate-900/30 transition-colors">
             <td className="px-4 py-3 text-xs font-mono text-slate-500">{String(u.id)}</td>
             <td className="px-4 py-3 text-xs font-bold text-slate-200">{String(u.nombre)}</td>
             <td className="px-4 py-3 text-[11px] text-slate-400 font-mono">{String(u.email)}</td>
@@ -337,7 +337,7 @@ function ScansTable({ data }: { data: PaginatedData }) {
       </thead>
       <tbody>
         {data.items.map((s) => (
-          <tr key={s.id} className="border-b border-slate-900 hover:bg-slate-900/30 transition-colors">
+          <tr key={String(s.id)} className="border-b border-slate-900 hover:bg-slate-900/30 transition-colors">
             <td className="px-4 py-3 text-xs font-mono text-slate-500">{String(s.id)}</td>
             <td className="px-4 py-3">
               <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30">{String(s.scan_type)}</span>
@@ -371,7 +371,7 @@ function ReportsTable({ data, onDelete }: { data: PaginatedData; onDelete: (id: 
       </thead>
       <tbody>
         {data.items.map((r) => (
-          <tr key={r.id} className="border-b border-slate-900 hover:bg-slate-900/30 transition-colors">
+          <tr key={String(r.id)} className="border-b border-slate-900 hover:bg-slate-900/30 transition-colors">
             <td className="px-4 py-3 text-xs font-mono text-slate-500">{String(r.id)}</td>
             <td className="px-4 py-3 text-[11px] text-slate-400 font-mono">{String(r.domain || r.phone_number || "-")}</td>
             <td className="px-4 py-3 text-[11px] text-slate-400 max-w-[180px] truncate">{String(r.description)}</td>
@@ -410,7 +410,7 @@ function AuditTable({ data }: { data: PaginatedData }) {
       </thead>
       <tbody>
         {data.items.map((l) => (
-          <tr key={l.id} className="border-b border-slate-900 hover:bg-slate-900/30 transition-colors">
+          <tr key={String(l.id)} className="border-b border-slate-900 hover:bg-slate-900/30 transition-colors">
             <td className="px-4 py-3 text-xs font-mono text-slate-500">{String(l.id)}</td>
             <td className="px-4 py-3 text-[11px] text-slate-400 font-mono">{String(l.admin_email)}</td>
             <td className="px-4 py-3">
