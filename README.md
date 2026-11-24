@@ -1,403 +1,396 @@
 <div align="center">
 
-# 🛡️ AgielShield | Anti-Fraud Intelligence Platform
-### *Plataforma de Ciberseguridad Ciudadana y Mitigación de Fraude*
+# 🛡️ AgielShield — Anti-Fraud Intelligence Platform
 
-[![Status](https://img.shields.io/badge/Estado-Activo%20y%20Protegiendo-00e5b4?style=for-the-badge&logo=shield&logoColor=white)]()
-[![Backend](https://img.shields.io/badge/Backend-FastAPI-2563eb?style=for-the-badge&logo=fastapi&logoColor=white)]()
-[![Frontend](https://img.shields.io/badge/Frontend-React%20%2B%20TS-61DAFB?style=for-the-badge&logo=react&logoColor=black)]()
-[![DB](https://img.shields.io/badge/Database-PostgreSQL-3ECF8E?style=for-the-badge&logo=postgresql&logoColor=white)]()
-[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)]()
-[![Licencia](https://img.shields.io/badge/Licencia-MIT-purple?style=for-the-badge)]()
+### Ciberseguridad ciudadana contra phishing, extorsión y fraude financiero en LATAM
 
-**AgielShield** es tu Centro de Operaciones de Seguridad (SOC) ciudadano. Una solución para la detección proactiva, correlación y mitigación en tiempo real de infraestructura maliciosa (IoCs) y esquemas de fraude financiero como extorsiones, phishing y "gota a gota" en LATAM.
+[![CI](https://github.com/mazagir/fraude-defender/actions/workflows/ci.yml/badge.svg)](https://github.com/mazagir/fraude-defender/actions/workflows/ci.yml)
+[![Vercel](https://img.shields.io/badge/Frontend-Vercel-000000?logo=vercel&logoColor=white)](https://frontend-mazagirs-projects.vercel.app)
+[![Render](https://img.shields.io/badge/API-Render-46E3B7?logo=render&logoColor=white)](https://agishield-api.onrender.com/health)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009485?logo=fastapi&logoColor=white)](https://agishield-api.onrender.com/docs)
+[![React](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61DAFB?logo=react&logoColor=black)](https://frontend-mazagirs-projects.vercel.app)
+[![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)](backend/requirements.txt)
 
-[🚀 Ver Demo en Vivo](https://frontend-mazagirs-projects.vercel.app) | [🐛 Reportar Bug](https://github.com/mazagir/fraude-defender/issues)
-
-</div>
-
-<br/>
-
-> **"Defendiendo el ciberespacio financiero, un indicador de compromiso a la vez."**
-
----
-
-## 🔥 Características Principales (Transformación SaaS)
-
-*   🧠 **Análisis de Estafas Asistido por IA (Gemini 1.5 Flash)**: Integración directa para escanear y traducir amenazas complejas (URLs, SMS, WhatsApp, correos) a explicaciones empáticas y comprensibles para usuarios no técnicos, recomendando acciones inmediatas de autodefensa.
-*   🔗 **5 Canales de Entrada Directa**: Herramientas integradas en el Home para detectar fraudes rápidamente:
-    *   *Analizar URL*: Detección de phishing bancario.
-    *   *Analizar SMS*: Escaneo de falsos empleos o envíos postales.
-    *   *Analizar WhatsApp*: Mitigación de extorsiones y montadeudas.
-    *   *Analizar Correo*: Verificación de remitentes y cuerpos sospechosos.
-    *   *Escanear QR*: Decodificación de códigos físicos alterados (Quishing).
-*   🏆 **Gamificación y Retención (Mi Perfil Seguro)**: Sistema de recompensas XP, reputación, niveles de usuario (como "Guardián de la Comunidad") e insignias digitales desbloqueables.
-*   📜 **Historial Persistente de Escaneos**: Cada análisis queda guardado en tu perfil. Accedé desde el dashboard en cualquier momento aunque cierres sesión.
-*   🌐 **Telemetría WebSocket en Vivo**: Reportes y escaneos se reflejan al instante en el Threat Intel Panel y SOC Command Center mediante un event bus asíncrono (sin polling, sin Redis).
-*   🗺️ **Mapa de Amenazas de Latinoamérica**: Telemetría interactiva y alertas comunitarias localizadas en **Colombia, México, Perú, Chile y Argentina**.
-*   🔐 **Autenticación de Dos Factores (2FA/TOTP)**: MFA para administradores usando códigos TOTP vía Google Authenticator, Authy, etc. Flujo de login con partial token y verificación en dos pasos.
-*   🔒 **Rate Limiting Granular y Seguridad por Capas**: 7 niveles de rate limiting (5/min registro, 10/min login, 20/min IA, 30/min reportes, 200/min global) + headers de seguridad HTTP + dual auth (JWT + API Key).
-*   📄 **Paginación en Todos los Endpoints**: Listados de reportes e historial con paginación server-side para escalar a miles de registros sin degradación.
-*   🖥️ **Modo Desarrollador Aislado (SOC Command Center)**: Consola de telemetría, simulación de ataques SQLi/DDoS y base de datos cruda de IoCs oculta del flujo de usuario estándar.
-*   ⚡ **TypeScript Estricto en Toda la App Frontend**: 0 errores de tipo con `strict: true`. Interfaces Props tipadas, hooks genéricos y tipos compartidos entre servicios, constantes y componentes.
-
----
-
-## 📸 Funcionalidades Clave
-
-<div align="center">
-
-### 1. 🛡️ Detector de Estafas IA (5 canales de entrada)
-<img src="docs/screenshots/detector-estafas.png" alt="AgielShield Detector de Estafas Home" width="100%">
-*Detector unificado sin registro para URLs, SMS, WhatsApp, Correo y QR, integrado con Gemini AI.*
-
-<br/>
-
-### 2. 🗺️ Alertas y Mapa de Calor de la Comunidad LATAM
-<img src="docs/screenshots/mapa-comunidad.png" alt="AgielShield Mapa de Calor LATAM" width="100%">
-*Mapa regional interactivo que detalla tipos de estafa y volumen de incidentes en Colombia, México, Perú, Chile y Argentina.*
-
-<br/>
-
-### 3. 🔐 Autenticación de Dos Factores (2FA/TOTP)
-<img src="docs/screenshots/mfa-setup.png" alt="AgielShield 2FA Setup" width="100%">
-*Configuración de MFA con QR escaneable, verificación de código TOTP de 6 dígitos y flujo de login en dos pasos.*
-
-<br/>
-
-### 4. 📚 Documentación Interactiva de la API (B2B Core)
-<img src="docs/screenshots/api-docs-header.png" alt="AgielShield API Swagger Header" width="100%">
-*Swagger UI de la plataforma para integraciones y auditorías de seguridad corporativa.*
+**🔴 En vivo:** [Abrir aplicación](https://frontend-mazagirs-projects.vercel.app) · [API docs](https://agishield-api.onrender.com/docs) · [Health check](https://agishield-api.onrender.com/health)
 
 </div>
 
 ---
 
-## 🧠 Arquitectura en Tiempo Real
+## 🎬 Demo
 
-```
-Usuario (Frontend React + TypeScript)
-  │
-  ├─ 🔍 POST /api/v1/reportes/analizar → Gemini AI / Heurístico local
-  │   └─ 📡 EventBus (pub/sub asíncrono) → WebSocket clients en vivo
-  │       └─ 🖥️ Threat Intel Panel se actualiza solo
-  │
-  ├─ 📝 POST /api/v1/reportes → Risk Engine (score 0-100)
-  │   └─ 📡 EventBus → SOC Command Center + Mapa LATAM
-  │
-  ├─ 👤 POST /api/v1/auth/login (con MFA)
-  │   ├─ Sin 2FA → JWT directo
-  │   └─ Con 2FA → partial_token → POST /verify-login → JWT final
-  │
-  ├─ 🔐 POST /api/v1/auth/mfa/setup → QR + Secret TOTP
-  ├─ 🔐 POST /api/v1/auth/mfa/enable  → Activar 2FA
-  ├─ 🔐 POST /api/v1/auth/mfa/disable → Desactivar 2FA
-  │
-  └─ 📜 GET /api/v1/scan-history → Historial persistente (paginado)
-      └─ Dashboard → XP, badges, gamificación
-```
+> Grabada contra el despliegue real: frontend en Vercel, API en Render y datos de inteligencia comunitaria.
 
-**EventBus**: Pub/sub en memoria con `asyncio.Queue`. Sin Redis, sin polling, 0 dependencias externas. Escalable a Redis pub/swapping `event_bus.py` cuando el proyecto crezca.
+[![Demo de AgielShield](https://raw.githubusercontent.com/mazagir/fraude-defender/main/docs/screenshots/live-home.png)](https://raw.githubusercontent.com/mazagir/fraude-defender/main/docs/demo/agishield-demo.mp4)
+
+<video src="https://raw.githubusercontent.com/mazagir/fraude-defender/main/docs/demo/agishield-demo.mp4" controls width="100%"></video>
+
+[Ver guía completa de la demo →](docs/DEMO.md)
 
 ---
 
-## 🛠 Stack Tecnológico de Vanguardia
+## ✨ ¿Qué hace AgielShield?
 
-AgielShield está construido con las mejores herramientas de la industria para asegurar latencia ultra-baja y escalabilidad masiva:
+AgielShield es una plataforma de **threat intelligence** y análisis de fraude que combina un detector ciudadano con un panel SOC. Permite:
 
-| Capa | Tecnologías | Descripción |
-| :--- | :--- | :--- |
-| **Backend** | Python 3.13, FastAPI, SQLAlchemy, PostgreSQL | Arquitectura asíncrona con event bus, rate limiting, motor heurístico y MFA TOTP. |
-| **Frontend** | React 19, TypeScript (strict), Vite, Tailwind CSS, Recharts, Framer Motion | Interfaz *Glassmorphism* con tipos estáticos, WebSocket, gamificación y MFA UI. |
-| **Base de Datos** | PostgreSQL (Supabase) | PostgreSQL 17 en la nube. Alternativas: SQLite (local), Neon, direct. |
-| **Tiempo Real** | WebSocket + EventBus asyncio.Queue | Pub/sub in-memory sin Redis. Eventos en <1s a todos los clientes. |
-| **Infraestructura** | Render (Backend), Vercel (Frontend) | Backend always-on en Render + DB en Supabase. Frontend estático en Vercel. |
-| **Seguridad** | JWT + API Key, MFA TOTP, rate limiting, Pydantic, bcrypt | 7 niveles de rate limit, 2FA con pyotp, headers HTTP estrictos. |
+- **Analizar sospechas** — URLs/dominios, números de teléfono, cuentas bancarias y texto de mensajes o correos.
+- **Clasificar riesgo** — motor heurístico con puntaje y niveles `LOW`, `MEDIUM`, `HIGH` y `CRITICAL`.
+- **Correlacionar IoCs** — reportes de la comunidad, mapa LATAM y telemetría de incidentes.
+- **Defensa activa** — registro de contramedidas y telemetría de *decoys* para envenenar bases de datos de estafadores.
+- **Gamificación** — puntos, niveles y logros por reportes y análisis útiles.
+- **Seguridad de acceso** — JWT, API keys, MFA con TOTP, roles y auditoría administrativa.
+- **Tiempo real opcional** — WebSocket de telemetría para el centro de operaciones.
+
+La IA (Gemini) es **opcional**: si no se configura `GEMINI_API_KEY`, la plataforma opera con el motor heurístico local.
 
 ---
 
-## 🚀 Despliegue y Ejecución Local
+## 🏗️ Arquitectura
 
-¿Quieres levantar tu propio entorno en minutos? AgielShield está diseñado con principios de Arquitectura Limpia para ser plug-and-play.
+```mermaid
+flowchart LR
+    U[👤 Ciudadano / Analista] --> F[🌐 React + Vite\nVercel]
+    F -->|REST · WS| A[⚡ FastAPI\nRender]
+    A --> D[(🐘 PostgreSQL\nSupabase)]
+    A --> H[🧠 Motor de riesgo\nheurística + IA opcional]
+    A --> T[📡 Telemetría · Decoys\nMFA · Auditoría]
+    A --> G[🏅 Gamificación]
+```
 
-### 1️⃣ Levantar el Backend (FastAPI + Gemini AI)
+| Capa | Tecnología | Entorno |
+|---|---|---|
+| Frontend | React 19 + TypeScript + Vite + Tailwind | Vercel |
+| Backend | FastAPI + SQLAlchemy + Pydantic + SlowAPI | Render (Docker) |
+| Base de datos | PostgreSQL (Supabase) / SQLite local | Supabase / local |
+| Seguridad | JWT, bcrypt, TOTP, API keys, CORS, headers HTTP | Backend |
+| CI/CD | GitHub Actions → lint, tests, build y deploy | GitHub |
+| Tiempo real | WebSocket `/api/v1/ws/telemetry` | Backend |
+
+---
+
+## 🚀 Inicio rápido
+
+### Opción 1 — Verlo desplegado
+
+No necesitas instalar nada:
+
+- **App:** <https://frontend-mazagirs-projects.vercel.app>
+- **API:** <https://agishield-api.onrender.com/docs>
+- **Salud:** <https://agishield-api.onrender.com/health>
+
+> En el plan gratuito de Render, la API puede tardar ~30–60 s en responder si estuvo inactiva.
+
+### Opción 2 — Demo local interactiva (recomendado)
+
+Un solo comando desde la raíz del repositorio:
+
+```bash
+git clone https://github.com/mazagir/fraude-defender.git
+cd fraude-defender
+npm run demo
+```
+
+Ese comando hace todo automáticamente:
+
+- crea `backend/.venv` si hace falta;
+- instala dependencias de backend y frontend;
+- genera una clave JWT efímera (no se guarda ni se muestra);
+- siembra 50 incidentes ficticios en SQLite;
+- arranca la API en `http://localhost:8000`;
+- arranca y abre la UI en `http://localhost:5173`.
+
+Detén todo con `Ctrl+C`. Más detalles en [docs/DEMO.md](docs/DEMO.md).
+
+### Opción 3 — Instalación manual
+
+#### Requisitos
+
+- Node.js **20+**
+- Python **3.11+** (CI usa 3.13)
+- Git
+
+#### 1. Backend
+
 ```bash
 cd backend
-python -m venv venv
-venv\Scripts\activate      # En Windows
-# source venv/bin/activate  # En Linux/macOS
-pip install -r requirements.txt
-cp .env.template .env   # Copia la plantilla y edita las variables
-uvicorn app.main:app --reload
+python -m venv .venv
 ```
 
-### 2️⃣ Levantar el Frontend (React + TypeScript + Vite)
-En una nueva terminal:
+Windows:
+
+```powershell
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+copy .env.template .env
+```
+
+macOS / Linux:
+
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.template .env
+```
+
+Edita `backend/.env` y define al menos:
+
+```dotenv
+ENVIRONMENT=development
+DB_PROVIDER=sqlite
+JWT_SECRET_KEY=cambia-esta-clave-por-una-larga-y-aleatoria
+```
+
+Siembra datos de ejemplo y arranca la API:
+
+```bash
+python tools/seed_demo.py --dry-run
+python tools/seed_demo.py
+uvicorn app.main:app --reload --port 8000
+```
+
+Comprueba:
+
+```bash
+curl http://localhost:8000/health
+```
+
+#### 2. Frontend
+
+En otra terminal:
+
 ```bash
 cd frontend
-npm install
+npm ci
+cp .env.example .env     # Windows: copy .env.example .env
+```
+
+Ajusta `frontend/.env`:
+
+```dotenv
+VITE_API_URL=http://localhost:8000
+```
+
+Arranca:
+
+```bash
 npm run dev
 ```
 
-La app estará disponible en **http://localhost:5173** y el API en **http://localhost:8000/docs**.
+Abre <http://localhost:5173>.
 
-### 🐳 Docker (backend + frontend con Supabase)
-Desde la raíz del proyecto:
+> El frontend ya detecta `localhost` y usa `http://localhost:8000` aunque no definas `VITE_API_URL`.
+
+### Opción 4 — Docker
+
+Necesitas `backend/.env` creado como en la opción 3.
+
 ```bash
 docker compose up --build
 ```
-El backend usa `backend/.env` (Supabase). El frontend recibe `VITE_API_URL=http://localhost:8000`.
 
-### ☁️ Desplegar Backend en Render
-1. Conecta el repo en [render.com](https://render.com) y usa el Blueprint `render.yaml`.
-2. Configura las variables secretas: `JWT_SECRET_KEY`, `SUPABASE_DATABASE_URL`, `ALLOWED_API_KEYS`, `BACKEND_CORS_ORIGINS`.
-3. El servicio quedará en `https://agishield-api.onrender.com/health`.
+- Frontend: <http://localhost:5173>
+- API: <http://localhost:8000/docs>
 
-### ▲ Desplegar Frontend en Vercel
-1. Root directory: `frontend`
-2. Variable de build: `VITE_API_URL=https://agishield-api.onrender.com`
+---
 
-### 3️⃣ Verificar Tipos TypeScript (Opcional)
+## 🔐 Variables de entorno
+
+Nunca versiones archivos `.env`. Usa las plantillas `backend/.env.template` y `frontend/.env.example`.
+
+| Variable | Local | Producción | Uso |
+|---|---|---|---|
+| `JWT_SECRET_KEY` | Obligatoria | Obligatoria | Firma de tokens JWT |
+| `ENVIRONMENT` | `development` | `production` | Activa verificaciones de seguridad |
+| `DB_PROVIDER` | `sqlite` | `supabase` | Selecciona el proveedor de base de datos |
+| `DATABASE_URL` | Opcional | Según proveedor | URL SQLAlchemy directa |
+| `SUPABASE_DATABASE_URL` | — | Obligatoria | URL de PostgreSQL administrado |
+| `NEON_DATABASE_URL` | Opcional | Opcional | Proveedor alternativo |
+| `ALLOWED_API_KEYS` | Opcional | Obligatoria | Claves B2A separadas por coma |
+| `GEMINI_API_KEY` | Opcional | Opcional | Habilita análisis con IA |
+| `WS_AUTH_REQUIRED` | Opcional | Recomendado `true` | Exige token en WebSocket |
+| `BACKEND_CORS_ORIGINS` | Opcional | Obligatoria | Orígenes permitidos |
+| `CORS_ALLOW_ORIGIN_REGEX` | Opcional | Recomendado | Orígenes con patrón (Vercel/Render) |
+| `ADMIN_USER` | Opcional | Obligatoria | Usuario base del `SUPER_ADMIN` |
+| `ADMIN_PASSWORD_HASH` | Opcional | Obligatoria | Hash bcrypt del administrador |
+| `TWILIO_AUTH_TOKEN`, `EMAIL_*` | Opcional | Opcional | Notificaciones y correo |
+| `VITE_API_URL` | `http://localhost:8000` | URL de Render | Base de la API en el frontend |
+
+No existe contraseña de administrador por defecto. Si no defines `ADMIN_PASSWORD_HASH` o `ADMIN_PASSWORD_RAW`, no se siembra el `SUPER_ADMIN`. El demo local no necesita credenciales administrativas.
+
+---
+
+## 🧪 Pruebas
+
+Backend:
+
+```bash
+cd backend
+python -m pytest -q
+```
+
+Frontend:
+
 ```bash
 cd frontend
-npx tsc --noEmit   # 0 errores esperados
-npm run build      # Build de producción
+npm ci
+npm run lint
+npm test -- --run
+npx tsc --noEmit
+npm run build
+```
+
+CI ejecuta lint, tests y build en cada push/PR a `main`, y despliega cuando el push es a `main`.
+
+---
+
+## 📡 API
+
+Documentación interactiva:
+
+- Local: <http://localhost:8000/docs>
+- Producción: <https://agishield-api.onrender.com/docs>
+- Esquema: <https://agishield-api.onrender.com/openapi.json>
+
+### Endpoints públicos principales
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| `GET` | `/health` | Estado del servicio y proveedor de BD |
+| `POST` | `/api/v1/auth/registro` | Registro de usuario |
+| `POST` | `/api/v1/auth/login` | Login con JWT |
+| `POST` | `/api/v1/reportes/analizar` | Analizar URL, teléfono, cuenta o texto |
+| `POST` | `/api/v1/reportes/publico` | Crear reporte anónimo |
+| `GET` | `/api/v1/reportes/publico/listar` | Listar reportes públicos |
+| `GET` | `/api/v1/threat-intel` | KPIs, países y eventos recientes |
+| `GET` | `/api/v1/admin/leaderboard` | Ranking público |
+| `POST` | `/api/v1/webhooks/whatsapp` | Ingesta de reportes por WhatsApp |
+| `GET` | `/docs` · `/openapi.json` | Swagger UI y contrato OpenAPI |
+
+### Endpoints autenticados
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| `GET` | `/api/v1/auth/me` | Perfil actual |
+| `GET` | `/api/v1/scan-history` | Historial de análisis |
+| `POST` | `/api/v1/scan-history` | Guardar análisis |
+| `GET` · `PUT` | `/api/v1/gamification` | Puntos y preferencias |
+| `GET` · `DELETE` | `/api/v1/reportes` | Reportes privados |
+| `WS` | `/api/v1/ws/telemetry` | Telemetría en tiempo real |
+
+Las rutas `/api/v1/admin/*` (excepto `leaderboard`) requieren rol `super_admin`.
+
+Límite global: **200 peticiones/minuto por IP**, con límites más estrictos en login, registro, análisis y reportes públicos.
+
+---
+
+## 🖥️ Vistas de la aplicación
+
+| Vista | Qué muestra |
+|---|---|
+| **Detector de Estafas** | Análisis de enlaces y mensajes con puntaje, señales y recomendaciones |
+| **Mi Perfil Seguro** | Historial, gamificación, logros y configuración MFA |
+| **Comunidad y Mapa** | Reportes, mapa LATAM y telemetría de incidentes |
+| **Consola SOC (CTO)** | Modo desarrollador con telemetría avanzada |
+| **Panel de Administración** | Usuarios, reportes, auditoría y métricas (solo `super_admin`) |
+
+### Capturas del despliegue
+
+| Home | Detector | Comunidad |
+|---|---|---|
+| ![Home](docs/screenshots/live-home.png) | ![Detector](docs/screenshots/live-analisis.png) | ![Comunidad](docs/screenshots/live-comunidad.png) |
+
+| API docs | SOC | Portal público |
+|---|---|---|
+| ![API](docs/screenshots/live-api-docs.png) | ![SOC](docs/screenshots/soc-dashboard.png) | ![Portal](docs/screenshots/portal-publico.png) |
+
+---
+
+## 📦 Estructura del repositorio
+
+```text
+.
+├── backend/
+│   ├── app/
+│   │   ├── api/v1/endpoints/    # auth, reportes, admin, telemetría, webhooks...
+│   │   ├── core/                # configuración, seguridad, base de datos
+│   │   ├── models/              # modelos SQLAlchemy
+│   │   └── services/            # motor de riesgo, IA, defensa
+│   ├── tests/                   # suite pytest
+│   ├── tools/                   # seed_demo, verify_db, migraciones
+│   ├── requirements.txt
+│   └── Dockerfile
+├── frontend/
+│   ├── src/components/          # UI, SOC, admin, perfil, mapa
+│   ├── src/hooks/               # lógica de aplicación y telemetría
+│   ├── src/views/               # pantallas principales
+│   ├── package.json
+│   └── vercel.json
+├── scripts/                     # demo, validación y generación documental
+├── docs/
+│   ├── DEMO.md                  # guía de demo
+│   ├── demo/                    # video real
+│   ├── screenshots/             # capturas del despliegue
+│   └── informes y póster
+├── .github/workflows/ci.yml
+├── docker-compose.yml
+├── render.yaml
+└── package.json                 # npm run demo
 ```
 
 ---
 
-## ⚙️ Variables de Entorno
+## 🚢 Despliegue
 
-Copia `.env.template` como `.env` en la carpeta `backend/` y completa los valores:
+| Componente | Plataforma | Configuración |
+|---|---|---|
+| Frontend | Vercel | `frontend/vercel.json`, `rootDirectory=frontend` |
+| Backend | Render | `render.yaml`, `backend/Dockerfile`, healthcheck `/health` |
+| Base de datos | Supabase | `DB_PROVIDER=supabase` + `SUPABASE_DATABASE_URL` |
+| CI/CD | GitHub Actions | `.github/workflows/ci.yml` |
 
-| Variable | Descripción | Obligatorio |
-| :--- | :--- | :--- |
-| `JWT_SECRET_KEY` | Secreto para firmar tokens JWT (mín. 32 chars). Genera con: `python -c "import secrets; print(secrets.token_hex(32))"` | **Sí** |
-| `DB_PROVIDER` | Proveedor activo: `sqlite` \| `supabase` \| `neon` \| `direct` | No (default: `direct`) |
-| `SUPABASE_DATABASE_URL` | URI de conexión al pooler de Supabase | Si `DB_PROVIDER=supabase` |
-| `NEON_DATABASE_URL` | URI de conexión a Neon PostgreSQL | Si `DB_PROVIDER=neon` |
-| `DATABASE_URL` | URI genérica (SQLite por defecto en local) | No |
-| `ALLOWED_API_KEYS` | API Keys B2B separadas por comas | No (default: `aegis_dev_api_key_2026`) |
-| `GEMINI_API_KEY` | API Key de Google Gemini AI | No (fallback heurístico) |
-| `TWILIO_AUTH_TOKEN` | Auth Token de Twilio para validar la firma del webhook de WhatsApp (`/api/v1/webhooks/whatsapp`) | No (webhook sin validación si se omite) |
-| `ENVIRONMENT` | `development` \| `production` \| `testing` | No (default: `development`) |
-| `BACKEND_CORS_ORIGINS` | Orígenes permitidos (URL de Vercel) | Recomendado en producción |
-| `MFA_ENABLED` | Habilitar autenticación de dos factores (2FA/TOTP) | No (default: `true`) |
-
-### Frontend (Vercel / local)
-
-| Variable | Descripción | Obligatorio |
-| :--- | :--- | :--- |
-| `VITE_API_URL` | URL del backend Render (ej. `https://agishield-api.onrender.com`) | Sí en producción |
-| `VITE_POSTHOG_KEY` | Project API Key de PostHog para analítica de producto | No (sin key = sin tracking) |
-| `VITE_POSTHOG_HOST` | Host de ingesta de PostHog (default: `https://us.i.posthog.com`) | No |
-
-> [!IMPORTANT]
-> `JWT_SECRET_KEY` es obligatoria. El servidor no arrancará sin ella en producción.
+El deploy se dispara automáticamente al hacer push a `main`, siempre que los secretos `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `RENDER_SERVICE_ID` y `RENDER_API_KEY` estén configurados en el repositorio.
 
 ---
 
-## 🐘 Configuración de Base de Datos (Supabase)
+## 🛟 Solución de problemas
 
-1. Crea un proyecto en **[supabase.com](https://supabase.com)**
-2. Ve a **Project Settings → Database → Connection Pooling**
-3. Copia la URI del pooler (Session mode, puerto 5432):
-   ```
-   postgresql://postgres.PROJECT_REF:PASSWORD@aws-X-REGION.pooler.supabase.com:5432/postgres
-   ```
-4. En tu `.env`:
-   ```env
-   DB_PROVIDER=supabase
-   SUPABASE_DATABASE_URL=<URI copiada>
-   ```
-5. Verifica con: `python tools/verify_db.py`
-
-> **Neon** también es compatible: cambia `DB_PROVIDER=neon` y define `NEON_DATABASE_URL`.
+| Síntoma | Causa probable | Solución |
+|---|---|---|
+| `FATAL: Required environment variable 'JWT_SECRET_KEY'` | Falta la clave JWT | Define `JWT_SECRET_KEY` o usa `npm run demo` |
+| API responde 503 al primer intento | Render frío | Espera 30–60 s y vuelve a intentar |
+| Error CORS en local | URL base incorrecta | Verifica `VITE_API_URL=http://localhost:8000` |
+| El puerto 8000 está ocupado | Otro proceso escuchando | Detén ese proceso o usa `npm run demo` para reutilizarlo si es AgielShield |
+| El mapa no muestra incidentes | Base sin sembrar | Ejecuta `python tools/seed_demo.py --force` |
+| No aparece el panel admin | No hay `SUPER_ADMIN` | Configura `ADMIN_USER` y `ADMIN_PASSWORD_HASH` en el entorno |
+| `python` no encontrado | Python fuera del PATH | Usa `python3` en macOS/Linux o `py -3` en Windows |
 
 ---
 
-## 🧪 Testing
+## 🎓 Proyecto académico
 
-### Tests Locales (SQLite)
-```bash
-cd backend
-python tests/test_api.py        # Suite principal: 14 tests
-```
+**Programa:** Tecnología en Desarrollo de Sistemas de Información y Software
 
-### Tests de Integración (API en Producción)
-```bash
-cd backend
-python tests/test_integration_live.py   # 29 tests contra Render + Supabase
-```
+**Integrantes:**
 
-### Datos Reales LATAM
-```bash
-cd scripts
-python seed_real_data.py   # Seeder: 10 usuarios + 20 reportes fraude + 10 análisis
-```
+- Neil David Maza Girado
+- Steven Ruiz Fontalvo
+- Keider Polo Arteaga
 
-### Cobertura de Tests
-| Suite | Tests | Ambiente | Descripción |
-| :--- | :--- | :--- | :--- |
-| `test_api.py` | 14 | SQLite local | Auth, reportes, contramedidas, RBAC, legacy routes |
-| `test_integration_live.py` | 29 | Producción | Health, admin, CRUD, scans, validaciones, RBAC, cleanup |
-| `test_extended.py` | ~15 | SQLite local | CRUD avanzado, paginación, borrrado |
-| `test_webhooks.py` | 6 | SQLite local | WhatsApp Twilio webhook, firma, análisis |
-| `test_heuristica.py` | ~8 | SQLite local | Motor heurístico, scoring, IoC reincidente |
-| `test_gemini.py` | ~5 | SQLite local | Gemini AI fallback, análisis de texto |
-| **Total** | **~77** | | |
+**Asesora:** Maybelline Castro
 
----
+Documentos disponibles en [`docs/`](docs):
 
-## 📡 API — Ejemplos con Datos Reales
-
-Base URL producción: `https://agishield-api.onrender.com`
-
-### Health Check
-```bash
-curl https://agishield-api.onrender.com/health
-```
-```json
-{
-  "status": "ok",
-  "servicio": "AgielShield Threat Intelligence Platform",
-  "version": "2.0.0",
-  "environment": "production"
-}
-```
-
-### Login - SUPER_ADMIN
-```bash
-# Defina ADMIN_EMAIL y ADMIN_PASSWORD_RAW en su entorno; nunca escriba credenciales en el repositorio.
-curl -X POST https://agishield-api.onrender.com/api/v1/auth/login \
-  -d "username=${ADMIN_EMAIL}&password=${ADMIN_PASSWORD_RAW}"
-```
-```json
-{
-  "access_token": "eyJhbGciOi...",
-  "token_type": "bearer",
-  "usuario": {
-    "nombre": "SUPER_ADMIN",
-    "email": "<correo definido en ADMIN_EMAIL>",
-    "rol": "super_admin"
-  }
-}
-```
-
-### Registro de Usuario (dominio permitido: gmail, outlook, hotmail, yahoo)
-```bash
-curl -X POST https://agishield-api.onrender.com/api/v1/auth/registro \
-  -H "Content-Type: application/json" \
-  -d '{"nombre":"Carlos Mendoza","email":"carlos@gmail.com","password":"${DEMO_PASSWORD}"}'
-```
-```json
-{
-  "id": 8,
-  "nombre": "Carlos Mendoza",
-  "email": "carlos@gmail.com",
-  "rol": "analista",
-  "es_activo": true
-}
-```
-
-### Crear Reporte de Fraude (datos reales Colombia)
-```bash
-curl -X POST https://agishield-api.onrender.com/api/v1/reportes \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "phone_number": "+573214567890",
-    "bank_account": "4567-8901-2345-Davivienda",
-    "domain": "cobranza-legal-rapida.xyz",
-    "description": "Llaman amenazando con meterme a central de riesgo si no pago una deuda que no contraje.",
-    "risk_level": "CRITICAL"
-  }'
-```
-```json
-{
-  "id": 15,
-  "phone_number": "+573214567890",
-  "domain": "cobranza-legal-rapida.xyz",
-  "risk_score": 100,
-  "risk_level": "CRITICAL",
-  "malicious_indicators": "TLD altamente sospechoso, Patron de fraude detectado (amenaza, cobro, interes)"
-}
-```
-
-### Análisis de URL (5 canales)
-```bash
-curl -X POST https://agishield-api.onrender.com/api/v1/reportes/analizar \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"tipo":"url","contenido":"https://banco-secure-login-phishing.com/verificar-cuenta"}'
-```
-```json
-{
-  "score": 45,
-  "level": "MEDIUM",
-  "explanation": "Dominio sospechoso: patrón de phishing bancario detectado."
-}
-```
-
-### Admin Dashboard (requiere super_admin)
-```bash
-curl https://agishield-api.onrender.com/api/v1/admin/dashboard \
-  -H "Authorization: Bearer <admin_token>"
-```
-```json
-{
-  "total_users": 12,
-  "total_reports": 33,
-  "total_analyses": 0,
-  "risk_distribution": {"MEDIUM": 3, "HIGH": 11, "CRITICAL": 19},
-  "recent_activity": [...]
-}
-```
-
-### Threat Intelligence (público)
-```bash
-curl https://agishield-api.onrender.com/api/v1/threat-intel
-```
-```json
-{
-  "indicators": [...],
-  "stats": {"total_reports": 33, "countries_affected": 10}
-}
-```
-
----
-
-## 📋 Changelog
-
-### v2.1 — Testing & Datos Reales
-
-*   **29 tests de integración** contra API en producción (Render + Supabase).
-*   **Script de datos LATAM**: 20 reportes reales de fraude (Colombia, México, Argentina, Brasil, Chile, Perú, Ecuador, Uruguay, Costa Rica, Guatemala, Paraguay, Panamá, RD).
-*   **10 análisis en 5 canales**: URL, SMS, WhatsApp, Correo, QR — con datos de phishing reales.
-*   **12 usuarios demo** creados para mostrar Admin Console con múltiples roles.
-*   **SUPER_ADMIN funcional** con `ADMIN_USER` y `ADMIN_PASSWORD_HASH` en producción.
-
-### v2.0 — Rebranding & Admin Console
-
-*   Rebranding completo: AgielShield, AgiSense, FrauDefender (comunidad).
-*   Admin Console SOC-style con 6 paneles: Dashboard, Usuarios, Análisis, Reportes, Audit Logs, Sistema.
-*   RBAC 3 niveles: `analista`, `admin`, `super_admin`.
-*   Email domain validation (solo gmail, outlook, hotmail, yahoo).
-*   Password mínimo 8 caracteres (reducido de 12).
-
-### v1.0 — Features & Security
-
-*   Análisis de estafas asistido por IA (Gemini 1.5 Flash).
-*   5 canales de entrada: URL, SMS, WhatsApp, Correo, QR.
-*   Telemetría WebSocket en vivo.
-*   Gamificación: XP, badges, niveles, streak, leaderboard.
-*   MFA/TOTP para administradores.
-*   Rate limiting 7 niveles.
-*   Despliegue en Render + Vercel + Supabase.
+- [Demo y capturas](docs/DEMO.md)
+- [Póster con datos reales](docs/Poster_AgielShield_DATOS_REALES.pdf)
+- [Informe Final 115](docs/Informe_Final_AgielShield_115_DILIGENCIADO.docx)
+- [Proyecto 111 corregido](docs/Proyecto_Grado_AgielShield_111_CORREGIDO.docx)
 
 ---
 
 <div align="center">
-  Hecho con 💻 y 🛡️ por la comunidad para combatir el fraude digital en Latinoamérica. <br/>
-  <strong>Si este proyecto te ha resultado útil o interesante, no olvides dejar una ⭐ en GitHub.</strong>
+
+**Detect · Analyze · Defend**
+
+[⬆ Volver arriba](#-agielshield--anti-fraud-intelligence-platform)
+
 </div>
